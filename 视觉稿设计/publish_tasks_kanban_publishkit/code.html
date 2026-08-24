@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Publish Tasks - Kanban</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed-dim": "#c9c6c0",
+                      "tertiary-fixed-dim": "#abc8fa",
+                      "surface-tint": "#795916",
+                      "outline-variant": "#d1c5b3",
+                      "primary-fixed": "#ffdea7",
+                      "on-tertiary-fixed": "#001b3c",
+                      "primary": "#795916",
+                      "on-secondary": "#ffffff",
+                      "secondary-container": "#e5e2db",
+                      "on-primary": "#ffffff",
+                      "tertiary-container": "#7d99c9",
+                      "on-tertiary-fixed-variant": "#2a4772",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed-dim": "#ebc073",
+                      "secondary-fixed": "#e5e2db",
+                      "surface-dim": "#dbdad5",
+                      "on-error": "#ffffff",
+                      "inverse-surface": "#30312d",
+                      "on-surface": "#1b1c19",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-container": "#b8924a",
+                      "error": "#ba1a1a",
+                      "secondary": "#5f5e59",
+                      "inverse-on-surface": "#f2f1eb",
+                      "on-secondary-fixed-variant": "#474742",
+                      "background": "#fbf9f4",
+                      "surface-container": "#efeee8",
+                      "tertiary": "#435f8b",
+                      "on-primary-container": "#412c00",
+                      "surface": "#fbf9f4",
+                      "outline": "#807667",
+                      "surface-bright": "#fbf9f4",
+                      "on-primary-fixed-variant": "#5e4200",
+                      "on-primary-fixed": "#271900",
+                      "on-secondary-container": "#65645f",
+                      "on-tertiary-container": "#0f305a",
+                      "on-secondary-fixed": "#1c1c18",
+                      "error-container": "#ffdad6",
+                      "on-error-container": "#93000a",
+                      "surface-container-low": "#f5f4ee",
+                      "on-surface-variant": "#4e4638",
+                      "surface-container-highest": "#e4e2dd",
+                      "inverse-primary": "#ebc073",
+                      "surface-container-high": "#e9e8e3",
+                      "tertiary-fixed": "#d6e3ff",
+                      "on-background": "#1b1c19",
+                      "surface-variant": "#e4e2dd"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "element_gap": "12px",
+                      "inner_padding": "16px",
+                      "baseline": "4px",
+                      "sidebar_width": "220px",
+                      "container_gutter": "24px"
+              },
+              "fontFamily": {
+                      "body-base": ["Inter", "PingFang SC", "sans-serif"],
+                      "mono": ["Inter", "sans-serif"],
+                      "body-sm": ["Inter", "PingFang SC", "sans-serif"],
+                      "h3": ["Inter", "PingFang SC", "sans-serif"],
+                      "h1": ["Inter", "PingFang SC", "sans-serif"],
+                      "h2": ["Inter", "PingFang SC", "sans-serif"],
+                      "label-xs": ["Inter", "PingFang SC", "sans-serif"]
+              },
+              "fontSize": {
+                      "body-base": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "h3": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "h1": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "h2": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-xs": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for Kanban columns */
+        .kanban-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .kanban-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .kanban-scroll::-webkit-scrollbar-thumb {
+            background-color: #d1c5b3; /* outline-variant */
+            border-radius: 9999px;
+        }
+        .kanban-scroll:hover::-webkit-scrollbar-thumb {
+            background-color: #807667; /* outline */
+        }
+        /* Hide default scrollbar for cleaner look on board */
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-base antialiased h-screen w-full flex overflow-hidden selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[220px] bg-surface-container-low border-r border-surface-variant flex flex-col py-inner_padding z-20">
+<!-- Header -->
+<div class="px-inner_padding mb-8 flex items-center gap-3">
+<div aria-label="PongRabbit Studio Logo" class="w-8 h-8 rounded bg-primary-container text-on-primary-container flex items-center justify-center font-bold flex-shrink-0 shadow-sm">P</div>
+<div class="min-w-0">
+<h2 class="font-h2 text-h2 text-on-surface truncate">PongRabbit Studio</h2>
+<p class="font-body-sm text-body-sm text-on-secondary-container truncate">Project Switcher</p>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<nav aria-label="Main Navigation" class="flex-1 flex flex-col px-3 gap-0.5">
+<a class="flex items-center h-8 px-3 text-on-secondary-container hover:bg-surface-container-high transition-colors rounded-md group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px] group-hover:text-on-surface transition-colors">today</span>
+<span class="font-body-base text-body-base group-hover:text-on-surface transition-colors">Today</span>
+</a>
+<a class="flex items-center h-8 px-3 text-on-secondary-container hover:bg-surface-container-high transition-colors rounded-md group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px] group-hover:text-on-surface transition-colors">article</span>
+<span class="font-body-base text-body-base group-hover:text-on-surface transition-colors">Content</span>
+</a>
+<a class="flex items-center h-8 px-3 text-on-secondary-container hover:bg-surface-container-high transition-colors rounded-md group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px] group-hover:text-on-surface transition-colors">image</span>
+<span class="font-body-base text-body-base group-hover:text-on-surface transition-colors">Media</span>
+</a>
+<!-- Active Tab: Tasks -->
+<a class="flex items-center h-8 px-3 text-on-surface font-semibold border-l-2 border-primary bg-surface-container-highest rounded-r-md -ml-3 pl-[14px]" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="font-body-base text-body-base">Tasks</span>
+</a>
+<a class="flex items-center h-8 px-3 text-on-secondary-container hover:bg-surface-container-high transition-colors rounded-md group mt-0.5" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px] group-hover:text-on-surface transition-colors">calendar_month</span>
+<span class="font-body-base text-body-base group-hover:text-on-surface transition-colors">Calendar</span>
+</a>
+<a class="flex items-center h-8 px-3 text-on-secondary-container hover:bg-surface-container-high transition-colors rounded-md group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px] group-hover:text-on-surface transition-colors">source</span>
+<span class="font-body-base text-body-base group-hover:text-on-surface transition-colors">Sources</span>
+</a>
+<a class="flex items-center h-8 px-3 text-on-secondary-container hover:bg-surface-container-high transition-colors rounded-md group mt-auto mb-2" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px] group-hover:text-on-surface transition-colors">settings</span>
+<span class="font-body-base text-body-base group-hover:text-on-surface transition-colors">Settings</span>
+</a>
+</nav>
+<!-- CTA Button -->
+<div class="px-inner_padding mt-2">
+<button class="w-full h-8 bg-primary-container text-on-primary font-body-sm text-body-sm rounded hover:bg-primary transition-colors flex items-center justify-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">add</span> Create New
+            </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[220px] flex-1 flex flex-col min-w-0 bg-background relative h-full">
+<!-- Header / Toolbar -->
+<header class="h-16 shrink-0 border-b border-surface-variant flex items-center justify-between px-container_gutter bg-surface z-10">
+<div class="flex items-center gap-4">
+<h1 class="font-h1 text-h1 text-on-surface tracking-tight">发布任务</h1>
+</div>
+<div class="flex items-center gap-3">
+<!-- Search -->
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-secondary-container text-[18px] group-focus-within:text-primary transition-colors">search</span>
+<input class="h-8 pl-9 pr-3 w-64 bg-surface-container-low border border-surface-variant rounded text-body-sm font-body-sm text-on-surface placeholder-on-secondary-container focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all" placeholder="Search tasks..." type="text"/>
+</div>
+<!-- Filters -->
+<button class="h-8 px-3 flex items-center gap-2 border border-surface-variant rounded bg-surface hover:bg-surface-container-low text-body-sm font-body-sm text-on-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">filter_list</span> Filters
+                </button>
+<!-- View Toggle -->
+<div class="flex items-center bg-surface-container-low border border-surface-variant rounded p-0.5 h-8">
+<!-- Active: Board -->
+<button class="flex items-center gap-1.5 px-2.5 h-full bg-surface rounded-sm shadow-sm text-on-surface font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">view_kanban</span> 看板
+                    </button>
+<!-- Inactive: List -->
+<button class="flex items-center gap-1.5 px-2.5 h-full text-on-secondary-container hover:text-on-surface font-label-xs text-label-xs font-medium transition-colors">
+<span class="material-symbols-outlined text-[16px]">view_list</span> 列表
+                    </button>
+</div>
+</div>
+</header>
+<!-- Kanban Board Area -->
+<div class="flex-1 overflow-x-auto overflow-y-hidden p-container_gutter kanban-scroll bg-background relative flex items-start gap-6">
+<!-- Column 1: 草稿 (Draft) -->
+<div class="w-[280px] shrink-0 flex flex-col max-h-full">
+<!-- Column Header -->
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-h3 text-h3 text-on-surface">草稿</h3>
+<span class="bg-surface-variant text-on-surface-variant text-label-xs font-label-xs px-2 py-0.5 rounded-full">3</span>
+</div>
+<button class="text-on-secondary-container hover:text-on-surface hover:bg-surface-container-high rounded p-1 transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<!-- Cards Container -->
+<div class="flex flex-col gap-3 overflow-y-auto pb-4 kanban-scroll px-1">
+<!-- Card 1 -->
+<div class="bg-surface border border-surface-variant rounded-lg p-3 pl-7 shadow-sm hover:shadow group relative cursor-pointer transition-shadow flex flex-col gap-2.5">
+<div class="absolute left-1.5 top-1/2 -translate-y-1/2 text-surface-variant group-hover:text-outline opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</div>
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">01 Triangle bandana bib</h4>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">local_mall</span> 小红书
+                            </span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">ZH</span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">EN</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface border border-surface-variant rounded-lg p-3 pl-7 shadow-sm hover:shadow group relative cursor-pointer transition-shadow flex flex-col gap-2.5">
+<div class="absolute left-1.5 top-1/2 -translate-y-1/2 text-surface-variant group-hover:text-outline opacity-0 group-hover:opacity-100 transition-all cursor-grab flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</div>
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Summer campaign brief &amp; assets</h4>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">push_pin</span> Pinterest
+                            </span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">EN</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface border border-surface-variant rounded-lg p-3 pl-7 shadow-sm hover:shadow group relative cursor-pointer transition-shadow flex flex-col gap-2.5">
+<div class="absolute left-1.5 top-1/2 -translate-y-1/2 text-surface-variant group-hover:text-outline opacity-0 group-hover:opacity-100 transition-all cursor-grab flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</div>
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Feature announcement: Collaborative editing</h4>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">rocket_launch</span> Product Hunt
+                            </span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">EN</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2: 就绪 (Ready) -->
+<div class="w-[280px] shrink-0 flex flex-col max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-h3 text-h3 text-on-surface">就绪</h3>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant text-label-xs font-label-xs px-2 py-0.5 rounded-full">2</span>
+</div>
+<button class="text-on-secondary-container hover:text-on-surface hover:bg-surface-container-high rounded p-1 transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="flex flex-col gap-3 overflow-y-auto pb-4 kanban-scroll px-1">
+<div class="bg-surface border border-surface-variant rounded-lg p-3 pl-7 shadow-sm hover:shadow group relative cursor-pointer transition-shadow flex flex-col gap-2.5">
+<div class="absolute left-1.5 top-1/2 -translate-y-1/2 text-surface-variant group-hover:text-outline opacity-0 group-hover:opacity-100 transition-all cursor-grab flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</div>
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Q3 Update video script &amp; thumbnails</h4>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">local_mall</span> 小红书
+                            </span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">ZH</span>
+</div>
+</div>
+<div class="bg-surface border border-surface-variant rounded-lg p-3 pl-7 shadow-sm hover:shadow group relative cursor-pointer transition-shadow flex flex-col gap-2.5">
+<div class="absolute left-1.5 top-1/2 -translate-y-1/2 text-surface-variant group-hover:text-outline opacity-0 group-hover:opacity-100 transition-all cursor-grab flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</div>
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">New UI kit presentation assets</h4>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">push_pin</span> Pinterest
+                            </span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">EN</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 3: 已排期 (Scheduled) -->
+<div class="w-[280px] shrink-0 flex flex-col max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-h3 text-h3 text-on-surface">已排期</h3>
+<span class="bg-primary-fixed text-on-primary-fixed-variant text-label-xs font-label-xs px-2 py-0.5 rounded-full">2</span>
+</div>
+</div>
+<div class="flex flex-col gap-3 overflow-y-auto pb-4 kanban-scroll px-1">
+<div class="bg-surface border border-surface-variant rounded-lg p-3 pl-7 shadow-sm hover:shadow group relative cursor-pointer transition-shadow flex flex-col gap-2.5 border-t-2 border-t-primary-container">
+<div class="absolute left-1.5 top-1/2 -translate-y-1/2 text-surface-variant group-hover:text-outline opacity-0 group-hover:opacity-100 transition-all cursor-grab flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</div>
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Fall collection teaser reel</h4>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">local_mall</span> 小红书
+                            </span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">ZH</span>
+</div>
+<!-- Scheduled Metadata -->
+<div class="mt-1 flex items-center gap-1.5 text-label-xs font-label-xs text-primary-container font-medium bg-primary-fixed/20 px-2 py-1 rounded w-fit">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                            Oct 26, 14:00
+                        </div>
+</div>
+<div class="bg-surface border border-surface-variant rounded-lg p-3 pl-7 shadow-sm hover:shadow group relative cursor-pointer transition-shadow flex flex-col gap-2.5 border-t-2 border-t-primary-container">
+<div class="absolute left-1.5 top-1/2 -translate-y-1/2 text-surface-variant group-hover:text-outline opacity-0 group-hover:opacity-100 transition-all cursor-grab flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</div>
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Weekly design tip thread #42</h4>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">push_pin</span> Pinterest
+                            </span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">EN</span>
+</div>
+<!-- Scheduled Metadata -->
+<div class="mt-1 flex items-center gap-1.5 text-label-xs font-label-xs text-primary-container font-medium bg-primary-fixed/20 px-2 py-1 rounded w-fit">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                            Oct 27, 09:00
+                        </div>
+</div>
+</div>
+</div>
+<!-- Column 4: 已发布 (Published) -->
+<div class="w-[280px] shrink-0 flex flex-col max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-h3 text-h3 text-on-surface">已发布</h3>
+<span class="bg-surface-variant text-on-surface-variant text-label-xs font-label-xs px-2 py-0.5 rounded-full">1</span>
+</div>
+</div>
+<div class="flex flex-col gap-3 overflow-y-auto pb-4 kanban-scroll px-1">
+<div class="bg-surface border border-surface-variant rounded-lg p-3 shadow-sm group relative cursor-default flex flex-col gap-2.5 opacity-80 hover:opacity-100 transition-opacity">
+<!-- No drag handle for published, it's done -->
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight line-through decoration-surface-variant">V2.0 Release notes &amp; guide</h4>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">rocket_launch</span> Product Hunt
+                            </span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">EN</span>
+</div>
+<!-- Published Metadata -->
+<div class="mt-1 flex flex-col gap-1.5 border-t border-surface-variant pt-2">
+<a class="flex items-center gap-1.5 text-label-xs font-label-xs text-tertiary hover:underline group/link truncate" href="#">
+<span class="material-symbols-outlined text-[14px] shrink-0 group-hover/link:text-tertiary-fixed-dim">link</span>
+<span class="truncate">producthunt.com/posts/v2-0...</span>
+</a>
+<div class="flex items-center gap-1.5 text-label-xs font-label-xs text-on-secondary-container">
+<span class="material-symbols-outlined text-[14px] text-outline">check_circle</span>
+                                Published Oct 25
+                            </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 5: 阻塞 (Blocked) -->
+<div class="w-[280px] shrink-0 flex flex-col max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-h3 text-h3 text-on-surface">阻塞</h3>
+<span class="bg-error-container text-on-error-container text-label-xs font-label-xs px-2 py-0.5 rounded-full">1</span>
+</div>
+</div>
+<div class="flex flex-col gap-3 overflow-y-auto pb-4 kanban-scroll px-1">
+<div class="bg-surface border border-error/30 rounded-lg p-3 pl-7 shadow-sm hover:shadow hover:border-error/50 group relative cursor-pointer transition-shadow flex flex-col gap-2.5">
+<div class="absolute left-1.5 top-1/2 -translate-y-1/2 text-surface-variant group-hover:text-outline opacity-0 group-hover:opacity-100 transition-all cursor-grab flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+</div>
+<div class="flex justify-between items-start gap-2">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface leading-tight">Winter promo banner set</h4>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">push_pin</span> Pinterest
+                            </span>
+<span class="text-label-xs font-label-xs text-secondary bg-secondary-container px-1.5 py-0.5 rounded">EN</span>
+</div>
+<!-- Blocked Metadata -->
+<div class="mt-1">
+<span class="inline-flex items-center gap-1 bg-error-container text-on-error-container px-2 py-1 rounded text-label-xs font-label-xs font-medium w-fit">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">error</span>
+                                缺配图
+                            </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Empty space to allow scrolling past the last column easily -->
+<div class="w-8 shrink-0"></div>
+</div>
+</main>
+</body></html>

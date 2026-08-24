@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Preview Generated Items - PublishKit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#795916",
+                        "outline": "#807667",
+                        "surface-bright": "#fbf9f4",
+                        "surface-variant": "#e4e2dd",
+                        "secondary": "#5f5e59",
+                        "surface-container-low": "#f5f4ee",
+                        "on-secondary-fixed-variant": "#474742",
+                        "tertiary-fixed-dim": "#abc8fa",
+                        "outline-variant": "#d1c5b3",
+                        "tertiary-container": "#7d99c9",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary-container": "#b8924a",
+                        "surface": "#fbf9f4",
+                        "tertiary": "#435f8b",
+                        "secondary-fixed-dim": "#c9c6c0",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed": "#1c1c18",
+                        "secondary-fixed": "#e5e2db",
+                        "on-primary-container": "#412c00",
+                        "on-tertiary": "#ffffff",
+                        "background": "#fbf9f4",
+                        "tertiary-fixed": "#d6e3ff",
+                        "on-tertiary-container": "#0f305a",
+                        "inverse-surface": "#30312d",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#ebc073",
+                        "surface-tint": "#795916",
+                        "secondary-container": "#e5e2db",
+                        "surface-dim": "#dbdad5",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-primary-fixed-variant": "#5e4200",
+                        "on-surface-variant": "#4e4638",
+                        "on-background": "#1b1c19",
+                        "surface-container": "#efeee8",
+                        "primary-fixed": "#ffdea7",
+                        "surface-container-high": "#e9e8e3",
+                        "on-tertiary-fixed-variant": "#2a4772",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f2f1eb",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#271900",
+                        "on-surface": "#1b1c19",
+                        "inverse-primary": "#ebc073",
+                        "on-secondary-container": "#65645f",
+                        "on-tertiary-fixed": "#001b3c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "baseline": "4px",
+                        "inner_padding": "16px",
+                        "element_gap": "12px",
+                        "sidebar_width": "220px",
+                        "container_gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "h3": ["Inter"],
+                        "h2": ["Inter"],
+                        "label-xs": ["Inter"],
+                        "h1": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-base": ["Inter"],
+                        "mono": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h3": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-xs": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-base": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono": ["13px", { "lineHeight": "18px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #e4e2dd;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #c9c6c0;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-low text-on-surface min-h-screen flex items-center justify-center p-8">
+<!-- Wizard Modal Container -->
+<div class="w-full max-w-[1024px] bg-surface-container-lowest border border-surface-variant rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col h-[85vh] max-h-[800px]">
+<!-- Header: Step Indicator & Title -->
+<header class="px-container_gutter py-inner_padding border-b border-surface-variant flex items-center justify-between shrink-0">
+<div>
+<h1 class="font-h2 text-h2 text-on-surface">预览将生成的内容条目</h1>
+<p class="font-body-sm text-body-sm text-on-secondary-container mt-1">请确认拆分结果并选择需要生成任务的条目</p>
+</div>
+<!-- Stepper -->
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-label-xs text-label-xs">1</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden sm:inline">选择源文件</span>
+</div>
+<div class="w-4 h-[1px] bg-surface-variant"></div>
+<div class="flex items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-xs text-label-xs">2</div>
+<span class="font-body-sm text-body-sm text-on-surface font-medium hidden sm:inline">预览内容</span>
+</div>
+<div class="w-4 h-[1px] bg-surface-variant"></div>
+<div class="flex items-center gap-1 opacity-50">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-label-xs text-label-xs">3</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden sm:inline">配置发布</span>
+</div>
+</div>
+</header>
+<!-- Main Content: Split View -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Left Panel: Markdown Source Preview -->
+<section class="w-1/2 border-r border-surface-variant bg-surface flex flex-col">
+<div class="px-inner_padding py-2 border-b border-surface-variant bg-surface-container-lowest flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-on-secondary-container">description</span>
+<span class="font-label-xs text-label-xs text-on-secondary-container uppercase tracking-wider">Markdown 源文件 (部分提取)</span>
+</div>
+<div class="flex-1 overflow-y-auto p-inner_padding font-mono text-mono text-on-surface-variant leading-relaxed">
+<div class="bg-primary-fixed/20 -mx-2 px-2 py-1 rounded border-l-2 border-primary-container mb-4">
+<span class="text-primary-container font-semibold">## 01 三角口水巾</span><br/>
+                        - 材质：纯棉<br/>
+                        - 尺寸：30x30cm<br/>
+<br/>
+                        ### 小红书成稿<br/>
+                        超柔软的纯棉三角口水巾来啦！👶 这次选用的面料透气又吸汗，真的是妈妈们的心头好。30x30的尺寸刚刚好，不勒脖子。#母婴好物 #口水巾推荐
+                    </div>
+<div class="bg-primary-fixed/20 -mx-2 px-2 py-1 rounded border-l-2 border-primary-container mb-4">
+                        ### Instagram<br/>
+                        Super soft cotton triangle bandana! 🌿 Breathable and perfect for your little one. 30x30cm size for the best fit. #babygoods #cottonbandana
+                    </div>
+<div class="opacity-50 -mx-2 px-2 py-1 mb-4">
+                        ### Pinterest (skip)<br/>
+                        DIY baby bandana ideas. Save for later!
+                    </div>
+<div class="mb-4">
+                        ## 02 婴儿连体衣<br/>
+                        - 材质：竹纤维<br/>
+                        - 尺寸：59/66/73<br/>
+<br/>
+                        ### 小红书成稿<br/>
+                        竹纤维连体衣，夏日必备！透气清凉，宝宝穿了就不想脱。
+                    </div>
+</div>
+</section>
+<!-- Right Panel: Generated Checklist -->
+<section class="w-1/2 bg-surface-container-lowest flex flex-col">
+<div class="px-inner_padding py-2 border-b border-surface-variant bg-surface-container-lowest flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-on-secondary-container">checklist</span>
+<span class="font-label-xs text-label-xs text-on-secondary-container uppercase tracking-wider">提取结果 (36 条)</span>
+</div>
+<button class="font-label-xs text-label-xs text-primary hover:text-primary-container transition-colors">全选</button>
+</div>
+<div class="flex-1 overflow-y-auto p-2">
+<!-- Item 1 -->
+<label class="flex items-start gap-3 p-3 hover:bg-surface-container-low rounded-lg cursor-pointer transition-colors group">
+<div class="relative flex items-center mt-0.5">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="w-4 h-4 border border-surface-variant rounded bg-surface-container-lowest peer-checked:bg-primary-container peer-checked:border-primary-container flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[14px] text-on-primary opacity-0 peer-checked:opacity-100">check</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="font-body-base text-body-base font-medium text-on-surface group-hover:text-primary-container transition-colors">01 三角口水巾 · 小红书成稿</div>
+<div class="font-body-sm text-body-sm text-on-secondary-container mt-1 line-clamp-1">超柔软的纯棉三角口水巾来啦！👶 这次选用的面料透气又吸汗...</div>
+<div class="mt-2 flex gap-2">
+<span class="px-2 py-0.5 rounded-full bg-surface-variant font-label-xs text-label-xs text-on-surface-variant">小红书</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-variant font-label-xs text-label-xs text-on-surface-variant">图文</span>
+</div>
+</div>
+</label>
+<!-- Item 2 -->
+<label class="flex items-start gap-3 p-3 hover:bg-surface-container-low rounded-lg cursor-pointer transition-colors group border-t border-surface-variant/50">
+<div class="relative flex items-center mt-0.5">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="w-4 h-4 border border-surface-variant rounded bg-surface-container-lowest peer-checked:bg-primary-container peer-checked:border-primary-container flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[14px] text-on-primary opacity-0 peer-checked:opacity-100">check</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="font-body-base text-body-base font-medium text-on-surface group-hover:text-primary-container transition-colors">01 Triangle bandana · Instagram</div>
+<div class="font-body-sm text-body-sm text-on-secondary-container mt-1 line-clamp-1">Super soft cotton triangle bandana! 🌿 Breathable and perfect...</div>
+<div class="mt-2 flex gap-2">
+<span class="px-2 py-0.5 rounded-full bg-surface-variant font-label-xs text-label-xs text-on-surface-variant">Instagram</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-variant font-label-xs text-label-xs text-on-surface-variant">Post</span>
+</div>
+</div>
+</label>
+<!-- Item 3 -->
+<label class="flex items-start gap-3 p-3 hover:bg-surface-container-low rounded-lg cursor-pointer transition-colors group border-t border-surface-variant/50 opacity-60">
+<div class="relative flex items-center mt-0.5">
+<input class="peer sr-only" type="checkbox"/>
+<div class="w-4 h-4 border border-surface-variant rounded bg-surface-container-lowest peer-checked:bg-primary-container peer-checked:border-primary-container flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[14px] text-on-primary opacity-0 peer-checked:opacity-100">check</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="font-body-base text-body-base font-medium text-on-surface group-hover:text-primary-container transition-colors">01 · Pinterest (skip)</div>
+<div class="font-body-sm text-body-sm text-on-secondary-container mt-1 line-clamp-1">DIY baby bandana ideas. Save for later!</div>
+<div class="mt-2 flex gap-2">
+<span class="px-2 py-0.5 rounded-full bg-surface-variant font-label-xs text-label-xs text-on-surface-variant">Pinterest</span>
+</div>
+</div>
+</label>
+<!-- Item 4 (Mock) -->
+<label class="flex items-start gap-3 p-3 hover:bg-surface-container-low rounded-lg cursor-pointer transition-colors group border-t border-surface-variant/50">
+<div class="relative flex items-center mt-0.5">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="w-4 h-4 border border-surface-variant rounded bg-surface-container-lowest peer-checked:bg-primary-container peer-checked:border-primary-container flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[14px] text-on-primary opacity-0 peer-checked:opacity-100">check</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="font-body-base text-body-base font-medium text-on-surface group-hover:text-primary-container transition-colors">02 婴儿连体衣 · 小红书成稿</div>
+<div class="font-body-sm text-body-sm text-on-secondary-container mt-1 line-clamp-1">竹纤维连体衣，夏日必备！透气清凉，宝宝穿了就不想脱。</div>
+<div class="mt-2 flex gap-2">
+<span class="px-2 py-0.5 rounded-full bg-surface-variant font-label-xs text-label-xs text-on-surface-variant">小红书</span>
+</div>
+</div>
+</label>
+</div>
+</section>
+</main>
+<!-- Bottom Controls -->
+<div class="px-container_gutter py-inner_padding border-t border-surface-variant bg-surface flex items-center justify-between shrink-0">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="font-body-sm text-body-sm text-on-secondary-container">拆分策略:</span>
+<select class="h-8 pl-3 pr-8 py-0 rounded border-surface-variant font-body-sm text-body-sm text-on-surface bg-surface-container-lowest focus:ring-1 focus:ring-primary-container focus:border-primary-container">
+<option>按平台小节 (###)</option>
+<option>按二级标题 (##)</option>
+<option>按款式编号</option>
+</select>
+</div>
+<div class="w-[1px] h-4 bg-surface-variant"></div>
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded border-surface-variant text-primary-container focus:ring-primary-container bg-surface-container-lowest w-4 h-4" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface">同时为选中项创建发布任务</span>
+</label>
+</div>
+</div>
+<!-- Footer Actions -->
+<footer class="px-container_gutter py-inner_padding bg-surface-container-low border-t border-surface-variant flex items-center justify-between shrink-0">
+<button class="h-9 px-4 rounded border border-surface-variant bg-surface-container-lowest text-on-background font-body-sm text-body-sm font-medium hover:bg-surface-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                上一步
+            </button>
+<button class="h-9 px-6 rounded bg-primary-container text-on-primary font-body-sm text-body-sm font-medium hover:bg-primary transition-colors flex items-center gap-2">
+                生成 36 条内容
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</footer>
+</div>
+</body></html>

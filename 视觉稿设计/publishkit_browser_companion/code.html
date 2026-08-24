@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>PublishKit Extension Popup</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-error-container": "#93000a",
+                        "surface": "#fbf9f4",
+                        "surface-container-low": "#f5f4ee",
+                        "primary-fixed": "#ffdea7",
+                        "surface-container": "#efeee8",
+                        "surface-variant": "#e4e2dd",
+                        "tertiary-fixed-dim": "#abc8fa",
+                        "on-tertiary-container": "#0f305a",
+                        "inverse-surface": "#30312d",
+                        "tertiary-container": "#7d99c9",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#5e4200",
+                        "secondary-fixed-dim": "#c9c6c0",
+                        "secondary": "#5f5e59",
+                        "outline": "#807667",
+                        "surface-tint": "#795916",
+                        "outline-variant": "#d1c5b3",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#1c1c18",
+                        "primary-fixed-dim": "#ebc073",
+                        "on-primary-container": "#412c00",
+                        "on-tertiary-fixed": "#001b3c",
+                        "secondary-container": "#e5e2db",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#4e4638",
+                        "on-surface": "#1b1c19",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-primary-fixed": "#271900",
+                        "surface-container-high": "#e9e8e3",
+                        "tertiary": "#435f8b",
+                        "secondary-fixed": "#e5e2db",
+                        "inverse-on-surface": "#f2f1eb",
+                        "inverse-primary": "#ebc073",
+                        "on-tertiary-fixed-variant": "#2a4772",
+                        "on-secondary-container": "#65645f",
+                        "surface-dim": "#dbdad5",
+                        "primary": "#795916",
+                        "tertiary-fixed": "#d6e3ff",
+                        "on-secondary-fixed-variant": "#474742",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#fbf9f4",
+                        "on-background": "#1b1c19",
+                        "primary-container": "#b8924a",
+                        "background": "#fbf9f4",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    spacing: {
+                        baseline: "4px",
+                        container_gutter: "24px",
+                        sidebar_width: "220px",
+                        element_gap: "12px",
+                        inner_padding: "16px"
+                    },
+                    fontFamily: {
+                        "label-xs": ["Inter"],
+                        "h1": ["Inter"],
+                        "h2": ["Inter"],
+                        "mono": ["Inter"],
+                        "h3": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-base": ["Inter"]
+                    },
+                    fontSize: {
+                        "label-xs": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "500" }],
+                        "h1": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "600" }],
+                        "h2": ["20px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }],
+                        "mono": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+                        "h3": ["16px", { lineHeight: "24px", fontWeight: "600" }],
+                        "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+                        "body-base": ["14px", { lineHeight: "20px", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .toast-enter { animation: slideUp 0.3s ease-out forwards; }
+        .toast-exit { animation: slideDown 0.3s ease-in forwards; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex justify-center items-center h-screen w-full overflow-hidden">
+<!-- Mobile Extension Container -->
+<div class="w-[360px] h-[640px] bg-surface flex flex-col relative border border-surface-variant shadow-lg rounded-xl overflow-hidden mx-auto">
+<!-- Header -->
+<header class="flex items-center justify-between px-4 h-[56px] border-b border-surface-variant bg-surface shrink-0">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 bg-primary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[16px]">draw</span>
+</div>
+<span class="font-h3 text-h3 text-on-surface">发稿匣</span>
+</div>
+<div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">
+<div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+<span class="font-label-xs text-label-xs">已连接桌面端</span>
+</div>
+</header>
+<!-- Main Content Scroll Area -->
+<main class="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-6">
+<!-- Current Task Card -->
+<section class="flex flex-col gap-3">
+<h2 class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wide">当前任务</h2>
+<div class="p-4 border border-surface-variant rounded-lg bg-surface-container-low flex flex-col gap-3 shadow-sm hover:bg-surface-container transition-colors">
+<div class="flex justify-between items-start">
+<span class="font-body-sm text-body-sm text-on-surface font-semibold leading-tight line-clamp-2">
+                            01 三角口水巾 · 小红书成稿
+                        </span>
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+<div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+<span class="font-label-xs text-label-xs">就绪</span>
+</div>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">book</span>
+<span class="font-label-xs text-label-xs">小红书</span>
+</div>
+</div>
+</section>
+<!-- Action Buttons -->
+<section class="flex flex-col gap-2">
+<button class="w-full h-10 px-4 flex items-center justify-start gap-3 bg-surface border border-surface-variant rounded-lg text-on-surface hover:bg-surface-container-low active:bg-surface-container transition-colors focus:outline-none focus:ring-1 focus:ring-primary-container" onclick="showToast('已复制标题')">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">title</span>
+<span class="font-body-sm text-body-sm font-medium">复制标题</span>
+</button>
+<button class="w-full h-10 px-4 flex items-center justify-start gap-3 bg-surface border border-surface-variant rounded-lg text-on-surface hover:bg-surface-container-low active:bg-surface-container transition-colors focus:outline-none focus:ring-1 focus:ring-primary-container" onclick="showToast('已复制正文')">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">subject</span>
+<span class="font-body-sm text-body-sm font-medium">复制正文</span>
+</button>
+<button class="w-full h-10 px-4 flex items-center justify-start gap-3 bg-surface border border-surface-variant rounded-lg text-on-surface hover:bg-surface-container-low active:bg-surface-container transition-colors focus:outline-none focus:ring-1 focus:ring-primary-container" onclick="showToast('已复制标签')">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">tag</span>
+<span class="font-body-sm text-body-sm font-medium">复制标签</span>
+</button>
+<button class="w-full h-10 px-4 flex items-center justify-start gap-3 bg-surface border border-surface-variant rounded-lg text-on-surface hover:bg-surface-container-low active:bg-surface-container transition-colors focus:outline-none focus:ring-1 focus:ring-primary-container" onclick="showToast('正在打开文件夹...')">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">folder_open</span>
+<span class="font-body-sm text-body-sm font-medium">打开配图文件夹</span>
+</button>
+</section>
+<div class="h-px bg-surface-variant w-full my-2"></div>
+<!-- After Publish Section -->
+<section class="flex flex-col gap-3">
+<h2 class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wide">发布后操作</h2>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-2 p-3 bg-surface-container-low border border-surface-variant rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">link</span>
+<input class="font-mono text-mono bg-transparent border-none p-0 focus:ring-0 text-on-surface flex-1 w-full truncate cursor-default" readonly="" type="text" value="https://www.xiaohongshu.com/explore/..."/>
+</div>
+<button class="w-full h-10 px-4 flex items-center justify-center gap-2 bg-primary-container text-on-primary rounded-lg hover:opacity-90 active:opacity-80 transition-opacity shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-container" onclick="showToast('链接已回填')">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span class="font-body-sm text-body-sm font-medium">标记已发布并回填链接</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="h-[48px] border-t border-surface-variant bg-surface flex items-center justify-center gap-3 shrink-0">
+<button class="font-label-xs text-label-xs text-on-surface-variant hover:text-on-surface transition-colors focus:outline-none" onclick="showToast('切换任务面板...')">切换任务</button>
+<span class="text-surface-variant">·</span>
+<button class="font-label-xs text-label-xs text-on-surface-variant hover:text-on-surface transition-colors focus:outline-none" onclick="showToast('正在打开桌面端...')">在桌面端打开</button>
+</footer>
+<!-- Toast Notification (Hidden by default) -->
+<div class="absolute bottom-16 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-4 py-2 rounded-lg font-body-sm text-body-sm shadow-md hidden flex items-center gap-2 z-50" id="toast">
+<span class="material-symbols-outlined text-[16px] text-green-400">check</span>
+<span id="toast-message">链接已回填</span>
+</div>
+</div>
+<script>
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            
+            toast.classList.remove('hidden', 'toast-exit');
+            toast.classList.add('toast-enter');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-exit');
+                
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                    toast.classList.remove('toast-exit');
+                }, 300); // Wait for exit animation
+            }, 2000);
+        }
+    </script>
+</body></html>

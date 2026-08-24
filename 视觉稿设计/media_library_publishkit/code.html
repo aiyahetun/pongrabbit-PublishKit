@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PublishKit - Media Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#435f8b",
+                        "background": "#fbf9f4",
+                        "surface-variant": "#e4e2dd",
+                        "surface-container-low": "#f5f4ee",
+                        "on-primary-container": "#412c00",
+                        "on-tertiary-fixed-variant": "#2a4772",
+                        "primary-fixed-dim": "#ebc073",
+                        "tertiary-fixed-dim": "#abc8fa",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#5e4200",
+                        "secondary-fixed-dim": "#c9c6c0",
+                        "surface-container-highest": "#e4e2dd",
+                        "secondary-container": "#e5e2db",
+                        "on-secondary-fixed": "#1c1c18",
+                        "inverse-primary": "#ebc073",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#7d99c9",
+                        "on-surface-variant": "#4e4638",
+                        "primary-container": "#b8924a",
+                        "surface-bright": "#fbf9f4",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#d6e3ff",
+                        "on-tertiary-fixed": "#001b3c",
+                        "outline": "#807667",
+                        "primary": "#795916",
+                        "secondary-fixed": "#e5e2db",
+                        "outline-variant": "#d1c5b3",
+                        "on-surface": "#1b1c19",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#65645f",
+                        "on-tertiary-container": "#0f305a",
+                        "on-secondary-fixed-variant": "#474742",
+                        "inverse-surface": "#30312d",
+                        "on-primary-fixed": "#271900",
+                        "surface-container": "#efeee8",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#f2f1eb",
+                        "surface-tint": "#795916",
+                        "primary-fixed": "#ffdea7",
+                        "surface-container-high": "#e9e8e3",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#dbdad5",
+                        "secondary": "#5f5e59",
+                        "on-error": "#ffffff",
+                        "surface": "#fbf9f4",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c19"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "baseline": "4px",
+                        "element_gap": "12px",
+                        "container_gutter": "24px",
+                        "inner_padding": "16px",
+                        "sidebar_width": "220px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Inter"],
+                        "h3": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "mono": ["Inter"],
+                        "h1": ["Inter"],
+                        "body-base": ["Inter"],
+                        "label-xs": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "h3": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "mono": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-base": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-xs": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f7f6f3; } /* Level 0 Background Override for spec */
+    </style>
+</head>
+<body class="text-on-background font-body-base h-screen overflow-hidden flex bg-background">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-low dark:bg-surface-dim font-body-base text-body-base fixed left-0 top-0 h-full w-[220px] border-r border-surface-variant dark:border-outline-variant flex flex-col h-full py-inner_padding z-20">
+<div class="px-container_gutter mb-6">
+<h2 class="font-h2 text-h2 text-on-surface dark:text-on-surface-variant tracking-tight font-extrabold truncate">PongRabbit Studio</h2>
+<p class="font-body-sm text-body-sm text-on-secondary-container mt-1">Project Switcher</p>
+</div>
+<div class="flex-1 overflow-y-auto px-2 space-y-[2px]">
+<!-- Inactive -->
+<a class="flex items-center h-8 px-4 text-on-secondary-container dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-DEFAULT cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined text-[18px] mr-3">today</span>
+<span>Today</span>
+</a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-DEFAULT cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined text-[18px] mr-3">article</span>
+<span>Content</span>
+</a>
+<!-- Active (Media) -->
+<a class="flex items-center h-8 px-4 text-on-surface dark:text-on-surface font-semibold border-l-2 border-primary dark:border-primary-fixed-dim bg-surface-container-highest dark:bg-surface-container-high rounded-r-DEFAULT cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined text-[18px] mr-3" style="font-variation-settings: 'FILL' 1;">image</span>
+<span>Media</span>
+</a>
+<!-- Inactive -->
+<a class="flex items-center h-8 px-4 text-on-secondary-container dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-DEFAULT cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined text-[18px] mr-3">assignment</span>
+<span>Tasks</span>
+</a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-DEFAULT cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined text-[18px] mr-3">calendar_month</span>
+<span>Calendar</span>
+</a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-DEFAULT cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined text-[18px] mr-3">source</span>
+<span>Sources</span>
+</a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container dark:text-on-secondary-fixed-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest rounded-DEFAULT cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined text-[18px] mr-3">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="px-container_gutter mt-auto pt-4">
+<button class="w-full h-8 bg-primary-container text-on-primary flex items-center justify-center rounded-DEFAULT font-body-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[16px] mr-2">add</span>
+                Create New
+            </button>
+</div>
+</nav>
+<!-- TopNavBar (Customized for Media) -->
+<header class="bg-surface dark:bg-surface-dim text-primary dark:text-primary-fixed-dim font-body-sm text-body-sm fixed top-0 right-0 left-[220px] h-14 border-b border-surface-variant dark:border-outline-variant flex justify-between items-center px-container_gutter h-full z-10 shadow-none">
+<div class="flex items-center text-on-surface">
+<!-- Breadcrumbs -->
+<div class="flex items-center text-on-secondary-container">
+<span class="hover:text-primary cursor-pointer transition-colors">图片</span>
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<span class="font-medium text-on-surface">营销手机海报</span>
+</div>
+</div>
+<div class="flex items-center gap-element_gap">
+<!-- Search & Filters -->
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-[18px] text-outline">search</span>
+<input class="pl-8 pr-3 h-8 w-48 bg-surface-container-lowest border border-surface-variant rounded-DEFAULT focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 text-on-surface placeholder-outline transition-all text-body-sm" placeholder="Search files..." type="text"/>
+</div>
+<button class="h-8 px-3 bg-surface-container-lowest border border-surface-variant text-on-surface rounded-DEFAULT flex items-center hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px] mr-1 text-outline">filter_list</span>
+                Filters
+            </button>
+<button class="h-8 px-3 bg-surface-container-lowest border border-surface-variant text-on-surface rounded-DEFAULT flex items-center hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px] mr-1 text-outline">sort</span>
+                Sort
+            </button>
+<div class="w-px h-6 bg-surface-variant mx-1"></div>
+<button class="w-8 h-8 flex items-center justify-center text-on-secondary-container hover:text-primary transition-colors cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center text-on-secondary-container hover:text-primary transition-colors cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-surface-variant cursor-pointer ml-2">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A small, professional avatar portrait of a user. The lighting is soft and natural, against a plain neutral background. The aesthetic is clean and modern, suitable for a professional software application profile picture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8zCv4OAoC0mDawq5xs2nWk5FdR6QmKeg9BH0b6blto6KEMFzQ2GRNx6-EGnnNI_vRMz1K8YLgbjhnt6CNbIrKTRL8bwPvFvxy84qOGeYzhDyePW8fBm3oVEeNtJHWKI6URTRVXFwafjzIMhyK2WxsiVniW6m7IRlHe_-hki0ufaij-_Ywe7jfJcdUotiXiR5TeV0RKTXgcSYh5isZm45mbjMclPbv_CRhL9RoZJlV20-LSyB7S1fW"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-[220px] mt-14 flex-1 h-[calc(100vh-56px)] flex">
+<!-- Grid View -->
+<div class="flex-1 p-container_gutter overflow-y-auto bg-background">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+<!-- Item 1 (Selected) -->
+<div class="group bg-surface-container-lowest border border-primary-container rounded-lg overflow-hidden flex flex-col cursor-pointer transition-all shadow-[0_0_0_2px_rgba(184,146,74,0.12)] relative">
+<div class="absolute inset-0 bg-primary-container opacity-10 pointer-events-none"></div> <!-- Soft gold highlight -->
+<div class="h-40 w-full overflow-hidden border-b border-surface-variant relative">
+<img alt="marketing_bib_01.jpg" class="w-full h-full object-cover" data-alt="A high-quality, brightly lit marketing poster featuring a cute golden retriever dog wearing a stylish patterned bandana bib. The background is a clean studio setting with soft pastel colors. The style is modern, professional pet apparel photography intended for e-commerce, with a calm and trustworthy aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2kKkNf780CL1VRiq4hrRu69vdQB1I4pkJtad_4HGGd_jUQ9qkfnDXL_59xDvwogdKDqTjgGq9nHbhP56Xc-6BZwkVMf2Kim9ctxlHUmtPba6cfCianMWkIpFmbCN7DQj5wEf5Qpn7870yIKDNCbNUWYwrwcH3V-2gj0X8UM6ioDpklp4dobTZ_ydx50IiKav88m1vgQvF-8JJB3j6mt_T-uJSnAdV6UZoSJqw6zx_KLM5_5QsboIC"/>
+<div class="absolute top-2 right-2 bg-inverse-surface/80 backdrop-blur-sm text-inverse-on-surface font-label-xs text-label-xs px-2 py-0.5 rounded-full flex items-center shadow-sm">
+<div class="w-1.5 h-1.5 bg-primary-fixed rounded-full mr-1.5"></div>
+                            用于 3 条内容
+                        </div>
+</div>
+<div class="p-3 flex-1 flex flex-col justify-between z-10 relative">
+<p class="font-body-sm text-body-sm font-medium text-on-surface truncate" title="marketing_bib_01.jpg">marketing_bib_01.jpg</p>
+<div class="flex flex-wrap gap-1 mt-2">
+<span class="px-1.5 py-0.5 bg-surface-container-low border border-surface-variant text-on-surface-variant font-label-xs text-label-xs rounded">poster</span>
+<span class="px-1.5 py-0.5 bg-surface-container-low border border-surface-variant text-on-surface-variant font-label-xs text-label-xs rounded">zh</span>
+<span class="px-1.5 py-0.5 bg-surface-container-low border border-surface-variant text-on-surface-variant font-label-xs text-label-xs rounded">pattern-bib</span>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="group bg-surface-container-lowest border border-surface-variant hover:border-outline-variant hover:bg-surface-bright rounded-lg overflow-hidden flex flex-col cursor-pointer transition-colors">
+<div class="h-40 w-full overflow-hidden border-b border-surface-variant relative">
+<img alt="size_guide_long.png" class="w-full h-full object-contain bg-surface-container-low p-4" data-alt="A detailed, clean, vector-style diagram serving as a dog measuring guide. It shows a simplified illustration of a dog silhouette with clear dimension lines indicating neck, chest, and back length. The design is utilitarian, utilizing a minimal warm neutral color palette aligned with a professional tool aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgBABEf47XJqODfCbAe6HM5C4BHMT-mj4DuAr7fGGHXfjTDNSXu0zyrpzgaavAS_ddIa5zAz_dVCWGO2CTCI_VMxQQBuOKJcrr5MWGUcylWUJLyA9-ev0J45Psc2R82N2TbzeldMJmz6Tnvym3e7Sm6X7CY1b-6MfQ60holX20g5h5np2RFdxTd2pS9hZlBYABEfORZqE2lSUeRKLd9-DHwY3lznG5H1nSKRWRq3RQkcbTqJGgM-H-"/>
+</div>
+<div class="p-3 flex-1 flex flex-col justify-between">
+<p class="font-body-sm text-body-sm font-medium text-on-surface truncate" title="size_guide_long.png">size_guide_long.png</p>
+<div class="flex flex-wrap gap-1 mt-2">
+<span class="px-1.5 py-0.5 bg-surface-container-low border border-surface-variant text-on-surface-variant font-label-xs text-label-xs rounded">guide</span>
+<span class="px-1.5 py-0.5 bg-surface-container-low border border-surface-variant text-on-surface-variant font-label-xs text-label-xs rounded">en</span>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="group bg-surface-container-lowest border border-surface-variant hover:border-outline-variant hover:bg-surface-bright rounded-lg overflow-hidden flex flex-col cursor-pointer transition-colors">
+<div class="h-40 w-full overflow-hidden border-b border-surface-variant relative">
+<img alt="winter_collection_hero.jpg" class="w-full h-full object-cover" data-alt="A bright, aesthetic lifestyle photograph of a small terrier mix dog wearing a knitted yellow sweater. The dog is sitting on a modern minimalist rug in a well-lit living room with subtle sunlight streaming in. The mood is calm and inviting, perfect for high-end pet brand marketing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyquF7dBzw3Z9JIAIIX6S9MhyBnDXYmnK3HBefhjGcuXdtfXPq__w2ZPd2cCjPRWCTbLLuy8wLJyjaqcXm16WISyI5YpznOfZpE00BvhtAbB7_psant9H3EdLVO3nVzZkOtGN8XD6wLpxwNQA9iE0hXVmGyoyKqaDA_A6quRz-JEQMOJigq-I5QBkxEGxPFkPBEV7tfNrDkrouhKpjiOhdmw0dKhNelhkSz3kV7ldNQtWjyZ-OQ7G3"/>
+<div class="absolute top-2 right-2 bg-inverse-surface/80 backdrop-blur-sm text-inverse-on-surface font-label-xs text-label-xs px-2 py-0.5 rounded-full flex items-center shadow-sm">
+<div class="w-1.5 h-1.5 bg-primary-fixed rounded-full mr-1.5"></div>
+                            用于 1 条内容
+                        </div>
+</div>
+<div class="p-3 flex-1 flex flex-col justify-between">
+<p class="font-body-sm text-body-sm font-medium text-on-surface truncate" title="winter_collection_hero.jpg">winter_collection_hero.jpg</p>
+<div class="flex flex-wrap gap-1 mt-2">
+<span class="px-1.5 py-0.5 bg-surface-container-low border border-surface-variant text-on-surface-variant font-label-xs text-label-xs rounded">campaign</span>
+<span class="px-1.5 py-0.5 bg-surface-container-low border border-surface-variant text-on-surface-variant font-label-xs text-label-xs rounded">sweater</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Inspector Panel (Right) -->
+<aside class="w-[360px] bg-surface-container-lowest border-l border-surface-variant flex flex-col overflow-y-auto z-10 shrink-0">
+<div class="p-inner_padding border-b border-surface-variant flex items-center justify-between sticky top-0 bg-surface-container-lowest/90 backdrop-blur-sm">
+<h3 class="font-h3 text-h3 text-on-surface">Image Details</h3>
+<button class="text-on-secondary-container hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="flex-1 p-inner_padding space-y-6">
+<!-- Large Preview -->
+<div class="rounded-lg overflow-hidden border border-surface-variant bg-surface-container-low aspect-video flex items-center justify-center">
+<img alt="Selected Preview" class="max-w-full max-h-full object-contain" data-alt="A high-quality, brightly lit marketing poster featuring a cute golden retriever dog wearing a stylish patterned bandana bib. The background is a clean studio setting with soft pastel colors. The style is modern, professional pet apparel photography intended for e-commerce, with a calm and trustworthy aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYgGiFlorTEPrT99kFDYczxIqNsj6AKQxAKfdQ5bOP3K8wvDTL9AL-X1D6me6e_92U5b8OELIT703Zvrrd8uK-VT5EtW1uSYR3_Ta608816sLxRN14NGEboLBPjeWLorY03RjTH0WHCNMVqELz4c5hCcxTTJtq5y5bioSvJLubtr3UXphEG1ymO6aUQ0hmuGYX73BRExQOSyqMnbJmTaBP3NZcsZr_cT7730ptxFKiY7IYwzlIQ8kb"/>
+</div>
+<!-- Meta Info -->
+<div>
+<h4 class="font-body-base text-body-base font-semibold text-on-surface mb-2 truncate">marketing_bib_01.jpg</h4>
+<div class="grid grid-cols-2 gap-y-2 text-body-sm font-body-sm">
+<div class="text-on-secondary-container">Type</div>
+<div class="text-on-surface text-right">JPEG Image</div>
+<div class="text-on-secondary-container">Dimensions</div>
+<div class="text-on-surface text-right">2400 x 3600 px</div>
+<div class="text-on-secondary-container">Size</div>
+<div class="text-on-surface text-right">1.2 MB</div>
+<div class="text-on-secondary-container">Added</div>
+<div class="text-on-surface text-right">Oct 12, 2023</div>
+</div>
+</div>
+<!-- Linked Content -->
+<div>
+<div class="flex items-center justify-between mb-3">
+<h4 class="font-body-sm text-body-sm font-semibold text-on-surface uppercase tracking-wider text-outline">Linked Content</h4>
+<span class="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded font-mono text-mono text-[11px]">3</span>
+</div>
+<ul class="space-y-2">
+<li class="flex items-start gap-2 p-2 hover:bg-surface-container-low rounded-DEFAULT cursor-pointer group border border-transparent hover:border-surface-variant transition-all">
+<span class="material-symbols-outlined text-[16px] text-primary mt-0.5">article</span>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">01 Triangle bandana bib · 小红书成稿</p>
+<p class="font-label-xs text-label-xs text-on-secondary-container mt-0.5">Social Post · Scheduled</p>
+</div>
+</li>
+<li class="flex items-start gap-2 p-2 hover:bg-surface-container-low rounded-DEFAULT cursor-pointer group border border-transparent hover:border-surface-variant transition-all">
+<span class="material-symbols-outlined text-[16px] text-tertiary mt-0.5">shopping_bag</span>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Autumn Collection - Product Page</p>
+<p class="font-label-xs text-label-xs text-on-secondary-container mt-0.5">E-commerce · Live</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<!-- Actions -->
+<div class="p-inner_padding border-t border-surface-variant bg-surface-container-lowest sticky bottom-0 space-y-2">
+<button class="w-full h-8 flex items-center justify-center gap-2 bg-surface-container-lowest border border-surface-variant text-on-surface font-body-sm rounded-DEFAULT hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px]">folder_open</span>
+                    [在文件夹中显示]
+                </button>
+<div class="flex gap-2">
+<button class="flex-1 h-8 flex items-center justify-center gap-1.5 bg-surface-container-lowest border border-surface-variant text-on-surface font-body-sm rounded-DEFAULT hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px]">link</span>
+                        [复制路径]
+                    </button>
+<button class="flex-1 h-8 flex items-center justify-center gap-1.5 bg-surface-container-lowest border border-surface-variant text-on-surface font-body-sm rounded-DEFAULT hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+                        [复制到剪贴板]
+                    </button>
+</div>
+</div>
+</aside>
+</main>
+</body></html>

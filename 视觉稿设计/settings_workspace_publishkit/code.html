@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - Workspace | PublishKit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#fbf9f4",
+                        "inverse-on-surface": "#f2f1eb",
+                        "on-tertiary-container": "#0f305a",
+                        "on-secondary-fixed": "#1c1c18",
+                        "surface-bright": "#fbf9f4",
+                        "surface-container-highest": "#e4e2dd",
+                        "surface-container-low": "#f5f4ee",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#001b3c",
+                        "on-primary-fixed": "#271900",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#1b1c19",
+                        "tertiary-container": "#7d99c9",
+                        "on-tertiary-fixed-variant": "#2a4772",
+                        "surface-variant": "#e4e2dd",
+                        "secondary": "#5f5e59",
+                        "outline-variant": "#d1c5b3",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e9e8e3",
+                        "primary": "#795916",
+                        "tertiary": "#435f8b",
+                        "surface": "#fbf9f4",
+                        "surface-dim": "#dbdad5",
+                        "outline": "#807667",
+                        "surface-tint": "#795916",
+                        "tertiary-fixed": "#d6e3ff",
+                        "primary-container": "#b8924a",
+                        "on-primary-fixed-variant": "#5e4200",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#412c00",
+                        "secondary-fixed-dim": "#c9c6c0",
+                        "on-surface-variant": "#4e4638",
+                        "inverse-surface": "#30312d",
+                        "inverse-primary": "#ebc073",
+                        "secondary-fixed": "#e5e2db",
+                        "primary-fixed-dim": "#ebc073",
+                        "secondary-container": "#e5e2db",
+                        "primary-fixed": "#ffdea7",
+                        "surface-container": "#efeee8",
+                        "on-secondary-container": "#65645f",
+                        "tertiary-fixed-dim": "#abc8fa",
+                        "error-container": "#ffdad6",
+                        "on-background": "#1b1c19",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#474742"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "element_gap": "12px",
+                        "inner_padding": "16px",
+                        "baseline": "4px",
+                        "sidebar_width": "220px",
+                        "container_gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-xs": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "h2": ["Inter"],
+                        "body-base": ["Inter"],
+                        "mono": ["Inter"],
+                        "h3": ["Inter"],
+                        "h1": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-xs": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-base": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "h3": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen antialiased flex flex-col overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-[220px] h-14 border-b border-surface-variant bg-surface flex justify-between items-center px-container_gutter z-20">
+<div class="flex items-center gap-6 h-full">
+<span class="font-h3 text-h3 font-bold text-on-surface">PublishKit</span>
+<nav class="hidden md:flex h-full gap-6">
+<a class="flex items-center h-full text-on-secondary-container font-medium hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="flex items-center h-full text-on-secondary-container font-medium hover:text-primary transition-colors" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-on-secondary-container">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span></button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors"><span class="material-symbols-outlined text-[20px]">help_outline</span></button>
+</div>
+<button class="px-4 py-2 border border-surface-variant rounded text-body-sm font-body-sm text-on-surface bg-surface-container-lowest hover:bg-surface-container-low transition-colors">Filters</button>
+<button class="px-4 py-2 bg-primary-container text-on-primary rounded text-body-sm font-body-sm hover:opacity-90 transition-opacity">Create New</button>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-outline-variant">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A close up professional headshot of a user against a neutral grey background. The lighting is soft and even, highlighting a friendly expression. The aesthetic is clean and modern, suitable for a professional software application profile picture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQW51rfkaIutm-VQPv_HXXPGrWX_ExzDVahvfmVfQiDJMSGmCDMBzisivvd96c0pdPz-YNVTHPGzKbhThS14NJic6sNMjH8_ichv9vSbNWSAUXzav1oo9nGpoI_D9fvlnt9m3zvfcZ-lrE2WLUglTI3Ed6Gwxb2sc7iKCxt2AlaZTuZ2_rKmR-_zYP_7epbrfSQGAvsu4fiOh3_X8gab8qhzzCoITjXQB7vIb_Quu3iq0Fvzd30wBZ"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[220px] bg-surface-container-low border-r border-surface-variant flex flex-col py-inner_padding z-30">
+<div class="px-4 mb-8 flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-container text-on-primary flex items-center justify-center font-bold">PR</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-surface leading-tight">PongRabbit Studio</h2>
+<p class="font-label-xs text-label-xs text-on-secondary-container">Project Switcher</p>
+</div>
+</div>
+<div class="px-4 mb-6">
+<button class="w-full py-2 bg-primary-container text-on-primary rounded text-body-sm font-body-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Create New
+            </button>
+</div>
+<nav class="flex-1 flex flex-col gap-1 font-body-base text-body-base">
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 gap-3" href="#">
+<span class="material-symbols-outlined text-[20px]">today</span> Today
+            </a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 gap-3" href="#">
+<span class="material-symbols-outlined text-[20px]">article</span> Content
+            </a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 gap-3" href="#">
+<span class="material-symbols-outlined text-[20px]">image</span> Media
+            </a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 gap-3" href="#">
+<span class="material-symbols-outlined text-[20px]">assignment</span> Tasks
+            </a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 gap-3" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span> Calendar
+            </a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 gap-3" href="#">
+<span class="material-symbols-outlined text-[20px]">source</span> Sources
+            </a>
+<a class="flex items-center h-8 px-4 text-on-surface font-semibold border-l-2 border-primary bg-surface-container-highest cursor-pointer active:opacity-80 gap-3 ml-[-1px]" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">settings</span> Settings
+            </a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-[220px] mt-14 flex-1 h-[calc(100vh-56px)] overflow-y-auto bg-background">
+<div class="max-w-[800px] mx-auto p-container_gutter py-8">
+<header class="mb-8">
+<h1 class="font-h1 text-h1 text-on-surface mb-2">Workspace Settings</h1>
+<p class="font-body-base text-body-base text-on-surface-variant">Manage directories, connections, and system preferences for this workspace.</p>
+</header>
+<div class="flex flex-col gap-8">
+<!-- Section 1: Copy Directory -->
+<section class="bg-surface-container-lowest border border-surface-variant rounded-lg p-6 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">文案目录 (Copy Directory)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Local directory for syncing textual content and drafts.</p>
+</div>
+<button class="px-3 py-1.5 border border-surface-variant rounded text-body-sm font-body-sm text-on-surface hover:bg-surface-container-low transition-colors">更改 (Change)</button>
+</div>
+<div class="bg-surface-container-low border border-surface-variant rounded p-3 flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">folder</span>
+<code class="font-mono text-mono text-on-surface flex-1 truncate">C:\Users\Admin\Documents\PublishKit\Copy</code>
+</div>
+<div class="text-label-xs font-label-xs text-on-secondary-container flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">sync</span> Last scanned: Just now
+                    </div>
+</section>
+<!-- Section 2: Image Directories -->
+<section class="bg-surface-container-lowest border border-surface-variant rounded-lg p-6 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">图片目录 (Image Directories)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Monitored folders for image assets and marketing materials.</p>
+</div>
+<button class="px-3 py-1.5 bg-surface-container-low border border-surface-variant rounded text-body-sm font-body-sm text-on-surface hover:bg-surface-container-highest transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">add</span> Add Path
+                        </button>
+</div>
+<div class="flex flex-col gap-2">
+<div class="bg-surface-container-low border border-surface-variant rounded p-3 flex items-center gap-3 group">
+<span class="material-symbols-outlined text-outline">image</span>
+<code class="font-mono text-mono text-on-surface flex-1 truncate">D:\Assets\Marketing</code>
+<button class="text-on-secondary-container hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+<div class="bg-surface-container-low border border-surface-variant rounded p-3 flex items-center gap-3 group">
+<span class="material-symbols-outlined text-outline">photo_library</span>
+<code class="font-mono text-mono text-on-surface flex-1 truncate">E:\Photos\Products</code>
+<button class="text-on-secondary-container hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+</div>
+</section>
+<!-- Section 3: Browser Extension -->
+<section class="bg-surface-container-lowest border border-surface-variant rounded-lg p-6 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">浏览器插件 (Browser Extension)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Manage connection with the PublishKit Chrome extension.</p>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface text-label-xs font-label-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                            已连接 (Connected)
+                        </span>
+</div>
+<div class="flex items-center justify-between border-t border-surface-variant pt-4 mt-2">
+<div>
+<p class="text-label-xs font-label-xs text-on-secondary-container uppercase mb-1">Pairing Code</p>
+<code class="font-mono text-h2 font-h2 text-on-surface tracking-wider bg-surface-container-low px-2 py-1 rounded">ABCD-1234</code>
+</div>
+<button class="px-4 py-2 border border-surface-variant rounded text-body-sm font-body-sm text-on-surface hover:bg-surface-container-low transition-colors">重新配对 (Re-pair)</button>
+</div>
+</section>
+<!-- Section 4: Backup -->
+<section class="bg-surface-container-lowest border border-surface-variant rounded-lg p-6 flex flex-col gap-4">
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">备份 (Backup)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Secure your workspace data or restore from a previous state.</p>
+</div>
+<div class="flex gap-4 pt-2">
+<button class="px-4 py-2 border border-surface-variant rounded text-body-sm font-body-sm text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span> 导出数据库 (Export Database)
+                        </button>
+<button class="px-4 py-2 border border-surface-variant rounded text-body-sm font-body-sm text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">restore</span> 从备份恢复 (Restore from Backup)
+                        </button>
+</div>
+</section>
+<!-- Section 5: License -->
+<section class="bg-surface-container-lowest border border-surface-variant rounded-lg p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">许可证 (License)</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Current Plan:</span>
+<span class="font-mono text-mono bg-surface-container-high px-1.5 py-0.5 rounded text-on-surface">Free Plan</span>
+</div>
+</div>
+<button class="px-4 py-2 bg-primary-container text-on-primary rounded text-body-sm font-body-sm hover:opacity-90 transition-opacity">Upgrade to Pro</button>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>

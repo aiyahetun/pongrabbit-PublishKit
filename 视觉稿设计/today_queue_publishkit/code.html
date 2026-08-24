@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html lang="zh"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Today Queue - PublishKit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#474742",
+                      "secondary-container": "#e5e2db",
+                      "on-tertiary-container": "#0f305a",
+                      "primary-container": "#b8924a",
+                      "tertiary-fixed-dim": "#abc8fa",
+                      "tertiary-fixed": "#d6e3ff",
+                      "outline-variant": "#d1c5b3",
+                      "surface-dim": "#dbdad5",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#5e4200",
+                      "on-tertiary": "#ffffff",
+                      "inverse-surface": "#30312d",
+                      "tertiary": "#435f8b",
+                      "on-error-container": "#93000a",
+                      "surface-container-lowest": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface-container": "#efeee8",
+                      "on-secondary-fixed": "#1c1c18",
+                      "on-primary-container": "#412c00",
+                      "surface-tint": "#795916",
+                      "tertiary-container": "#7d99c9",
+                      "secondary-fixed": "#e5e2db",
+                      "error-container": "#ffdad6",
+                      "surface-container-low": "#f5f4ee",
+                      "surface": "#fbf9f4",
+                      "secondary-fixed-dim": "#c9c6c0",
+                      "primary": "#795916",
+                      "on-tertiary-fixed": "#001b3c",
+                      "inverse-primary": "#ebc073",
+                      "background": "#fbf9f4",
+                      "primary-fixed-dim": "#ebc073",
+                      "on-surface-variant": "#4e4638",
+                      "outline": "#807667",
+                      "surface-bright": "#fbf9f4",
+                      "primary-fixed": "#ffdea7",
+                      "on-background": "#1b1c19",
+                      "surface-variant": "#e4e2dd",
+                      "on-primary": "#ffffff",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-surface": "#1b1c19",
+                      "on-tertiary-fixed-variant": "#2a4772",
+                      "surface-container-high": "#e9e8e3",
+                      "inverse-on-surface": "#f2f1eb",
+                      "secondary": "#5f5e59",
+                      "on-primary-fixed": "#271900",
+                      "on-error": "#ffffff",
+                      "on-secondary-container": "#65645f"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container_gutter": "24px",
+                      "inner_padding": "16px",
+                      "element_gap": "12px",
+                      "sidebar_width": "220px",
+                      "baseline": "4px"
+              },
+              "fontFamily": {
+                      "mono": [
+                              "Inter"
+                      ],
+                      "h1": [
+                              "Inter"
+                      ],
+                      "body-base": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "h3": [
+                              "Inter"
+                      ],
+                      "label-xs": [
+                              "Inter"
+                      ],
+                      "h2": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "h1": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-base": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "h3": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-xs": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "h2": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    </style>
+</head>
+<body class="bg-surface-container-low text-on-surface h-screen overflow-hidden flex font-body-base">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-[220px] bg-surface-container-low border-r border-surface-variant flex flex-col py-inner_padding z-10">
+<div class="px-4 mb-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-variant rounded-md flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-surface text-sm" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-surface leading-tight">PongRabbit Studio</h2>
+<p class="font-label-xs text-label-xs text-on-secondary-container">Project Switcher</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1 px-2 flex-grow">
+<!-- Active Tab: Today -->
+<a class="flex items-center h-8 px-4 text-on-surface font-semibold border-l-2 border-primary bg-surface-container-highest rounded-r-md" href="#">
+<span class="material-symbols-outlined mr-3 text-lg" data-icon="today">today</span>
+<span class="font-body-sm text-body-sm">Today</span>
+</a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 rounded-r-md" href="#">
+<span class="material-symbols-outlined mr-3 text-lg" data-icon="article">article</span>
+<span class="font-body-sm text-body-sm">Content</span>
+</a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 rounded-r-md" href="#">
+<span class="material-symbols-outlined mr-3 text-lg" data-icon="image">image</span>
+<span class="font-body-sm text-body-sm">Media</span>
+</a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 rounded-r-md" href="#">
+<span class="material-symbols-outlined mr-3 text-lg" data-icon="assignment">assignment</span>
+<span class="font-body-sm text-body-sm">Tasks</span>
+</a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 rounded-r-md" href="#">
+<span class="material-symbols-outlined mr-3 text-lg" data-icon="calendar_month">calendar_month</span>
+<span class="font-body-sm text-body-sm">Calendar</span>
+</a>
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 rounded-r-md" href="#">
+<span class="material-symbols-outlined mr-3 text-lg" data-icon="source">source</span>
+<span class="font-body-sm text-body-sm">Sources</span>
+</a>
+<div class="mt-auto">
+<a class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 rounded-r-md" href="#">
+<span class="material-symbols-outlined mr-3 text-lg" data-icon="settings">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</a>
+</div>
+</div>
+</nav>
+<!-- Main Workspace -->
+<main class="ml-[220px] flex-1 flex flex-col h-full bg-background relative z-0">
+<!-- TopNavBar -->
+<header class="h-14 border-b border-surface-variant bg-surface flex justify-between items-center px-container_gutter shrink-0">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-2 top-1.5 text-on-secondary-container text-[18px]" data-icon="search">search</span>
+<input class="w-full h-8 pl-8 pr-3 bg-surface-container-low border border-surface-variant rounded-md font-body-sm text-body-sm focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 transition-all" placeholder="Search tasks..." type="text"/>
+</div>
+<!-- Filter Chips -->
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1 h-7 px-3 bg-surface-container-low border border-surface-variant rounded-full font-label-xs text-label-xs text-on-surface-variant hover:bg-surface-container-high">
+                        渠道 <span class="material-symbols-outlined text-[14px]" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</button>
+<button class="flex items-center gap-1 h-7 px-3 bg-surface-container-low border border-surface-variant rounded-full font-label-xs text-label-xs text-on-surface-variant hover:bg-surface-container-high">
+                        语言 <span class="material-symbols-outlined text-[14px]" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</button>
+<button class="flex items-center gap-1 h-7 px-3 bg-surface-container-low border border-surface-variant rounded-full font-label-xs text-label-xs text-on-surface-variant hover:bg-surface-container-high">
+                        状态 <span class="material-symbols-outlined text-[14px]" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-8 h-8 flex items-center justify-center text-on-secondary-container hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant overflow-hidden shrink-0">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A minimal, flat-design abstract avatar for a user profile in a calm light-mode interface. The avatar uses geometric shapes and warm paper-like tones, fitting a professional productivity app aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU2g0T65b63wf1yEReiXVVFZZImLJ47kpYW7jtzL3bDI_VdRAk2YorJjcc2xu--RWaLTgGv09VBNnXPQ7i1TtyHapaGGdTKGMS5SWrBaCE4fqrGJIe0gdOplzVdmxCFNONc4FHi3hQMBDuqFeSqJXdoKH8BIYUmu753S9cblxRgWJM8SplecNJJ9cxbu11pxE9lvwWU1LTOjwwqmy95AsZHdKOBgqiDx0ITkj3QzEnakfivVLMIj7D"/>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="flex-1 overflow-y-auto">
+<div class="max-w-[1440px] mx-auto p-8 grid grid-cols-12 gap-8">
+<!-- Left Column (Main Content) -->
+<div class="col-span-9 flex flex-col gap-10">
+<!-- Header -->
+<div>
+<h1 class="font-h1 text-h1 text-on-surface mb-1">今天</h1>
+<p class="font-body-base text-body-base text-on-surface-variant flex items-center gap-2">
+<span>3 tasks ready</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="text-error">1 overdue</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[16px]" data-icon="computer">computer</span> Desktop connected
+                            </span>
+</p>
+</div>
+<!-- Section 1: Suggested First -->
+<section>
+<h2 class="font-h3 text-h3 text-on-surface mb-4">建议先发</h2>
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-variant bg-surface-container-low">
+<th class="py-2 px-4 font-label-xs text-label-xs text-outline uppercase font-semibold">内容</th>
+<th class="py-2 px-4 font-label-xs text-label-xs text-outline uppercase font-semibold w-24">渠道</th>
+<th class="py-2 px-4 font-label-xs text-label-xs text-outline uppercase font-semibold w-20">语言</th>
+<th class="py-2 px-4 font-label-xs text-label-xs text-outline uppercase font-semibold w-28">状态</th>
+<th class="py-2 px-4 font-label-xs text-label-xs text-outline uppercase font-semibold text-right w-32">操作</th>
+</tr>
+</thead>
+<tbody>
+<!-- Row 1: Hover State -->
+<tr class="border-b border-surface-variant bg-surface-container-low transition-colors cursor-default group">
+<td class="py-3 px-4 font-body-sm text-body-sm text-on-surface font-medium">01 三角口水巾 · 小红书成稿</td>
+<td class="py-3 px-4 font-body-sm text-body-sm text-on-surface-variant">小红书</td>
+<td class="py-3 px-4 font-mono text-mono text-on-surface-variant">ZH</td>
+<td class="py-3 px-4">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e8e3e]/10 text-[#1e8e3e] font-label-xs text-label-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1e8e3e]"></span>
+                                                ready
+                                            </div>
+</td>
+<td class="py-3 px-4 text-right">
+<button class="h-7 px-3 bg-primary-container text-on-primary rounded font-label-xs text-label-xs transition-opacity hover:opacity-90">
+                                                准备发布
+                                            </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors cursor-default">
+<td class="py-3 px-4 font-body-sm text-body-sm text-on-surface">How to measure a dog</td>
+<td class="py-3 px-4 font-body-sm text-body-sm text-on-surface-variant">Instagram</td>
+<td class="py-3 px-4 font-mono text-mono text-on-surface-variant">EN</td>
+<td class="py-3 px-4">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#1e8e3e]/10 text-[#1e8e3e] font-label-xs text-label-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1e8e3e]"></span>
+                                                ready
+                                            </div>
+</td>
+<td class="py-3 px-4 text-right">
+<button class="h-7 px-3 bg-primary-container text-on-primary rounded font-label-xs text-label-xs transition-opacity hover:opacity-90">
+                                                准备发布
+                                            </button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors cursor-default opacity-70">
+<td class="py-3 px-4 font-body-sm text-body-sm text-on-surface">Product Hunt launch tagline</td>
+<td class="py-3 px-4 font-body-sm text-body-sm text-on-surface-variant">Product Hunt</td>
+<td class="py-3 px-4 font-mono text-mono text-on-surface-variant">EN</td>
+<td class="py-3 px-4">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-error/10 text-error font-label-xs text-label-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                                                blocked
+                                            </div>
+</td>
+<td class="py-3 px-4 text-right">
+<span class="font-label-xs text-label-xs text-error-container bg-error px-2 py-1 rounded">缺封面图</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section 2: Scheduled -->
+<section>
+<h2 class="font-h3 text-h3 text-on-surface mb-4">已排期</h2>
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg p-2 space-y-1">
+<div class="flex items-center justify-between p-2 hover:bg-surface-container-low rounded-md transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 text-center font-label-xs text-label-xs text-on-surface-variant bg-surface-container px-1 py-1 rounded">
+<div class="font-semibold text-on-surface">14:00</div>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface">Summer Sale Announcement</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Twitter</span>
+</div>
+<div class="flex items-center justify-between p-2 hover:bg-surface-container-low rounded-md transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 text-center font-label-xs text-label-xs text-on-surface-variant bg-surface-container px-1 py-1 rounded">
+<div class="font-semibold text-on-surface">16:30</div>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface">New Feature Teaser Video</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">LinkedIn</span>
+</div>
+</div>
+</section>
+<!-- Section 3: Recently Published -->
+<section>
+<h2 class="font-h3 text-h3 text-on-surface mb-4">最近已发布</h2>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-3 bg-surface-container-lowest border border-surface-variant rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-[#1e8e3e]/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[#1e8e3e] text-[18px]" data-icon="check_circle">check_circle</span>
+</div>
+<div>
+<div class="font-body-sm text-body-sm text-on-surface font-medium">Q3 Wrap-up Blog Post</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Medium · Published 2h ago</div>
+</div>
+</div>
+<button class="w-8 h-8 flex items-center justify-center text-on-secondary-container hover:bg-surface-container-highest rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column (Status) -->
+<div class="col-span-3">
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 flex items-start gap-3">
+<div class="mt-0.5">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+</span>
+</div>
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">插件已连接</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">PublishKit desktop extension is active and syncing.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

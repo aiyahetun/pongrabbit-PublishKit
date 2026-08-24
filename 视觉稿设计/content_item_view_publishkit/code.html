@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PublishKit - Content Detail</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e4e2dd",
+                        "surface-tint": "#795916",
+                        "on-surface-variant": "#4e4638",
+                        "primary": "#795916",
+                        "tertiary": "#435f8b",
+                        "surface-dim": "#dbdad5",
+                        "on-secondary-container": "#65645f",
+                        "primary-fixed-dim": "#ebc073",
+                        "primary-container": "#b8924a",
+                        "secondary": "#5f5e59",
+                        "on-background": "#1b1c19",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#412c00",
+                        "inverse-on-surface": "#f2f1eb",
+                        "surface-container": "#efeee8",
+                        "surface-bright": "#fbf9f4",
+                        "on-tertiary-fixed": "#001b3c",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#e4e2dd",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#2a4772",
+                        "on-surface": "#1b1c19",
+                        "on-secondary-fixed-variant": "#474742",
+                        "surface": "#fbf9f4",
+                        "secondary-container": "#e5e2db",
+                        "primary-fixed": "#ffdea7",
+                        "surface-container-high": "#e9e8e3",
+                        "tertiary-container": "#7d99c9",
+                        "tertiary-fixed": "#d6e3ff",
+                        "on-primary-fixed-variant": "#5e4200",
+                        "outline": "#807667",
+                        "inverse-primary": "#ebc073",
+                        "secondary-fixed-dim": "#c9c6c0",
+                        "tertiary-fixed-dim": "#abc8fa",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#30312d",
+                        "secondary-fixed": "#e5e2db",
+                        "on-secondary-fixed": "#1c1c18",
+                        "outline-variant": "#d1c5b3",
+                        "on-primary-fixed": "#271900",
+                        "background": "#fbf9f4",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#0f305a",
+                        "surface-container-low": "#f5f4ee"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "element_gap": "12px",
+                        "baseline": "4px",
+                        "container_gutter": "24px",
+                        "sidebar_width": "220px",
+                        "inner_padding": "16px"
+                    },
+                    "fontFamily": {
+                        "mono": ["Inter"],
+                        "label-xs": ["Inter"],
+                        "h2": ["Inter"],
+                        "h1": ["Inter"],
+                        "body-base": ["Inter"],
+                        "h3": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "mono": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-xs": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-base": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "h3": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface h-screen w-full flex overflow-hidden">
+<!-- Shared Component: SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[220px] bg-surface-container-low border-r border-surface-variant flex flex-col py-inner_padding">
+<!-- Header -->
+<div class="px-4 mb-8 flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex-shrink-0 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small, minimalist studio logo icon featuring a stylized rabbit silhouette in flat warm gray tones on a soft white background. Modern tech startup aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATnK0NsIKAfNzznPa1nv_Ah_uyYCCVgqQf_XgYcO_gp2V3EklAXW5q6lh_QX5aCEoeIo4JDdQf85fKIbp4bZ9xHnfyadfVTRvHVd4C9Pn5TyEwZ3cQ_2hyNeERaXstlpzXBVfdg_Mv5XKJ7gOSlhQtObUJvejftUzoTuGMN9Bno4F55nem99QpIhLUiSaV2ILhpSkLFcMiGmUne810ywxvIoIj_D7Vvq19fgnnvdj87ontSLO6tduz"/>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-surface">PongRabbit Studio</h2>
+<p class="font-label-xs text-label-xs text-on-surface-variant">Project Switcher</p>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<nav class="flex flex-col gap-1 flex-1">
+<!-- Inactive -->
+<div class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mr-3 text-[18px]">today</span>
+<span class="font-body-base text-body-base">Today</span>
+</div>
+<!-- Active -->
+<div class="flex items-center h-8 px-4 text-on-surface font-semibold border-l-2 border-primary bg-surface-container-highest cursor-pointer active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mr-3 text-[18px]" style="font-variation-settings: 'FILL' 1;">article</span>
+<span class="font-body-base text-body-base">Content</span>
+</div>
+<!-- Inactive -->
+<div class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mr-3 text-[18px]">image</span>
+<span class="font-body-base text-body-base">Media</span>
+</div>
+<div class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mr-3 text-[18px]">assignment</span>
+<span class="font-body-base text-body-base">Tasks</span>
+</div>
+<div class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mr-3 text-[18px]">calendar_month</span>
+<span class="font-body-base text-body-base">Calendar</span>
+</div>
+<div class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mr-3 text-[18px]">source</span>
+<span class="font-body-base text-body-base">Sources</span>
+</div>
+</nav>
+<div class="mt-auto flex flex-col gap-1">
+<div class="flex items-center h-8 px-4 text-on-secondary-container hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mr-3 text-[18px]">settings</span>
+<span class="font-body-base text-body-base">Settings</span>
+</div>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="ml-[220px] flex w-[calc(100%-220px)] h-full">
+<!-- Content List Column (30%) -->
+<section class="w-[30%] min-w-[320px] border-r border-surface-variant flex flex-col bg-surface flex-shrink-0">
+<div class="h-14 border-b border-surface-variant flex items-center px-4 justify-between shrink-0">
+<h1 class="font-h3 text-h3 text-on-surface">Content</h1>
+<button class="w-8 h-8 rounded hover:bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+<!-- Selected Item -->
+<div class="p-3 rounded bg-surface-container-highest border border-surface-variant cursor-pointer">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Folder / Apparel</span>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-label-xs text-[10px] bg-tertiary-fixed text-tertiary">
+<span class="w-1 h-1 rounded-full bg-tertiary"></span>Ready
+                        </span>
+</div>
+<h3 class="font-body-base text-body-base font-semibold text-on-surface mb-2">01 Triangle bandana bib</h3>
+<div class="flex gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">public</span>
+<span class="material-symbols-outlined text-[14px]">smartphone</span>
+</div>
+</div>
+<!-- Unselected Item -->
+<div class="p-3 rounded hover:bg-surface-container-high border border-transparent cursor-pointer transition-colors">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Folder / Accessories</span>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-label-xs text-[10px] bg-surface-container-highest text-on-surface-variant">
+                            Draft
+                        </span>
+</div>
+<h3 class="font-body-base text-body-base text-on-surface mb-2">02 Organic cotton onesie</h3>
+<div class="flex gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">public</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Inspector Panel Column (70%) -->
+<section class="flex-1 flex bg-surface-lowest">
+<!-- Main Editor Area -->
+<div class="flex-1 flex flex-col min-w-0">
+<!-- Toolbar Header -->
+<header class="h-16 border-b border-surface-variant flex items-center justify-between px-6 shrink-0 bg-surface">
+<div class="flex items-center gap-4">
+<h2 class="font-h2 text-h2 text-on-surface truncate">01 Triangle bandana bib</h2>
+<!-- Status Badge -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-xs text-label-xs bg-[#e5f5e0] text-[#2e7d32]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2e7d32]"></span>Ready
+                        </span>
+<!-- Channels Multi-select simulation -->
+<div class="h-6 w-px bg-surface-variant mx-2"></div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="w-7 h-7 rounded hover:bg-surface-container-highest flex items-center justify-center bg-surface-container-highest text-on-surface"><span class="material-symbols-outlined text-[16px]">public</span></button>
+<button class="w-7 h-7 rounded hover:bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-[16px]">smartphone</span></button>
+<button class="w-7 h-7 rounded hover:bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-[16px]">mail</span></button>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<!-- Language Toggle -->
+<div class="flex bg-surface-container-low rounded border border-surface-variant p-0.5">
+<button class="px-3 py-1 font-label-xs text-label-xs rounded bg-surface border border-surface-variant shadow-sm text-on-surface">ZH</button>
+<button class="px-3 py-1 font-label-xs text-label-xs rounded text-on-surface-variant hover:text-on-surface">EN</button>
+</div>
+<!-- Primary Action -->
+<button class="bg-primary-container text-on-primary font-label-xs text-label-xs h-9 px-4 rounded hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">publish</span>
+                            Mark Published
+                        </button>
+</div>
+</header>
+<!-- Markdown Content Canvas -->
+<div class="flex-1 overflow-y-auto p-8 max-w-4xl mx-auto w-full">
+<div class="prose prose-sm max-w-none font-mono text-mono text-on-surface-variant leading-relaxed">
+<h1 class="font-h1 text-h1 text-on-surface mb-6 border-b border-surface-variant pb-2">01 Triangle bandana bib</h1>
+<p class="mb-4">This premium triangle bandana bib is designed for both style and utility. Crafted from 100% organic cotton, it provides maximum absorbency during feeding times while remaining gentle on delicate skin.</p>
+<h3 class="font-h3 text-h3 text-on-surface mt-8 mb-3">Key Features:</h3>
+<ul class="list-disc pl-5 mb-4 space-y-2">
+<li>Dual-layer absorption technology</li>
+<li>Adjustable nickel-free snap closures</li>
+<li>Machine washable and durable</li>
+</ul>
+<p>Perfect for daily wear, the subtle natural tones complement any outfit, making it an essential accessory for modern parenting.</p>
+</div>
+</div>
+</div>
+<!-- Metadata Side Panel (360px inside Inspector) -->
+<aside class="w-[360px] border-l border-surface-variant bg-surface-bright flex flex-col shrink-0">
+<div class="h-16 border-b border-surface-variant flex items-center px-5 font-h3 text-h3 text-on-surface">
+                    Metadata
+                </div>
+<div class="p-5 flex flex-col gap-6">
+<!-- Meta List -->
+<div class="space-y-4">
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant mb-1">Date Created</label>
+<div class="font-body-base text-body-base text-on-surface">Oct 24, 2023, 14:32 PM</div>
+</div>
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant mb-1">Author</label>
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a young designer with glasses, soft natural lighting, clear background, minimal styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCktHWfLEiGRxekAVISr_LIG2nAfAeVrDSZQWtOeePjWSQ_kKCMkjtsyqM1bx69PLDps7UfLU_xUEbekl5Mo-_NRzyklFuDbwT4UVAVwLWjsr-4N8DTmsPJk5-Dix6l28onQGdLI9jK2L4xl6tCHcpJnv06jVb_Uy6_aPSMx1UIlWMh7Wu7Ilj3WEsAJc5x3jtVT3qR2Fe_x3Os9QEZhokMVGGXMFNCKTHx3i-DaMFAV893ajem7ltX"/>
+</div>
+<span class="font-body-base text-body-base text-on-surface">Alex Mercer</span>
+</div>
+</div>
+<div>
+<label class="block font-label-xs text-label-xs text-on-surface-variant mb-1">Folder Path</label>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant bg-surface-container-low p-2 rounded border border-surface-variant">
+<span class="material-symbols-outlined text-[14px]">folder</span>
+<span>Root / Apparel / Bibs</span>
+</div>
+</div>
+</div>
+<div class="h-px bg-surface-variant w-full"></div>
+<!-- Actions -->
+<div class="flex flex-col gap-3">
+<button class="w-full bg-surface-container-lowest border border-surface-variant text-on-background font-label-xs text-label-xs h-9 px-4 rounded flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+                            Copy Title
+                        </button>
+<button class="w-full bg-surface-container-lowest border border-surface-variant text-on-background font-label-xs text-label-xs h-9 px-4 rounded flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px]">file_copy</span>
+                            Copy Body Markdown
+                        </button>
+</div>
+</div>
+</aside>
+</section>
+</main>
+</body></html>
