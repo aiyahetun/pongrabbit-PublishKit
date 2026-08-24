@@ -7,7 +7,9 @@ const { t } = useI18n();
 const nav = [
   { to: "/today", key: "nav.today" },
   { to: "/content", key: "nav.content" },
+  { to: "/media", key: "nav.media" },
   { to: "/tasks", key: "nav.tasks" },
+  { to: "/calendar", key: "nav.calendar" },
   { to: "/sources", key: "nav.sources" },
   { to: "/settings", key: "nav.settings" },
 ];

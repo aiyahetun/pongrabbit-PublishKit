@@ -1,10 +1,13 @@
 mod db;
 mod md_split;
+mod media;
 
 use db::{
     create_custom_channel, create_publish_task, delete_content_items_for_source,
-    delete_custom_channel, fields_body, insert_content_item, list_channels, list_content_items,
-    list_publish_tasks, update_publish_task_status, upsert_source_document, DbState,
+    delete_custom_channel, fields_body, insert_content_item, link_content_media,
+    list_calendar_tasks, list_channels, list_content_items, list_media_assets,
+    list_media_for_content, list_publish_tasks, unlink_content_media,
+    update_publish_task_status, upsert_media_asset, upsert_source_document, DbState,
 };
 use md_split::{anchor_json, preview_splits, SourceAnchor, SplitPreview, SplitStrategy};
 use serde::{Deserialize, Serialize};
@@ -13,11 +16,16 @@ use std::{
     path::{Path, PathBuf},
 };
 use tauri::Manager;
+use tauri_plugin_opener::OpenerExt;
 use uuid::Uuid;
 use walkdir::WalkDir;
 
 const IGNORE_DIRS: &[&str] = &["node_modules", ".git", ".cursor", "target", "dist"];
 const MANUAL_SOURCE_PATH: &str = "manual://publishkit";
+const IMAGE_EXTENSIONS: &[&str] = &[
+    "jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "heic", "heif", "tif", "tiff",
+];
+const VIDEO_EXTENSIONS: &[&str] = &["mp4", "mov", "webm", "avi", "mkv", "m4v"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -90,12 +98,57 @@ pub struct PublishTaskRow {
     pub publish_url: String,
     pub note: String,
     pub updated_at: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub scheduled_at: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub published_at: String,
     pub channel: TaskChannelRef,
     pub content: TaskContentRef,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaAssetRow {
+    pub id: String,
+    pub path: String,
+    pub file_name: String,
+    pub kind: String,
+    pub size_bytes: u64,
+    pub indexed_at: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub thumb_path: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThumbBatchResult {
+    pub generated: usize,
+    pub remaining: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScanMediaResult {
+    pub indexed_count: usize,
+    pub total_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CalendarEntryRow {
+    pub id: String,
+    pub status: String,
+    pub date: String,
+    pub channel_name: String,
+    pub channel_color: String,
+    pub content_title: String,
+    pub publish_url: String,
+}
+
 fn map_task_rows(
     rows: Vec<(
+        String,
+        String,
         String,
         String,
         String,
@@ -117,19 +170,42 @@ fn map_task_rows(
             publish_url: row.2.clone(),
             note: row.3.clone(),
             updated_at: row.4.clone(),
+            scheduled_at: row.5.clone(),
+            published_at: row.6.clone(),
             channel: TaskChannelRef {
-                id: row.5.clone(),
-                name: row.6.clone(),
-                color: row.7.clone(),
+                id: row.7.clone(),
+                name: row.8.clone(),
+                color: row.9.clone(),
             },
             content: TaskContentRef {
-                id: row.8.clone(),
-                title: row.9.clone(),
-                language: row.10.clone(),
-                body: fields_body(&row.11),
+                id: row.10.clone(),
+                title: row.11.clone(),
+                language: row.12.clone(),
+                body: fields_body(&row.13),
             },
         })
         .collect()
+}
+
+fn build_media_row(
+    app: &tauri::AppHandle,
+    id: &str,
+    path: &str,
+    file_name: &str,
+    kind: &str,
+    size_bytes: u64,
+    indexed_at: &str,
+) -> MediaAssetRow {
+    let thumb_path = media::thumb_path_if_exists(app, id, kind);
+    MediaAssetRow {
+        id: id.to_string(),
+        path: path.to_string(),
+        file_name: file_name.to_string(),
+        kind: kind.to_string(),
+        size_bytes,
+        indexed_at: indexed_at.to_string(),
+        thumb_path,
+    }
 }
 
 fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
@@ -185,6 +261,22 @@ fn should_skip(path: &Path) -> bool {
             false
         }
     })
+}
+
+fn media_kind(ext: &str) -> Option<&'static str> {
+    if IMAGE_EXTENSIONS.contains(&ext) {
+        Some("image")
+    } else if VIDEO_EXTENSIONS.contains(&ext) {
+        Some("video")
+    } else {
+        None
+    }
+}
+
+fn event_date(iso: &str) -> Option<String> {
+    chrono::DateTime::parse_from_rfc3339(iso)
+        .ok()
+        .map(|dt| dt.date_naive().format("%Y-%m-%d").to_string())
 }
 
 fn title_from_markdown(path: &Path, content: &str) -> String {
@@ -558,6 +650,193 @@ fn list_content_items_cmd(state: tauri::State<'_, DbState>) -> Result<Vec<Conten
     })
 }
 
+#[tauri::command]
+fn scan_media_cmd(app: tauri::AppHandle, state: tauri::State<'_, DbState>) -> Result<ScanMediaResult, String> {
+    let settings = load_settings(&app)?;
+    let root = settings
+        .media_root
+        .ok_or_else(|| "请先在「来源文件」选择图片文件夹".to_string())?;
+    let root_path = PathBuf::from(&root);
+    if !root_path.is_dir() {
+        return Err("图片路径不是文件夹".into());
+    }
+
+    let mut indexed = 0usize;
+    db::with_conn(&state, |conn| {
+        for entry in WalkDir::new(&root_path)
+            .follow_links(false)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
+            let path = entry.path();
+            if !path.is_file() || should_skip(path) {
+                continue;
+            }
+            let ext = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("")
+                .to_ascii_lowercase();
+            let Some(kind) = media_kind(&ext) else {
+                continue;
+            };
+            let meta = fs::metadata(path).map_err(|e| e.to_string())?;
+            let file_name = path
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("unknown")
+                .to_string();
+            let mtime = meta
+                .modified()
+                .ok()
+                .map(|t| chrono::DateTime::<chrono::Utc>::from(t).to_rfc3339());
+            let id = Uuid::new_v4().to_string();
+            let path_str = path.to_string_lossy().into_owned();
+            upsert_media_asset(
+                conn,
+                &id,
+                &path_str,
+                &file_name,
+                kind,
+                meta.len() as i64,
+                mtime.as_deref(),
+            )?;
+            indexed += 1;
+        }
+
+        let total: i64 = conn
+            .query_row("SELECT COUNT(*) FROM media_assets", [], |row| row.get(0))
+            .map_err(|e| e.to_string())?;
+
+        Ok(ScanMediaResult {
+            indexed_count: indexed,
+            total_count: total as usize,
+        })
+    })
+}
+
+#[tauri::command]
+fn list_media_assets_cmd(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, DbState>,
+) -> Result<Vec<MediaAssetRow>, String> {
+    db::with_conn(&state, |conn| {
+        Ok(list_media_assets(conn)?
+            .into_iter()
+            .map(|(id, path, file_name, kind, size_bytes, indexed_at)| {
+                build_media_row(
+                    &app,
+                    &id,
+                    &path,
+                    &file_name,
+                    &kind,
+                    size_bytes as u64,
+                    &indexed_at,
+                )
+            })
+            .collect())
+    })
+}
+
+#[tauri::command]
+fn list_content_media_cmd(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, DbState>,
+    content_item_id: String,
+) -> Result<Vec<MediaAssetRow>, String> {
+    db::with_conn(&state, |conn| {
+        Ok(list_media_for_content(conn, &content_item_id)?
+            .into_iter()
+            .map(|(id, path, file_name, kind, size_bytes)| {
+                build_media_row(&app, &id, &path, &file_name, &kind, size_bytes as u64, "")
+            })
+            .collect())
+    })
+}
+
+#[tauri::command]
+fn link_content_media_cmd(
+    state: tauri::State<'_, DbState>,
+    content_item_id: String,
+    media_asset_id: String,
+) -> Result<(), String> {
+    db::with_conn(&state, |conn| link_content_media(conn, &content_item_id, &media_asset_id))
+}
+
+#[tauri::command]
+fn unlink_content_media_cmd(
+    state: tauri::State<'_, DbState>,
+    content_item_id: String,
+    media_asset_id: String,
+) -> Result<(), String> {
+    db::with_conn(&state, |conn| unlink_content_media(conn, &content_item_id, &media_asset_id))
+}
+
+#[tauri::command]
+async fn generate_media_thumbnails_cmd(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, DbState>,
+    batch_size: Option<usize>,
+) -> Result<ThumbBatchResult, String> {
+    let batch_size = batch_size.unwrap_or(24).clamp(1, 50);
+    let assets = db::with_conn(&state, |conn| {
+        Ok(list_media_assets(conn)?
+            .into_iter()
+            .map(|(id, path, file_name, kind, _, _)| (id, path, kind))
+            .collect::<Vec<_>>())
+    })?;
+
+    let app = app.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let (generated, remaining) = media::generate_thumbnail_batch(&app, &assets, batch_size);
+        ThumbBatchResult {
+            generated,
+            remaining,
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn copy_media_image_cmd(path: String) -> Result<(), String> {
+    media::copy_image_to_clipboard(&path)
+}
+
+#[tauri::command]
+fn reveal_media_in_folder_cmd(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    app.opener()
+        .reveal_item_in_dir(&path)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn list_calendar_entries_cmd(
+    state: tauri::State<'_, DbState>,
+    year: i32,
+    month: u32,
+) -> Result<Vec<CalendarEntryRow>, String> {
+    if !(1..=12).contains(&month) {
+        return Err("月份无效".into());
+    }
+    db::with_conn(&state, |conn| {
+        Ok(list_calendar_tasks(conn, year, month)?
+            .into_iter()
+            .filter_map(|(id, status, event_at, channel_name, channel_color, content_title, publish_url)| {
+                event_date(&event_at).map(|date| CalendarEntryRow {
+                    id,
+                    status,
+                    date,
+                    channel_name,
+                    channel_color,
+                    content_title,
+                    publish_url,
+                })
+            })
+            .collect())
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -584,7 +863,16 @@ pub fn run() {
             create_publish_task_cmd,
             list_publish_tasks_cmd,
             list_today_tasks_cmd,
-            update_publish_task_status_cmd
+            update_publish_task_status_cmd,
+            scan_media_cmd,
+            list_media_assets_cmd,
+            list_content_media_cmd,
+            link_content_media_cmd,
+            unlink_content_media_cmd,
+            list_calendar_entries_cmd,
+            generate_media_thumbnails_cmd,
+            copy_media_image_cmd,
+            reveal_media_in_folder_cmd
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

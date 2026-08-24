@@ -9,6 +9,7 @@ use tauri::{AppHandle, Manager};
 const MIGRATION_001: &str = include_str!("../migrations/001_init.sql");
 const MIGRATION_002: &str = include_str!("../migrations/002_tasks.sql");
 const MIGRATION_003: &str = include_str!("../migrations/003_channels.sql");
+const MIGRATION_004: &str = include_str!("../migrations/004_media.sql");
 
 const DEFAULT_CHANNELS: &[(&str, &str, &str, &str, i32)] = &[
     // 国内
@@ -124,6 +125,12 @@ fn migrate(conn: &Connection) -> Result<(), String> {
         mark_migration(conn, 3)?;
     }
     seed_channels(conn)?;
+
+    if !migration_applied(conn, 4)? {
+        conn.execute_batch(MIGRATION_004)
+            .map_err(|e| e.to_string())?;
+        mark_migration(conn, 4)?;
+    }
 
     Ok(())
 }
@@ -336,8 +343,8 @@ pub fn update_publish_task_status(
     note: Option<&str>,
 ) -> Result<(), String> {
     let now = chrono::Utc::now().to_rfc3339();
-    let published_at = if status == "published" {
-        Some(now.as_str())
+    let published_at: Option<String> = if status == "published" {
+        Some(now.clone())
     } else {
         None
     };
@@ -347,7 +354,11 @@ pub fn update_publish_task_status(
             status = ?1,
             publish_url = COALESCE(?2, publish_url),
             note = COALESCE(?3, note),
-            published_at = COALESCE(?4, published_at),
+            scheduled_at = CASE
+                WHEN ?1 = 'ready' AND scheduled_at IS NULL THEN ?5
+                ELSE scheduled_at
+            END,
+            published_at = ?4,
             updated_at = ?5
          WHERE id = ?6",
         rusqlite::params![status, publish_url, note, published_at, now, task_id],
@@ -363,10 +374,11 @@ pub fn update_publish_task_status(
 pub fn list_publish_tasks(
     conn: &Connection,
     status_filter: Option<&str>,
-) -> Result<Vec<(String, String, String, String, String, String, String, String, String, String, String, String)>, String> {
+) -> Result<Vec<(String, String, String, String, String, String, String, String, String, String, String, String, String, String)>, String> {
     let sql = if status_filter.is_some() {
         "SELECT
             t.id, t.status, t.publish_url, t.note, t.updated_at,
+            COALESCE(t.scheduled_at, ''), COALESCE(t.published_at, ''),
             c.id, c.name, COALESCE(c.color, '#888888'),
             i.id, i.title, i.language, i.fields_json
          FROM publish_tasks t
@@ -377,6 +389,7 @@ pub fn list_publish_tasks(
     } else {
         "SELECT
             t.id, t.status, t.publish_url, t.note, t.updated_at,
+            COALESCE(t.scheduled_at, ''), COALESCE(t.published_at, ''),
             c.id, c.name, COALESCE(c.color, '#888888'),
             i.id, i.title, i.language, i.fields_json
          FROM publish_tasks t
@@ -401,6 +414,8 @@ pub fn list_publish_tasks(
             row.get::<_, String>(9)?,
             row.get::<_, String>(10)?,
             row.get::<_, String>(11)?,
+            row.get::<_, String>(12)?,
+            row.get::<_, String>(13)?,
         ))
     };
 
@@ -428,4 +443,181 @@ pub fn fields_body(fields_json: &str) -> String {
         .ok()
         .and_then(|v| v.get("body").and_then(|b| b.as_str()).map(str::to_string))
         .unwrap_or_default()
+}
+
+pub fn upsert_media_asset(
+    conn: &Connection,
+    id: &str,
+    path: &str,
+    file_name: &str,
+    kind: &str,
+    size_bytes: i64,
+    mtime: Option<&str>,
+) -> Result<(), String> {
+    let now = chrono::Utc::now().to_rfc3339();
+    conn.execute(
+        "INSERT INTO media_assets (id, path, file_name, kind, size_bytes, mtime, indexed_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+         ON CONFLICT(path) DO UPDATE SET
+           file_name = excluded.file_name,
+           kind = excluded.kind,
+           size_bytes = excluded.size_bytes,
+           mtime = excluded.mtime,
+           indexed_at = excluded.indexed_at",
+        rusqlite::params![id, path, file_name, kind, size_bytes, mtime, now],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn media_asset_id_by_path(conn: &Connection, path: &str) -> Result<String, String> {
+    conn.query_row(
+        "SELECT id FROM media_assets WHERE path = ?1",
+        [path],
+        |row| row.get(0),
+    )
+    .map_err(|_| "素材不存在".into())
+}
+
+pub fn list_media_assets(
+    conn: &Connection,
+) -> Result<Vec<(String, String, String, String, i64, String)>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, path, file_name, kind, size_bytes, indexed_at
+             FROM media_assets
+             ORDER BY file_name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, i64>(4)?,
+                row.get::<_, String>(5)?,
+            ))
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(rows)
+}
+
+pub fn list_media_for_content(
+    conn: &Connection,
+    content_item_id: &str,
+) -> Result<Vec<(String, String, String, String, i64)>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT m.id, m.path, m.file_name, m.kind, m.size_bytes
+             FROM content_media cm
+             JOIN media_assets m ON m.id = cm.media_asset_id
+             WHERE cm.content_item_id = ?1
+             ORDER BY cm.sort_order ASC, m.file_name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map([content_item_id], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, i64>(4)?,
+            ))
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(rows)
+}
+
+pub fn link_content_media(
+    conn: &Connection,
+    content_item_id: &str,
+    media_asset_id: &str,
+) -> Result<(), String> {
+    let sort: i64 = conn
+        .query_row(
+            "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM content_media WHERE content_item_id = ?1",
+            [content_item_id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
+    conn.execute(
+        "INSERT OR IGNORE INTO content_media (content_item_id, media_asset_id, sort_order)
+         VALUES (?1, ?2, ?3)",
+        rusqlite::params![content_item_id, media_asset_id, sort],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn unlink_content_media(
+    conn: &Connection,
+    content_item_id: &str,
+    media_asset_id: &str,
+) -> Result<(), String> {
+    conn.execute(
+        "DELETE FROM content_media WHERE content_item_id = ?1 AND media_asset_id = ?2",
+        rusqlite::params![content_item_id, media_asset_id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn list_calendar_tasks(
+    conn: &Connection,
+    year: i32,
+    month: u32,
+) -> Result<Vec<(String, String, String, String, String, String, String)>, String> {
+    let start = format!("{:04}-{:02}-01T00:00:00", year, month);
+    let next_month = if month == 12 {
+        (year + 1, 1)
+    } else {
+        (year, month + 1)
+    };
+    let end = format!("{:04}-{:02}-01T00:00:00", next_month.0, next_month.1);
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT
+                t.id, t.status,
+                COALESCE(t.published_at, t.scheduled_at, t.updated_at) AS event_at,
+                c.name, COALESCE(c.color, '#888888'), i.title, t.publish_url
+             FROM publish_tasks t
+             JOIN channels c ON c.id = t.channel_id
+             JOIN content_items i ON i.id = t.content_item_id
+             WHERE t.status IN ('published', 'scheduled', 'ready')
+               AND COALESCE(t.published_at, t.scheduled_at, t.updated_at) >= ?1
+               AND COALESCE(t.published_at, t.scheduled_at, t.updated_at) < ?2
+             ORDER BY event_at ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map(rusqlite::params![start, end], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
+                row.get::<_, Option<String>>(6)?.unwrap_or_default(),
+            ))
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(rows)
 }

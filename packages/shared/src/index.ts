@@ -120,6 +120,10 @@ export type PublishTask = {
 
   updatedAt: string;
 
+  scheduledAt?: string;
+
+  publishedAt?: string;
+
   channel: {
 
     id: string;
@@ -141,6 +145,56 @@ export type PublishTask = {
     body: string;
 
   };
+
+};
+
+
+
+export type MediaAsset = {
+
+  id: string;
+
+  path: string;
+
+  fileName: string;
+
+  kind: string;
+
+  sizeBytes: number;
+
+  indexedAt: string;
+
+  thumbPath?: string;
+
+};
+
+
+
+export type ScanMediaResult = {
+
+  indexedCount: number;
+
+  totalCount: number;
+
+};
+
+
+
+export type CalendarEntry = {
+
+  id: string;
+
+  status: string;
+
+  date: string;
+
+  channelName: string;
+
+  channelColor: string;
+
+  contentTitle: string;
+
+  publishUrl: string;
 
 };
 

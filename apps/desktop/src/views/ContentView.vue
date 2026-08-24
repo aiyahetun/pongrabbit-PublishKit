@@ -2,8 +2,11 @@
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
-import type { Channel, ContentItem } from "@publishkit/shared";
+import type { Channel, ContentItem, MediaAsset } from "@publishkit/shared";
 import { copyMarkdownAsRichText } from "../utils/clipboard";
+import MediaLinkDialog from "../components/MediaLinkDialog.vue";
+import MediaThumb from "../components/MediaThumb.vue";
+import { copyMediaImage } from "../utils/mediaActions";
 
 const { t } = useI18n();
 const items = ref<ContentItem[]>([]);
@@ -14,6 +17,8 @@ const error = ref("");
 const notice = ref("");
 const showCreate = ref(false);
 const showTaskFor = ref<ContentItem | null>(null);
+const showMediaFor = ref<ContentItem | null>(null);
+const itemMedia = ref<Record<string, MediaAsset[]>>({});
 const newTitle = ref("");
 const newBody = ref("");
 const creating = ref(false);
@@ -33,11 +38,24 @@ async function loadItems() {
   error.value = "";
   try {
     items.value = await invoke<ContentItem[]>("list_content_items_cmd");
+    await refreshMediaMap();
   } catch (e) {
     error.value = String(e);
   } finally {
     loading.value = false;
   }
+}
+
+async function refreshMediaMap() {
+  const map: Record<string, MediaAsset[]> = {};
+  await Promise.all(
+    items.value.map(async (item) => {
+      map[item.id] = await invoke<MediaAsset[]>("list_content_media_cmd", {
+        contentItemId: item.id,
+      });
+    })
+  );
+  itemMedia.value = map;
 }
 
 async function loadChannels() {
@@ -98,6 +116,23 @@ async function createTask(item: ContentItem, channel: Channel) {
   }
 }
 
+async function copyLinkedImagesForItem(item: ContentItem) {
+  error.value = "";
+  notice.value = "";
+  const assets = itemMedia.value[item.id] ?? [];
+  const images = assets.filter((asset) => asset.kind === "image");
+  if (!images.length) return;
+  try {
+    await copyMediaImage(images[0]);
+    notice.value =
+      images.length > 1
+        ? t("media.copiedMultipleHint", { count: images.length })
+        : t("media.copied");
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
 async function addQuickChannel() {
   if (!quickChannelName.value.trim()) return;
   error.value = "";
@@ -144,6 +179,18 @@ onMounted(async () => {
             <span class="badge">{{ item.language }}</span>
           </div>
           <div class="row-actions">
+            <button
+              v-if="itemMedia[item.id]?.some((m) => m.kind === 'image')"
+              type="button"
+              class="pk-btn pk-btn--ghost"
+              @click="copyLinkedImagesForItem(item)"
+            >
+              {{ t("media.copyImage") }}
+            </button>
+            <button type="button" class="pk-btn pk-btn--ghost" @click="showMediaFor = item">
+              {{ t("content.linkMedia") }}
+              <span v-if="itemMedia[item.id]?.length" class="count">{{ itemMedia[item.id].length }}</span>
+            </button>
             <button type="button" class="pk-btn pk-btn--ghost" @click="showTaskFor = item">{{ t("content.addTask") }}</button>
             <button type="button" class="pk-btn pk-btn--secondary" @click="copyBody(item)">
               {{ copiedId === item.id ? t("content.copied") : t("content.copyRich") }}
@@ -151,6 +198,12 @@ onMounted(async () => {
           </div>
         </div>
         <p class="preview">{{ item.body.slice(0, 240) }}{{ item.body.length > 240 ? "…" : "" }}</p>
+        <ul v-if="itemMedia[item.id]?.length" class="media-list">
+          <li v-for="media in itemMedia[item.id]" :key="media.id">
+            <MediaThumb :asset="media" size="sm" />
+            <span>{{ media.fileName }}</span>
+          </li>
+        </ul>
         <span class="path">{{ sourceLabel(item.sourcePath) }}</span>
       </li>
     </ul>
@@ -177,6 +230,14 @@ onMounted(async () => {
         </div>
       </form>
     </div>
+
+    <MediaLinkDialog
+      v-if="showMediaFor"
+      :content-id="showMediaFor.id"
+      :content-title="showMediaFor.title"
+      @close="showMediaFor = null"
+      @updated="refreshMediaMap"
+    />
 
     <div v-if="showTaskFor" class="overlay" @click.self="showTaskFor = null">
       <section class="modal card picker">
@@ -315,6 +376,31 @@ li:first-child {
   font-size: 13px;
   color: var(--pk-ink-secondary);
   white-space: pre-wrap;
+}
+.media-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.media-list li {
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--pk-ink-secondary);
+  background: var(--pk-bg-alt);
+  border-radius: var(--pk-radius-pill);
+  padding: 2px 8px 2px 2px;
+}
+.count {
+  margin-left: 4px;
+  font-size: 11px;
+  color: var(--pk-accent-text);
 }
 .path {
   display: block;

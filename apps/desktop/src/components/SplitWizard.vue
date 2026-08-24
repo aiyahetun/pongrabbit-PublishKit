@@ -105,7 +105,9 @@ watch(
           <p class="source">{{ title }}</p>
           <p class="hint">{{ t("split.metaHint") }}</p>
         </div>
-        <button type="button" class="ghost" @click="emit('close')">{{ t("common.cancel") }}</button>
+        <button type="button" class="pk-btn pk-btn--ghost" @click="emit('close')">
+          {{ t("common.cancel") }}
+        </button>
       </header>
 
       <div class="field">
@@ -157,10 +159,12 @@ watch(
       <p v-if="error" class="error">{{ error }}</p>
 
       <footer class="footer">
-        <button type="button" @click="loadPreview" :disabled="loading">{{ t("split.refresh") }}</button>
+        <button type="button" class="pk-btn pk-btn--secondary" :disabled="loading" @click="loadPreview">
+          {{ t("split.refresh") }}
+        </button>
         <button
           type="button"
-          class="primary"
+          class="pk-btn pk-btn--primary"
           :disabled="importing || selected.size === 0"
           @click="importSelected"
         >
@@ -297,22 +301,6 @@ li label {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 16px;
-}
-button {
-  border: 1px solid var(--pk-border-strong);
-  background: var(--pk-bg-panel);
-  border-radius: 8px;
-  padding: 8px 12px;
-}
-button.primary {
-  background: var(--pk-accent);
-  color: var(--pk-inverse);
-  border-color: var(--pk-accent);
-}
-button.ghost {
-  border: none;
-  background: transparent;
-  color: var(--pk-ink-muted);
 }
 .muted {
   color: var(--pk-ink-muted);

@@ -130,9 +130,8 @@ function onImported(count: number) {
 
         <div class="row">
 
-          <input readonly :value="settings?.copyRoot ?? ''" placeholder="—" />
-
-          <button type="button" @click="pickCopyRoot">{{ t("common.choose") }}</button>
+          <input class="pk-input row-input" readonly :value="settings?.copyRoot ?? ''" placeholder="—" />
+          <button type="button" class="pk-btn pk-btn--secondary" @click="pickCopyRoot">{{ t("common.choose") }}</button>
 
         </div>
 
@@ -144,15 +143,19 @@ function onImported(count: number) {
 
         <div class="row">
 
-          <input readonly :value="settings?.mediaRoot ?? ''" placeholder="—" />
-
-          <button type="button" @click="pickMediaRoot">{{ t("common.choose") }}</button>
+          <input class="pk-input row-input" readonly :value="settings?.mediaRoot ?? ''" placeholder="—" />
+          <button type="button" class="pk-btn pk-btn--secondary" @click="pickMediaRoot">{{ t("common.choose") }}</button>
 
         </div>
 
       </div>
 
-      <button class="primary" type="button" :disabled="!settings?.copyRoot || scanning" @click="scan">
+      <button
+        class="pk-btn pk-btn--primary"
+        type="button"
+        :disabled="!settings?.copyRoot || scanning"
+        @click="scan"
+      >
 
         {{ scanning ? t("sources.scanning") : t("sources.scan") }}
 
@@ -186,7 +189,9 @@ function onImported(count: number) {
 
             </div>
 
-            <button type="button" @click="openSplit(item)">{{ t("split.open") }}</button>
+            <button type="button" class="pk-btn pk-btn--secondary" @click="openSplit(item)">
+              {{ t("split.open") }}
+            </button>
 
           </div>
 
@@ -270,40 +275,8 @@ function onImported(count: number) {
 
 }
 
-input {
-
+.row-input {
   flex: 1;
-
-  border: 1px solid var(--pk-border-strong);
-
-  border-radius: 8px;
-
-  padding: 8px 10px;
-
-  background: var(--pk-bg-app);
-
-}
-
-button {
-
-  border: 1px solid var(--pk-border-strong);
-
-  background: var(--pk-bg-panel);
-
-  border-radius: 8px;
-
-  padding: 8px 12px;
-
-}
-
-button.primary {
-
-  background: var(--pk-accent);
-
-  color: var(--pk-inverse);
-
-  border-color: var(--pk-accent);
-
 }
 
 .meta {
