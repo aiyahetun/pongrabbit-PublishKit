@@ -1,0 +1,10 @@
+{
+  "name": "@publishkit/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./locales/zh-CN.json": "./locales/zh-CN.json",
+    "./locales/en.json": "./locales/en.json"
+  }
+}

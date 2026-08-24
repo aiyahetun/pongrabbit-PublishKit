@@ -15,7 +15,16 @@
 
 ## 当前阶段
 
-规划与文档（M0 前）。代码工程尚未启动。
+**M1 开发中** — 桌面端 v0.1.0-dev，`npm run tauri dev` 可本地运行（来源 → 内容 → 任务闭环已验收）。
+
+## 本地开发
+
+详见 [docs/开发环境.md](./docs/开发环境.md)。
+
+```powershell
+npm install
+npm run tauri dev
+```
 
 ## 仓库
 

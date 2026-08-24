@@ -1,0 +1,19 @@
+{
+  "name": "pongrabbit-publishkit",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PublishKit — local-first content ops for cross-border marketing",
+  "scripts": {
+    "dev": "npm run dev --workspace @publishkit/desktop",
+    "build": "npm run build --workspace @publishkit/desktop",
+    "tauri": "npm run tauri --workspace @publishkit/desktop",
+    "check:i18n": "node scripts/check-i18n-keys.mjs"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

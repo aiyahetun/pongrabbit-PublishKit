@@ -1,0 +1,221 @@
+:root {
+  --pk-bg-app: #f7f6f3;
+  --pk-bg-panel: #ffffff;
+  --pk-bg-alt: #f0ede6;
+  --pk-bg-canvas: #faf8f3;
+  --pk-ink: #1b1c19;
+  --pk-ink-secondary: #4e4638;
+  --pk-ink-muted: #8a8278;
+  --pk-border: #e4e2dd;
+  --pk-border-strong: #d1c5b3;
+  --pk-accent: #b8924a;
+  --pk-accent-text: #795916;
+  --pk-accent-soft: rgba(184, 146, 74, 0.12);
+  --pk-inverse: #fdfcfa;
+  --pk-status-draft: #8a8278;
+  --pk-status-ready: #3a6a4a;
+  --pk-status-scheduled: #b8924a;
+  --pk-status-published: #2563eb;
+  --pk-status-blocked: #b42318;
+  --pk-status-archived: #6b7280;
+  --pk-space-1: 4px;
+  --pk-space-2: 8px;
+  --pk-space-3: 12px;
+  --pk-space-4: 16px;
+  --pk-space-5: 24px;
+  --pk-radius-sm: 6px;
+  --pk-radius-md: 8px;
+  --pk-radius-lg: 12px;
+  --pk-radius-pill: 999px;
+  --pk-shadow-sm: 0 1px 3px rgba(27, 28, 25, 0.06);
+  --pk-shadow-md: 0 4px 12px rgba(27, 28, 25, 0.08);
+  --pk-sidebar-w: 220px;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+  background: var(--pk-bg-app);
+  color: var(--pk-ink);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* 避免各页面 scoped `button {}` 盖掉 pk-btn 配色 */
+button.pk-btn--primary {
+  background: var(--pk-accent);
+  color: var(--pk-inverse);
+  border-color: var(--pk-accent);
+}
+
+button.pk-btn--secondary {
+  background: var(--pk-bg-panel);
+  color: var(--pk-ink);
+  border-color: var(--pk-border-strong);
+}
+
+button.pk-btn--ghost {
+  background: transparent;
+  color: var(--pk-ink-secondary);
+  border-color: transparent;
+}
+
+input {
+  font: inherit;
+}
+
+/* Buttons — see 设计标准 §3.1 */
+.pk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pk-space-2);
+  height: 36px;
+  padding: 0 var(--pk-space-3);
+  border-radius: var(--pk-radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.pk-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pk-btn--primary {
+  background: var(--pk-accent);
+  color: var(--pk-inverse);
+  border-color: var(--pk-accent);
+}
+
+.pk-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.pk-btn--secondary {
+  background: var(--pk-bg-panel);
+  color: var(--pk-ink);
+  border-color: var(--pk-border-strong);
+  box-shadow: var(--pk-shadow-sm);
+}
+
+.pk-btn--secondary:hover:not(:disabled) {
+  background: var(--pk-bg-alt);
+}
+
+.pk-btn--ghost {
+  background: transparent;
+  color: var(--pk-ink-secondary);
+  border-color: transparent;
+}
+
+.pk-btn--ghost:hover:not(:disabled) {
+  background: var(--pk-bg-alt);
+}
+
+.pk-btn--success {
+  background: var(--pk-status-ready);
+  color: #fff;
+  border-color: var(--pk-status-ready);
+}
+
+.pk-input {
+  height: 36px;
+  padding: 0 var(--pk-space-3);
+  border: 1px solid var(--pk-border-strong);
+  border-radius: var(--pk-radius-md);
+  background: var(--pk-bg-panel);
+  color: var(--pk-ink);
+  font-size: 13px;
+  box-shadow: var(--pk-shadow-sm);
+}
+
+.pk-input::placeholder {
+  color: var(--pk-ink-muted);
+}
+
+.pk-input:focus {
+  outline: 2px solid var(--pk-accent-soft);
+  border-color: var(--pk-accent);
+}
+
+.pk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--pk-radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--pk-border-strong);
+  background: var(--pk-bg-panel);
+}
+
+.pk-chip.active {
+  background: var(--pk-accent-soft);
+  border-color: var(--pk-accent);
+  color: var(--pk-accent-text);
+}
+
+.pk-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--pk-radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--pk-bg-alt);
+  color: var(--pk-ink-secondary);
+}
+
+.pk-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pk-status[data-status="draft"] {
+  color: var(--pk-status-draft);
+}
+
+.pk-status[data-status="ready"] {
+  color: var(--pk-status-ready);
+  background: rgba(58, 106, 74, 0.1);
+}
+
+.pk-status[data-status="scheduled"] {
+  color: var(--pk-status-scheduled);
+  background: var(--pk-accent-soft);
+}
+
+.pk-status[data-status="published"] {
+  color: var(--pk-status-published);
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.pk-status[data-status="blocked"] {
+  color: var(--pk-status-blocked);
+}
+
+.pk-status[data-status="archived"] {
+  color: var(--pk-status-archived);
+}
