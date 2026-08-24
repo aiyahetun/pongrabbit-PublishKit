@@ -13,6 +13,8 @@ const loading = ref(false);
 const error = ref("");
 const copiedId = ref("");
 const publishUrls = ref<Record<string, string>>({});
+const scheduledDates = ref<Record<string, string>>({});
+const notice = ref("");
 
 async function loadTasks() {
   loading.value = true;
@@ -21,8 +23,13 @@ async function loadTasks() {
     const list = await invoke<PublishTask[]>("list_today_tasks_cmd");
     tasks.value = list;
     const next: Record<string, string> = {};
-    for (const task of list) next[task.id] = task.publishUrl || "";
+    const nextDates: Record<string, string> = {};
+    for (const task of list) {
+      next[task.id] = task.publishUrl || "";
+      nextDates[task.id] = task.scheduledAt?.slice(0, 10) ?? "";
+    }
     publishUrls.value = next;
+    scheduledDates.value = nextDates;
   } catch (e) {
     error.value = String(e);
   } finally {
@@ -40,12 +47,28 @@ async function copyTask(task: PublishTask) {
 
 async function markPublished(task: PublishTask) {
   error.value = "";
+  notice.value = "";
   try {
     await invoke("update_publish_task_status_cmd", {
       taskId: task.id,
       status: "published",
       publishUrl: publishUrls.value[task.id]?.trim() || null,
     });
+    await loadTasks();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function saveScheduled(task: PublishTask) {
+  error.value = "";
+  notice.value = "";
+  try {
+    await invoke("update_publish_task_scheduled_cmd", {
+      taskId: task.id,
+      scheduledDate: scheduledDates.value[task.id] ?? "",
+    });
+    notice.value = t("tasks.scheduledSaved");
     await loadTasks();
   } catch (e) {
     error.value = String(e);
@@ -67,6 +90,7 @@ onMounted(loadTasks);
       </button>
     </header>
 
+    <p v-if="notice" class="notice">{{ notice }}</p>
     <p v-if="loading" class="muted">{{ t("today.loading") }}</p>
     <p v-else-if="error" class="error">{{ error }}</p>
     <p v-else-if="!tasks.length" class="muted">{{ t("today.empty") }}</p>
@@ -78,9 +102,12 @@ onMounted(loadTasks);
             :task="task"
             :copied="copiedId === task.id"
             :publish-url="publishUrls[task.id] ?? ''"
+            :scheduled-date="scheduledDates[task.id] ?? ''"
             @update:publish-url="publishUrls[task.id] = $event"
+            @update:scheduled-date="scheduledDates[task.id] = $event"
             @copy="copyTask(task)"
             @mark-published="markPublished(task)"
+            @save-scheduled="saveScheduled(task)"
           />
         </TaskCard>
       </li>
@@ -121,5 +148,9 @@ onMounted(loadTasks);
 .error {
   color: var(--pk-status-blocked);
   font-size: 14px;
+}
+.notice {
+  color: var(--pk-accent);
+  font-size: 13px;
 }
 </style>

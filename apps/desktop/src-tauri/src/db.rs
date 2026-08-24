@@ -371,6 +371,47 @@ pub fn update_publish_task_status(
     Ok(())
 }
 
+pub fn get_content_item_by_id(
+    conn: &Connection,
+    content_item_id: &str,
+) -> Result<(String, String, String), String> {
+    conn.query_row(
+        "SELECT title, source_path, fields_json FROM content_items WHERE id = ?1",
+        [content_item_id],
+        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+    )
+    .map_err(|_| "内容条目不存在".into())
+}
+
+pub fn linked_media_ids(conn: &Connection, content_item_id: &str) -> Result<Vec<String>, String> {
+    let mut stmt = conn
+        .prepare("SELECT media_asset_id FROM content_media WHERE content_item_id = ?1")
+        .map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map([content_item_id], |row| row.get::<_, String>(0))
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+    Ok(rows)
+}
+
+pub fn update_task_scheduled_at(
+    conn: &Connection,
+    task_id: &str,
+    scheduled_at: Option<&str>,
+) -> Result<(), String> {
+    let now = chrono::Utc::now().to_rfc3339();
+    conn.execute(
+        "UPDATE publish_tasks SET scheduled_at = ?1, updated_at = ?2 WHERE id = ?3",
+        rusqlite::params![scheduled_at, now, task_id],
+    )
+    .map_err(|e| e.to_string())?;
+    if conn.changes() == 0 {
+        return Err("任务不存在".into());
+    }
+    Ok(())
+}
+
 pub fn list_publish_tasks(
     conn: &Connection,
     status_filter: Option<&str>,

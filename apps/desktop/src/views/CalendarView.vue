@@ -11,6 +11,12 @@ const viewMonth = ref(today.getMonth() + 1);
 const entries = ref<CalendarEntry[]>([]);
 const loading = ref(false);
 const error = ref("");
+const selectedDate = ref("");
+
+const todayIso = computed(() => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+});
 
 const weekdayLabels = computed(() => {
   if (locale.value.startsWith("zh")) {
@@ -55,8 +61,31 @@ const entriesByDate = computed(() => {
   return map;
 });
 
+const selectedEntries = computed(() => {
+  if (!selectedDate.value) return [];
+  return entriesByDate.value.get(selectedDate.value) ?? [];
+});
+
+const selectedDateLabel = computed(() => {
+  if (!selectedDate.value) return "";
+  const [year, month, day] = selectedDate.value.split("-").map(Number);
+  if (locale.value.startsWith("zh")) {
+    return `${year}年${month}月${day}日`;
+  }
+  return new Date(year, month - 1, day).toLocaleDateString("en", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+});
+
 function statusLabel(status: string) {
   return t(`tasks.status_${status}`);
+}
+
+function selectDate(date: string) {
+  selectedDate.value = selectedDate.value === date ? "" : date;
 }
 
 async function loadEntries() {
@@ -67,6 +96,9 @@ async function loadEntries() {
       year: viewYear.value,
       month: viewMonth.value,
     });
+    if (selectedDate.value && !entriesByDate.value.has(selectedDate.value)) {
+      selectedDate.value = "";
+    }
   } catch (e) {
     error.value = String(e);
   } finally {
@@ -95,6 +127,7 @@ function nextMonth() {
 function goToday() {
   viewYear.value = today.getFullYear();
   viewMonth.value = today.getMonth() + 1;
+  selectedDate.value = todayIso.value;
 }
 
 watch([viewYear, viewMonth], loadEntries);
@@ -121,29 +154,68 @@ onMounted(loadEntries);
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="loading" class="muted">{{ t("calendar.loading") }}</p>
 
-    <div class="calendar">
-      <div v-for="label in weekdayLabels" :key="label" class="weekday">{{ label }}</div>
-      <div
-        v-for="(cell, index) in calendarCells"
-        :key="`${cell.date}-${index}`"
-        class="day"
-        :class="{ empty: !cell.inMonth, today: cell.date === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}` }"
-      >
-        <div v-if="cell.inMonth" class="day-num">{{ cell.day }}</div>
-        <div v-if="cell.inMonth && entriesByDate.get(cell.date)?.length" class="events">
-          <div
-            v-for="entry in entriesByDate.get(cell.date)"
-            :key="entry.id"
-            class="event"
-            :style="{ borderLeftColor: entry.channelColor }"
-            :title="`${entry.channelName} · ${entry.contentTitle}`"
-          >
-            <span class="dot" :style="{ background: entry.channelColor }" />
-            <span class="event-text">{{ entry.channelName }} · {{ entry.contentTitle }}</span>
-            <span class="event-status">{{ statusLabel(entry.status) }}</span>
+    <div class="layout">
+      <div class="calendar">
+        <div v-for="label in weekdayLabels" :key="label" class="weekday">{{ label }}</div>
+        <button
+          v-for="(cell, index) in calendarCells"
+          :key="`${cell.date}-${index}`"
+          type="button"
+          class="day"
+          :class="{
+            empty: !cell.inMonth,
+            today: cell.date === todayIso,
+            selected: cell.date === selectedDate,
+          }"
+          :disabled="!cell.inMonth"
+          @click="cell.inMonth && selectDate(cell.date)"
+        >
+          <div v-if="cell.inMonth" class="day-num">{{ cell.day }}</div>
+          <div v-if="cell.inMonth && entriesByDate.get(cell.date)?.length" class="events">
+            <div
+              v-for="entry in entriesByDate.get(cell.date)?.slice(0, 3)"
+              :key="entry.id"
+              class="event"
+              :style="{ borderLeftColor: entry.channelColor }"
+            >
+              <span class="event-text">{{ entry.channelName }}</span>
+            </div>
+            <span v-if="(entriesByDate.get(cell.date)?.length ?? 0) > 3" class="more">
+              +{{ (entriesByDate.get(cell.date)?.length ?? 0) - 3 }}
+            </span>
           </div>
-        </div>
+        </button>
       </div>
+
+      <aside v-if="selectedDate" class="detail">
+        <header class="detail-head">
+          <h2>{{ selectedDateLabel }}</h2>
+          <button type="button" class="pk-btn pk-btn--ghost" @click="selectedDate = ''">
+            {{ t("calendar.closeDetail") }}
+          </button>
+        </header>
+        <p v-if="!selectedEntries.length" class="muted">{{ t("calendar.dayEmpty") }}</p>
+        <ul v-else class="detail-list">
+          <li v-for="entry in selectedEntries" :key="entry.id">
+            <div class="detail-row">
+              <span class="dot" :style="{ background: entry.channelColor }" />
+              <div>
+                <strong>{{ entry.contentTitle }}</strong>
+                <span class="meta">{{ entry.channelName }} · {{ statusLabel(entry.status) }}</span>
+              </div>
+            </div>
+            <a
+              v-if="entry.publishUrl"
+              class="link"
+              :href="entry.publishUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ entry.publishUrl }}
+            </a>
+          </li>
+        </ul>
+      </aside>
     </div>
   </section>
 </template>
@@ -177,6 +249,12 @@ onMounted(loadEntries);
   text-align: center;
   font-weight: 600;
 }
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: start;
+}
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -201,10 +279,15 @@ onMounted(loadEntries);
 }
 .day {
   padding: 6px;
-  vertical-align: top;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
 }
 .day.empty {
   background: var(--pk-bg-alt);
+  cursor: default;
 }
 .day.today .day-num {
   background: var(--pk-accent-soft);
@@ -215,6 +298,11 @@ onMounted(loadEntries);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+.day.selected {
+  outline: 2px solid var(--pk-accent);
+  outline-offset: -2px;
+  z-index: 1;
 }
 .day-num {
   font-size: 12px;
@@ -227,17 +315,11 @@ onMounted(loadEntries);
   gap: 4px;
 }
 .event {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 4px 6px;
+  padding: 2px 4px;
   border-left: 3px solid var(--pk-accent);
   background: var(--pk-bg-alt);
   border-radius: 4px;
-  font-size: 11px;
-}
-.dot {
-  display: none;
+  font-size: 10px;
 }
 .event-text {
   overflow: hidden;
@@ -245,8 +327,60 @@ onMounted(loadEntries);
   white-space: nowrap;
   color: var(--pk-ink);
 }
-.event-status {
+.more {
+  font-size: 10px;
   color: var(--pk-ink-muted);
+}
+.detail {
+  border: 1px solid var(--pk-border-strong);
+  border-radius: var(--pk-radius-md);
+  background: var(--pk-bg-panel);
+  padding: 16px;
+  min-height: 200px;
+}
+.detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.detail-head h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.detail-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.detail-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.meta {
+  display: block;
+  font-size: 12px;
+  color: var(--pk-ink-muted);
+  margin-top: 2px;
+}
+.link {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--pk-status-published);
+  word-break: break-all;
 }
 .error {
   color: #b42318;
@@ -255,5 +389,10 @@ onMounted(loadEntries);
 .muted {
   color: var(--pk-ink-muted);
   font-size: 13px;
+}
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

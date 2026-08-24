@@ -170,6 +170,36 @@ export type MediaAsset = {
 
 
 
+export type MediaSuggestion = MediaAsset & {
+
+  reason: string;
+
+  score: number;
+
+};
+
+
+
+export type ExportContentPackResult = {
+
+  folderPath: string;
+
+  mediaCount: number;
+
+};
+
+
+
+export type ExportTasksCsvResult = {
+
+  path: string;
+
+  rowCount: number;
+
+};
+
+
+
 export type ScanMediaResult = {
 
   indexedCount: number;

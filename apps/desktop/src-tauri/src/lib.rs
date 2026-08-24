@@ -1,13 +1,14 @@
 mod db;
 mod md_split;
 mod media;
+mod media_suggest;
 
 use db::{
     create_custom_channel, create_publish_task, delete_content_items_for_source,
-    delete_custom_channel, fields_body, insert_content_item, link_content_media,
-    list_calendar_tasks, list_channels, list_content_items, list_media_assets,
-    list_media_for_content, list_publish_tasks, unlink_content_media,
-    update_publish_task_status, upsert_media_asset, upsert_source_document, DbState,
+    delete_custom_channel, fields_body, get_content_item_by_id, insert_content_item, link_content_media,
+    linked_media_ids, list_calendar_tasks, list_channels, list_content_items, list_media_assets,
+    list_media_for_content, list_publish_tasks, unlink_content_media, update_publish_task_status,
+    update_task_scheduled_at, upsert_media_asset, upsert_source_document, DbState,
 };
 use md_split::{anchor_json, preview_splits, SourceAnchor, SplitPreview, SplitStrategy};
 use serde::{Deserialize, Serialize};
@@ -128,6 +129,33 @@ pub struct ThumbBatchResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct MediaSuggestionRow {
+    pub id: String,
+    pub path: String,
+    pub file_name: String,
+    pub kind: String,
+    pub size_bytes: u64,
+    pub thumb_path: Option<String>,
+    pub reason: String,
+    pub score: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportContentPackResult {
+    pub folder_path: String,
+    pub media_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportTasksCsvResult {
+    pub path: String,
+    pub row_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScanMediaResult {
     pub indexed_count: usize,
     pub total_count: usize,
@@ -185,6 +213,39 @@ fn map_task_rows(
             },
         })
         .collect()
+}
+
+fn parse_scheduled_date(date: &str) -> Result<String, String> {
+    let trimmed = date.trim();
+    if trimmed.is_empty() {
+        return Ok(String::new());
+    }
+    if trimmed.len() != 10 || !trimmed.chars().all(|c| c.is_ascii_digit() || c == '-') {
+        return Err("日期格式应为 YYYY-MM-DD".into());
+    }
+    Ok(format!("{trimmed}T12:00:00Z"))
+}
+
+fn scheduled_date_input(iso: &str) -> String {
+    if iso.len() >= 10 {
+        iso[..10].to_string()
+    } else {
+        String::new()
+    }
+}
+
+fn sanitize_folder_name(name: &str) -> String {
+    let invalid = ['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
+    let cleaned: String = name
+        .chars()
+        .map(|c| if invalid.contains(&c) { '_' } else { c })
+        .collect();
+    let trimmed = cleaned.trim().trim_end_matches('.').to_string();
+    if trimmed.is_empty() {
+        "content".to_string()
+    } else {
+        trimmed
+    }
 }
 
 fn build_media_row(
@@ -810,6 +871,204 @@ fn reveal_media_in_folder_cmd(app: tauri::AppHandle, path: String) -> Result<(),
         .map_err(|e| e.to_string())
 }
 
+fn csv_cell(value: &str) -> String {
+    if value.contains(['"', ',', '\n', '\r']) {
+        format!("\"{}\"", value.replace('"', "\"\""))
+    } else {
+        value.to_string()
+    }
+}
+
+fn unique_pack_dir(dest: &Path, base_name: &str) -> PathBuf {
+    let mut candidate = dest.join(base_name);
+    if !candidate.exists() {
+        return candidate;
+    }
+    for i in 2..100 {
+        candidate = dest.join(format!("{base_name}-{i}"));
+        if !candidate.exists() {
+            return candidate;
+        }
+    }
+    dest.join(format!(
+        "{base_name}-{}",
+        chrono::Utc::now().format("%Y%m%d-%H%M%S")
+    ))
+}
+
+fn unique_dest_path(dir: &Path, file_name: &str) -> PathBuf {
+    let mut dest = dir.join(file_name);
+    if !dest.exists() {
+        return dest;
+    }
+    let path = Path::new(file_name);
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("file");
+    let ext = path
+        .extension()
+        .and_then(|s| s.to_str())
+        .map(|e| format!(".{e}"))
+        .unwrap_or_default();
+    for i in 2..100 {
+        dest = dir.join(format!("{stem}-{i}{ext}"));
+        if !dest.exists() {
+            return dest;
+        }
+    }
+    dir.join(file_name)
+}
+
+#[tauri::command]
+fn suggest_media_for_content_cmd(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, DbState>,
+    content_item_id: String,
+    limit: Option<usize>,
+) -> Result<Vec<MediaSuggestionRow>, String> {
+    let limit = limit.unwrap_or(12).clamp(1, 50);
+    let settings = load_settings(&app)?;
+    let copy_root = settings.copy_root.as_deref();
+    let media_root = settings.media_root.as_deref();
+    db::with_conn(&state, |conn| {
+        let (title, source_path, _) = get_content_item_by_id(conn, &content_item_id)?;
+        let linked: std::collections::HashSet<String> =
+            linked_media_ids(conn, &content_item_id)?.into_iter().collect();
+
+        let mut scored: Vec<MediaSuggestionRow> = list_media_assets(conn)?
+            .into_iter()
+            .filter(|(id, _, _, _, _, _)| !linked.contains(id))
+            .filter_map(|(id, path, file_name, kind, size_bytes, _)| {
+                let (score, reason) = media_suggest::score_media_for_content(
+                    &source_path,
+                    &title,
+                    &path,
+                    &file_name,
+                    copy_root,
+                    media_root,
+                );
+                if score <= 0 {
+                    return None;
+                }
+                Some(MediaSuggestionRow {
+                    id: id.clone(),
+                    path,
+                    file_name,
+                    kind: kind.clone(),
+                    size_bytes: size_bytes as u64,
+                    thumb_path: media::thumb_path_if_exists(&app, &id, &kind),
+                    reason: reason.to_string(),
+                    score,
+                })
+            })
+            .collect();
+
+        scored.sort_by(|a, b| {
+            b.score
+                .cmp(&a.score)
+                .then_with(|| a.file_name.cmp(&b.file_name))
+        });
+        scored.truncate(limit);
+        Ok(scored)
+    })
+}
+
+#[tauri::command]
+fn update_publish_task_scheduled_cmd(
+    state: tauri::State<'_, DbState>,
+    task_id: String,
+    scheduled_date: String,
+) -> Result<(), String> {
+    let scheduled_at = if scheduled_date.trim().is_empty() {
+        None
+    } else {
+        Some(parse_scheduled_date(&scheduled_date)?)
+    };
+    db::with_conn(&state, |conn| {
+        update_task_scheduled_at(conn, &task_id, scheduled_at.as_deref())
+    })
+}
+
+#[tauri::command]
+fn export_content_pack_cmd(
+    state: tauri::State<'_, DbState>,
+    content_item_id: String,
+    dest_folder: String,
+) -> Result<ExportContentPackResult, String> {
+    db::with_conn(&state, |conn| {
+        let (title, source_path, fields_json) = get_content_item_by_id(conn, &content_item_id)?;
+        let body = fields_body(&fields_json);
+        let media = list_media_for_content(conn, &content_item_id)?;
+
+        let dest = PathBuf::from(&dest_folder);
+        if !dest.is_dir() {
+            return Err("目标路径不是文件夹".into());
+        }
+
+        let pack_dir = unique_pack_dir(&dest, &sanitize_folder_name(&title));
+        fs::create_dir_all(&pack_dir).map_err(|e| e.to_string())?;
+
+        let mut md = format!("# {title}\n\n");
+        if !source_path.starts_with("manual://") {
+            md.push_str(&format!("> Source: {source_path}\n\n"));
+        }
+        md.push_str(&body);
+        fs::write(pack_dir.join("content.md"), md).map_err(|e| e.to_string())?;
+
+        let mut media_count = 0;
+        if !media.is_empty() {
+            let media_dir = pack_dir.join("media");
+            fs::create_dir_all(&media_dir).map_err(|e| e.to_string())?;
+            for (_, path, file_name, _, _) in media {
+                let target = unique_dest_path(&media_dir, &file_name);
+                fs::copy(&path, &target)
+                    .map_err(|e| format!("复制素材失败 {path}: {e}"))?;
+                media_count += 1;
+            }
+        }
+
+        Ok(ExportContentPackResult {
+            folder_path: pack_dir.to_string_lossy().to_string(),
+            media_count,
+        })
+    })
+}
+
+#[tauri::command]
+fn export_tasks_csv_cmd(
+    state: tauri::State<'_, DbState>,
+    dest_path: String,
+) -> Result<ExportTasksCsvResult, String> {
+    db::with_conn(&state, |conn| {
+        let rows = list_publish_tasks(conn, None)?;
+        let mut csv = String::from(
+            "id,status,channel,content_title,language,scheduled_at,published_at,publish_url,updated_at\n",
+        );
+
+        for row in &rows {
+            csv.push_str(&format!(
+                "{},{},{},{},{},{},{},{},{}\n",
+                csv_cell(&row.0),
+                csv_cell(&row.1),
+                csv_cell(&row.8),
+                csv_cell(&row.11),
+                csv_cell(&row.12),
+                csv_cell(&scheduled_date_input(&row.5)),
+                csv_cell(&scheduled_date_input(&row.6)),
+                csv_cell(&row.2),
+                csv_cell(&row.4),
+            ));
+        }
+
+        fs::write(&dest_path, csv.as_bytes()).map_err(|e| e.to_string())?;
+        Ok(ExportTasksCsvResult {
+            path: dest_path,
+            row_count: rows.len(),
+        })
+    })
+}
+
 #[tauri::command]
 fn list_calendar_entries_cmd(
     state: tauri::State<'_, DbState>,
@@ -872,7 +1131,11 @@ pub fn run() {
             list_calendar_entries_cmd,
             generate_media_thumbnails_cmd,
             copy_media_image_cmd,
-            reveal_media_in_folder_cmd
+            reveal_media_in_folder_cmd,
+            suggest_media_for_content_cmd,
+            update_publish_task_scheduled_cmd,
+            export_content_pack_cmd,
+            export_tasks_csv_cmd
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

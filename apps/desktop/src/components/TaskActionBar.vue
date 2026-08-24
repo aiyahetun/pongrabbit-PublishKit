@@ -7,6 +7,7 @@ const props = defineProps<{
   task: PublishTask;
   copied?: boolean;
   publishUrl: string;
+  scheduledDate?: string;
 }>();
 
 const emit = defineEmits<{
@@ -15,12 +16,18 @@ const emit = defineEmits<{
   markPublished: [];
   undoPublish: [];
   "update:publishUrl": [value: string];
+  "update:scheduledDate": [value: string];
+  saveScheduled: [];
 }>();
 
 const { t } = useI18n();
 
 const showUrlField = computed(
   () => props.task.status === "ready" || props.task.status === "published"
+);
+
+const showScheduleField = computed(
+  () => props.task.status === "draft" || props.task.status === "ready"
 );
 </script>
 
@@ -59,8 +66,24 @@ const showUrlField = computed(
       </template>
     </div>
 
+    <label v-if="showScheduleField" class="schedule-row">
+      <span class="field-label">{{ t("tasks.scheduledDateLabel") }}</span>
+      <div class="schedule-inputs">
+        <input
+          class="pk-input schedule-input"
+          type="date"
+          :value="scheduledDate ?? ''"
+          @input="emit('update:scheduledDate', ($event.target as HTMLInputElement).value)"
+        />
+        <button type="button" class="pk-btn pk-btn--ghost" @click="emit('saveScheduled')">
+          {{ t("tasks.saveScheduled") }}
+        </button>
+      </div>
+      <span class="hint">{{ t("tasks.scheduledDateHint") }}</span>
+    </label>
+
     <label v-if="showUrlField" class="url-row">
-      <span class="url-label">{{ t("tasks.publishUrlLabel") }}</span>
+      <span class="field-label">{{ t("tasks.publishUrlLabel") }}</span>
       <input
         class="pk-input url-input"
         :value="publishUrl"
@@ -98,15 +121,32 @@ const showUrlField = computed(
   gap: var(--pk-space-2);
 }
 
+.schedule-row,
 .url-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.url-label {
+.field-label {
   font-size: 12px;
   font-weight: 500;
+  color: var(--pk-ink-muted);
+}
+
+.schedule-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pk-space-2);
+  align-items: center;
+}
+
+.schedule-input {
+  width: 160px;
+}
+
+.hint {
+  font-size: 11px;
   color: var(--pk-ink-muted);
 }
 

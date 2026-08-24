@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
+import { save } from "@tauri-apps/plugin-dialog";
 import type { PublishTask, TaskStatus } from "@publishkit/shared";
 import TaskCard from "../components/TaskCard.vue";
 import TaskActionBar from "../components/TaskActionBar.vue";
@@ -15,7 +16,9 @@ const loading = ref(false);
 const error = ref("");
 const copiedId = ref("");
 const publishUrls = ref<Record<string, string>>({});
+const scheduledDates = ref<Record<string, string>>({});
 const collapsed = ref<Set<string>>(new Set());
+const notice = ref("");
 
 const filters: Array<"all" | TaskStatus> = ["all", "draft", "ready", "published"];
 
@@ -25,11 +28,18 @@ const hasTasks = computed(() => sections.value.some((section) => section.tasks.l
 
 function syncPublishUrls(list: PublishTask[]) {
   const next: Record<string, string> = { ...publishUrls.value };
+  const nextDates: Record<string, string> = { ...scheduledDates.value };
   for (const task of list) {
     if (!(task.id in next)) next[task.id] = task.publishUrl || "";
     else if (task.publishUrl) next[task.id] = task.publishUrl;
+    if (!(task.id in nextDates)) {
+      nextDates[task.id] = task.scheduledAt?.slice(0, 10) ?? "";
+    } else if (task.scheduledAt) {
+      nextDates[task.id] = task.scheduledAt.slice(0, 10);
+    }
   }
   publishUrls.value = next;
+  scheduledDates.value = nextDates;
 }
 
 function sectionLabel(section: TaskSection) {
@@ -82,6 +92,7 @@ async function copyTask(task: PublishTask) {
 
 async function updateTask(task: PublishTask, status: TaskStatus) {
   error.value = "";
+  notice.value = "";
   try {
     await invoke("update_publish_task_status_cmd", {
       taskId: task.id,
@@ -89,6 +100,38 @@ async function updateTask(task: PublishTask, status: TaskStatus) {
       publishUrl: publishUrls.value[task.id]?.trim() || null,
     });
     await loadTasks();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function saveScheduled(task: PublishTask) {
+  error.value = "";
+  notice.value = "";
+  try {
+    await invoke("update_publish_task_scheduled_cmd", {
+      taskId: task.id,
+      scheduledDate: scheduledDates.value[task.id] ?? "",
+    });
+    notice.value = t("tasks.scheduledSaved");
+    await loadTasks();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function exportCsv() {
+  error.value = "";
+  notice.value = "";
+  const picked = await save({
+    defaultPath: `publishkit-tasks-${new Date().toISOString().slice(0, 10)}.csv`,
+    filters: [{ name: "CSV", extensions: ["csv"] }],
+    title: t("tasks.exportCsvTitle"),
+  });
+  if (!picked || typeof picked !== "string") return;
+  try {
+    const result = await invoke<{ rowCount: number }>("export_tasks_csv_cmd", { destPath: picked });
+    notice.value = t("tasks.exportCsvDone", { count: result.rowCount });
   } catch (e) {
     error.value = String(e);
   }
@@ -114,10 +157,17 @@ onMounted(loadTasks);
         <h1>{{ t("tasks.title") }}</h1>
         <p class="muted">{{ t("tasks.subtitleGrouped") }}</p>
       </div>
-      <button type="button" class="pk-btn pk-btn--secondary" :disabled="loading" @click="loadTasks">
-        {{ t("tasks.refresh") }}
-      </button>
+      <div class="head-actions">
+        <button type="button" class="pk-btn pk-btn--ghost" :disabled="loading" @click="exportCsv">
+          {{ t("tasks.exportCsv") }}
+        </button>
+        <button type="button" class="pk-btn pk-btn--secondary" :disabled="loading" @click="loadTasks">
+          {{ t("tasks.refresh") }}
+        </button>
+      </div>
     </header>
+
+    <p v-if="notice" class="notice">{{ notice }}</p>
 
     <div class="filters">
       <button
@@ -151,11 +201,14 @@ onMounted(loadTasks);
                 :task="task"
                 :copied="copiedId === task.id"
                 :publish-url="publishUrls[task.id] ?? ''"
+                :scheduled-date="scheduledDates[task.id] ?? ''"
                 @update:publish-url="publishUrls[task.id] = $event"
+                @update:scheduled-date="scheduledDates[task.id] = $event"
                 @copy="copyTask(task)"
                 @mark-ready="updateTask(task, 'ready')"
                 @mark-published="updateTask(task, 'published')"
                 @undo-publish="updateTask(task, 'draft')"
+                @save-scheduled="saveScheduled(task)"
               />
             </TaskCard>
           </li>
@@ -182,6 +235,10 @@ onMounted(loadTasks);
   margin: 0 0 4px;
   font-size: 20px;
   font-weight: 600;
+}
+.head-actions {
+  display: flex;
+  gap: var(--pk-space-2);
 }
 .filters {
   display: flex;
@@ -237,5 +294,9 @@ onMounted(loadTasks);
 .error {
   color: var(--pk-status-blocked);
   font-size: 14px;
+}
+.notice {
+  color: var(--pk-accent);
+  font-size: 13px;
 }
 </style>

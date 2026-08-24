@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
-import type { MediaAsset } from "@publishkit/shared";
+import type { MediaAsset, MediaSuggestion } from "@publishkit/shared";
 import MediaThumb from "./MediaThumb.vue";
 
 const props = defineProps<{
@@ -17,6 +17,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const allAssets = ref<MediaAsset[]>([]);
+const suggestions = ref<MediaSuggestion[]>([]);
 const linked = ref<MediaAsset[]>([]);
 const loading = ref(true);
 const saving = ref(false);
@@ -25,16 +26,25 @@ const selected = ref<Set<string>>(new Set());
 
 const linkedIds = computed(() => new Set(linked.value.map((item) => item.id)));
 
+function reasonLabel(reason: string) {
+  return t(`media.suggestReason_${reason}`, reason);
+}
+
 async function load() {
   loading.value = true;
   error.value = "";
   try {
-    const [assets, linkedItems] = await Promise.all([
+    const [assets, linkedItems, suggested] = await Promise.all([
       invoke<MediaAsset[]>("list_media_assets_cmd"),
       invoke<MediaAsset[]>("list_content_media_cmd", { contentItemId: props.contentId }),
+      invoke<MediaSuggestion[]>("suggest_media_for_content_cmd", {
+        contentItemId: props.contentId,
+        limit: 12,
+      }),
     ]);
     allAssets.value = assets;
     linked.value = linkedItems;
+    suggestions.value = suggested;
     selected.value = new Set(linkedItems.map((item) => item.id));
   } catch (e) {
     error.value = String(e);
@@ -47,6 +57,14 @@ function toggle(id: string) {
   const next = new Set(selected.value);
   if (next.has(id)) next.delete(id);
   else next.add(id);
+  selected.value = next;
+}
+
+function applySuggestions() {
+  const next = new Set(selected.value);
+  for (const item of suggestions.value) {
+    next.add(item.id);
+  }
   selected.value = next;
 }
 
@@ -103,18 +121,48 @@ watch(
       <p v-if="loading" class="muted">{{ t("media.loading") }}</p>
       <p v-else-if="!allAssets.length" class="muted">{{ t("media.linkEmpty") }}</p>
 
-      <ul v-else class="list">
-        <li v-for="item in allAssets" :key="item.id">
-          <label>
-            <input type="checkbox" :checked="selected.has(item.id)" @change="toggle(item.id)" />
-            <MediaThumb :asset="item" size="md" />
-            <div class="text">
-              <strong>{{ item.fileName }}</strong>
-              <span class="path">{{ item.path }}</span>
-            </div>
-          </label>
-        </li>
-      </ul>
+      <template v-else>
+        <section class="suggest-block">
+          <div class="suggest-head">
+            <h3>{{ t("media.suggestTitle") }}</h3>
+            <button
+              v-if="suggestions.length"
+              type="button"
+              class="pk-btn pk-btn--ghost"
+              @click="applySuggestions"
+            >
+              {{ t("media.suggestApply") }}
+            </button>
+          </div>
+          <ul v-if="suggestions.length" class="suggest-list">
+            <li v-for="item in suggestions" :key="item.id">
+              <label>
+                <input type="checkbox" :checked="selected.has(item.id)" @change="toggle(item.id)" />
+                <MediaThumb :asset="item" size="md" />
+                <div class="text">
+                  <strong>{{ item.fileName }}</strong>
+                  <span class="reason">{{ reasonLabel(item.reason) }}</span>
+                </div>
+              </label>
+            </li>
+          </ul>
+          <p v-else class="suggest-empty">{{ t("media.suggestEmpty") }}</p>
+        </section>
+
+        <h3 class="all-title">{{ t("media.allAssets") }}</h3>
+        <ul class="list">
+          <li v-for="item in allAssets" :key="item.id">
+            <label>
+              <input type="checkbox" :checked="selected.has(item.id)" @change="toggle(item.id)" />
+              <MediaThumb :asset="item" size="md" />
+              <div class="text">
+                <strong>{{ item.fileName }}</strong>
+                <span class="path">{{ item.path }}</span>
+              </div>
+            </label>
+          </li>
+        </ul>
+      </template>
 
       <p v-if="error" class="error">{{ error }}</p>
 
@@ -162,12 +210,38 @@ watch(
   font-size: 12px;
   color: var(--pk-ink-muted);
 }
+.suggest-block {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--pk-accent-soft);
+  border-radius: 8px;
+  background: var(--pk-bg-alt);
+}
+.suggest-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.suggest-head h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.suggest-list,
 .list {
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 420px;
+  max-height: 240px;
   overflow: auto;
+}
+.all-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pk-ink-muted);
 }
 li {
   border-top: 1px solid var(--pk-border);
@@ -181,6 +255,18 @@ label {
 }
 .text {
   min-width: 0;
+}
+.reason {
+  display: block;
+  font-size: 11px;
+  color: var(--pk-accent-text);
+  margin-top: 2px;
+}
+.suggest-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--pk-ink-muted);
+  line-height: 1.5;
 }
 .path {
   display: block;

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
 import type { Channel, ContentItem, MediaAsset } from "@publishkit/shared";
 import { copyMarkdownAsRichText } from "../utils/clipboard";
 import MediaLinkDialog from "../components/MediaLinkDialog.vue";
@@ -133,6 +134,29 @@ async function copyLinkedImagesForItem(item: ContentItem) {
   }
 }
 
+async function exportPack(item: ContentItem) {
+  error.value = "";
+  notice.value = "";
+  const picked = await open({
+    directory: true,
+    multiple: false,
+    title: t("content.exportPackTitle"),
+  });
+  if (!picked || typeof picked !== "string") return;
+  try {
+    const result = await invoke<{ folderPath: string; mediaCount: number }>("export_content_pack_cmd", {
+      contentItemId: item.id,
+      destFolder: picked,
+    });
+    notice.value = t("content.exportPackDone", {
+      path: result.folderPath,
+      count: result.mediaCount,
+    });
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
 async function addQuickChannel() {
   if (!quickChannelName.value.trim()) return;
   error.value = "";
@@ -190,6 +214,9 @@ onMounted(async () => {
             <button type="button" class="pk-btn pk-btn--ghost" @click="showMediaFor = item">
               {{ t("content.linkMedia") }}
               <span v-if="itemMedia[item.id]?.length" class="count">{{ itemMedia[item.id].length }}</span>
+            </button>
+            <button type="button" class="pk-btn pk-btn--ghost" @click="exportPack(item)">
+              {{ t("content.exportPack") }}
             </button>
             <button type="button" class="pk-btn pk-btn--ghost" @click="showTaskFor = item">{{ t("content.addTask") }}</button>
             <button type="button" class="pk-btn pk-btn--secondary" @click="copyBody(item)">
