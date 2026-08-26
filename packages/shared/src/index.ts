@@ -96,6 +96,50 @@ export type ContentItem = {
 
 
 
+export type ImportBackupResult = {
+
+  mode: string;
+
+  fileCount: number;
+
+  includesThumbs: boolean;
+
+  merged?: MergeBackupSummary;
+
+};
+
+
+
+export type MergeBackupSummary = {
+
+  sourceDocumentsAdded: number;
+
+  contentItemsAdded: number;
+
+  publishTasksAdded: number;
+
+  mediaAssetsAdded: number;
+
+  contentMediaAdded: number;
+
+  channelsAdded: number;
+
+};
+
+
+
+export type DuplicatePublishWarning = {
+
+  previousPublishedAt: string;
+
+  previousPublishUrl: string;
+
+  daysSince: number;
+
+};
+
+
+
 export type ImportSplitsResult = {
 
   importedCount: number;
@@ -279,16 +323,6 @@ export type DeleteContentResult = {
 export type ExportBackupResult = {
 
   path: string;
-
-  fileCount: number;
-
-  includesThumbs: boolean;
-
-};
-
-
-
-export type ImportBackupResult = {
 
   fileCount: number;
 

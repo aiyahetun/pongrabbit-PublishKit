@@ -18,6 +18,17 @@ pub struct ImportBackupSummary {
     pub includes_thumbs: bool,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MergeBackupSummary {
+    pub source_documents_added: usize,
+    pub content_items_added: usize,
+    pub publish_tasks_added: usize,
+    pub media_assets_added: usize,
+    pub content_media_added: usize,
+    pub channels_added: usize,
+}
+
 const RESTORE_PENDING_DIR: &str = "restore_pending";
 fn zip_unix_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
@@ -182,20 +193,125 @@ fn validate_restore_manifest(pending: &Path) -> Result<bool, String> {
         .unwrap_or(false))
 }
 
+fn extract_zip_to_temp(app: &AppHandle, zip_path: &Path) -> Result<(PathBuf, usize, bool), String> {
+    let pending = restore_pending_dir(app)?;
+    let file_count = extract_zip_to_dir(zip_path, &pending)?;
+    if !pending.join("publishkit.db").is_file() {
+        fs::remove_dir_all(&pending).ok();
+        return Err("备份包缺少 publishkit.db".into());
+    }
+    let includes_thumbs = validate_restore_manifest(&pending)?;
+    Ok((pending, file_count, includes_thumbs))
+}
+
+pub fn merge_backup_from_zip(
+    app: &AppHandle,
+    conn: &rusqlite::Connection,
+    zip_path: &Path,
+) -> Result<(MergeBackupSummary, bool), String> {
+    if !zip_path.is_file() {
+        return Err("备份文件不存在".into());
+    }
+
+    let (pending, _file_count, includes_thumbs) = extract_zip_to_temp(app, zip_path)?;
+    let backup_db = pending.join("publishkit.db");
+    let summary = merge_backup_database(conn, &backup_db)?;
+
+    if includes_thumbs {
+        let thumbs_src = pending.join("cache").join("thumbs");
+        if thumbs_src.is_dir() {
+            let thumbs_dest = app
+                .path()
+                .app_data_dir()
+                .map_err(|e| e.to_string())?
+                .join("cache")
+                .join("thumbs");
+            merge_thumb_dir(&thumbs_src, &thumbs_dest)?;
+        }
+    }
+
+    fs::remove_dir_all(&pending).map_err(|e| e.to_string())?;
+    Ok((summary, includes_thumbs))
+}
+
+fn merge_thumb_dir(src: &Path, dest: &Path) -> Result<(), String> {
+    fs::create_dir_all(dest).map_err(|e| e.to_string())?;
+    for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let from = entry.path();
+        if !from.is_file() {
+            continue;
+        }
+        let to = dest.join(entry.file_name());
+        if !to.exists() {
+            fs::copy(&from, &to).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
+pub fn merge_backup_database(
+    main: &rusqlite::Connection,
+    backup_db_path: &Path,
+) -> Result<MergeBackupSummary, String> {
+    let backup_path = backup_db_path.to_string_lossy();
+    main.execute("ATTACH DATABASE ?1 AS backup", [backup_path.as_ref()])
+        .map_err(|e| e.to_string())?;
+
+    let merge = |sql: &str| -> Result<usize, String> {
+        main.execute(sql, []).map_err(|e| e.to_string())?;
+        Ok(main.changes() as usize)
+    };
+
+    let result = (|| {
+        let channels_added = merge(
+            "INSERT OR IGNORE INTO channels (id, name, market, color, sort_order, is_custom)
+             SELECT id, name, market, color, sort_order, is_custom FROM backup.channels
+             WHERE is_custom = 1",
+        )?;
+        let source_documents_added = merge(
+            "INSERT OR IGNORE INTO source_documents
+             SELECT id, path, title, hash, last_scanned_at FROM backup.source_documents",
+        )?;
+        let content_items_added = merge(
+            "INSERT OR IGNORE INTO content_items
+             SELECT id, source_document_id, source_path, source_anchor, title, language, fields_json, created_at, updated_at
+             FROM backup.content_items",
+        )?;
+        let media_assets_added = merge(
+            "INSERT OR IGNORE INTO media_assets
+             SELECT id, path, file_name, kind, size_bytes, mtime, indexed_at FROM backup.media_assets",
+        )?;
+        let content_media_added = merge(
+            "INSERT OR IGNORE INTO content_media
+             SELECT content_item_id, media_asset_id, sort_order FROM backup.content_media",
+        )?;
+        let publish_tasks_added = merge(
+            "INSERT OR IGNORE INTO publish_tasks
+             SELECT id, content_item_id, channel_id, status, scheduled_at, published_at, publish_url, note, created_at, updated_at
+             FROM backup.publish_tasks",
+        )?;
+        Ok(MergeBackupSummary {
+            source_documents_added,
+            content_items_added,
+            publish_tasks_added,
+            media_assets_added,
+            content_media_added,
+            channels_added,
+        })
+    })();
+
+    let _ = main.execute("DETACH DATABASE backup", []);
+    result
+}
+
 pub fn stage_restore_from_zip(app: &AppHandle, zip_path: &Path) -> Result<ImportBackupSummary, String> {
     if !zip_path.is_file() {
         return Err("备份文件不存在".into());
     }
 
-    let pending = restore_pending_dir(app)?;
-    let file_count = extract_zip_to_dir(zip_path, &pending)?;
+    let (_pending, file_count, includes_thumbs) = extract_zip_to_temp(app, zip_path)?;
 
-    if !pending.join("publishkit.db").is_file() {
-        fs::remove_dir_all(&pending).ok();
-        return Err("备份包缺少 publishkit.db".into());
-    }
-
-    let includes_thumbs = validate_restore_manifest(&pending)?;
     Ok(ImportBackupSummary {
         file_count,
         includes_thumbs,

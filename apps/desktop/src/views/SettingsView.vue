@@ -10,6 +10,7 @@ const saving = ref(false);
 const backingUp = ref(false);
 const restoring = ref(false);
 const includeThumbs = ref(false);
+const restoreMode = ref<"replace" | "merge">("replace");
 const backupNotice = ref("");
 const apiStatus = ref<ApiStatus | null>(null);
 const apiLoading = ref(false);
@@ -132,7 +133,9 @@ async function importBackup() {
   });
   if (!picked || typeof picked !== "string") return;
 
-  const confirmed = await ask(t("settings.restoreConfirm"), {
+  const confirmKey =
+    restoreMode.value === "merge" ? "settings.restoreMergeConfirm" : "settings.restoreConfirm";
+  const confirmed = await ask(t(confirmKey), {
     title: t("settings.restoreTitle"),
     kind: "warning",
   });
@@ -140,9 +143,21 @@ async function importBackup() {
 
   restoring.value = true;
   try {
-    await invoke<ImportBackupResult>("import_backup_cmd", { zipPath: picked });
+    const result = await invoke<ImportBackupResult>("import_backup_cmd", {
+      zipPath: picked,
+      mode: restoreMode.value,
+    });
+    if (restoreMode.value === "merge" && result.merged) {
+      const m = result.merged;
+      backupNotice.value = t("settings.restoreMergeDone", {
+        content: m.contentItemsAdded,
+        tasks: m.publishTasksAdded,
+        media: m.mediaAssetsAdded,
+      });
+    }
   } catch (e) {
     channelError.value = String(e);
+  } finally {
     restoring.value = false;
   }
 }
@@ -187,6 +202,17 @@ onMounted(async () => {
         <input v-model="includeThumbs" type="checkbox" />
         <span>{{ t("settings.backupIncludeThumbs") }}</span>
       </label>
+      <div class="restore-mode">
+        <span class="field-label">{{ t("settings.restoreMode") }}</span>
+        <label class="mode-option">
+          <input v-model="restoreMode" type="radio" value="replace" />
+          {{ t("settings.restoreModeReplace") }}
+        </label>
+        <label class="mode-option">
+          <input v-model="restoreMode" type="radio" value="merge" />
+          {{ t("settings.restoreModeMerge") }}
+        </label>
+      </div>
       <button type="button" class="pk-btn pk-btn--secondary" :disabled="backingUp || restoring" @click="exportBackup">
         {{ backingUp ? t("settings.backingUp") : t("settings.exportBackup") }}
       </button>
@@ -305,6 +331,20 @@ onMounted(async () => {
   margin: var(--pk-space-3) 0;
   font-size: 13px;
   color: var(--pk-ink-secondary);
+}
+.restore-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: var(--pk-space-3);
+}
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--pk-ink-secondary);
+  cursor: pointer;
 }
 .actions-inline {
   display: flex;

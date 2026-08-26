@@ -680,3 +680,52 @@ pub fn list_calendar_tasks(
 
     Ok(rows)
 }
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DuplicatePublishWarning {
+    pub previous_published_at: String,
+    pub previous_publish_url: String,
+    pub days_since: i64,
+}
+
+pub fn duplicate_publish_warning(
+    conn: &Connection,
+    content_item_id: &str,
+    channel_id: &str,
+    exclude_task_id: &str,
+    within_days: i64,
+) -> Result<Option<DuplicatePublishWarning>, String> {
+    let cutoff = chrono::Utc::now() - chrono::Duration::days(within_days);
+    let row: Option<(String, String)> = conn
+        .query_row(
+            "SELECT published_at, COALESCE(publish_url, '')
+             FROM publish_tasks
+             WHERE content_item_id = ?1 AND channel_id = ?2 AND status = 'published'
+               AND id != ?3 AND published_at IS NOT NULL AND published_at != ''
+             ORDER BY published_at DESC LIMIT 1",
+            rusqlite::params![content_item_id, channel_id, exclude_task_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()
+        .map_err(|e| e.to_string())?;
+
+    let Some((published_at, publish_url)) = row else {
+        return Ok(None);
+    };
+    let Some(dt) = chrono::DateTime::parse_from_rfc3339(&published_at)
+        .ok()
+        .map(|value| value.with_timezone(&chrono::Utc))
+    else {
+        return Ok(None);
+    };
+    if dt < cutoff {
+        return Ok(None);
+    }
+    let days_since = (chrono::Utc::now() - dt).num_days().max(0);
+    Ok(Some(DuplicatePublishWarning {
+        previous_published_at: published_at,
+        previous_publish_url: publish_url,
+        days_since,
+    }))
+}

@@ -9,6 +9,7 @@ import TaskActionBar from "../components/TaskActionBar.vue";
 import { copyMarkdownAsRichText } from "../utils/clipboard";
 import { copyFirstLinkedImage, openLinkedImagesFolder } from "../utils/taskMediaActions";
 import { buildTaskSections, type TaskSection } from "../utils/taskGroups";
+import { confirmPublishIfDuplicate } from "../utils/confirmPublish";
 
 const { t, locale } = useI18n();
 const tasks = ref<PublishTask[]>([]);
@@ -124,6 +125,10 @@ async function openTaskImagesFolder(task: PublishTask) {
 async function updateTask(task: PublishTask, status: TaskStatus) {
   error.value = "";
   notice.value = "";
+  if (status === "published") {
+    const ok = await confirmPublishIfDuplicate(task, t);
+    if (!ok) return;
+  }
   try {
     await invoke("update_publish_task_status_cmd", {
       taskId: task.id,

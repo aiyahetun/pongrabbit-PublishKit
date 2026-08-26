@@ -12,10 +12,11 @@ mod staging;
 
 use db::{
     create_custom_channel, create_publish_task, delete_content_items, delete_content_items_for_source,
-    delete_custom_channel, fields_body, get_content_item_by_id, insert_content_item, link_content_media,
-    linked_media_ids, list_calendar_tasks, list_channels, list_content_items, list_media_assets,
-    list_media_for_content, list_publish_tasks, unlink_content_media, update_publish_task_status,
-    update_task_scheduled_at, upsert_media_asset, upsert_source_document, DbState,
+    delete_custom_channel, duplicate_publish_warning, fields_body, get_content_item_by_id,
+    insert_content_item, link_content_media, linked_media_ids, list_calendar_tasks, list_channels,
+    list_content_items, list_media_assets, list_media_for_content, list_publish_tasks,
+    unlink_content_media, update_publish_task_status, update_task_scheduled_at, upsert_media_asset,
+    upsert_source_document, DbState, DuplicatePublishWarning,
 };
 use md_split::{anchor_json, preview_splits, SourceAnchor, SplitPreview, SplitStrategy};
 use serde::{Deserialize, Serialize};
@@ -191,8 +192,11 @@ pub struct ExportBackupResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportBackupResult {
+    pub mode: String,
     pub file_count: usize,
     pub includes_thumbs: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub merged: Option<backup::MergeBackupSummary>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1268,14 +1272,52 @@ fn export_backup_cmd(
 }
 
 #[tauri::command]
-fn import_backup_cmd(app: tauri::AppHandle, zip_path: String) -> Result<ImportBackupResult, String> {
-    let summary = backup::stage_restore_from_zip(&app, Path::new(&zip_path))?;
-    app.restart();
-    #[allow(unreachable_code)]
-    Ok(ImportBackupResult {
-        file_count: summary.file_count,
-        includes_thumbs: summary.includes_thumbs,
+fn check_duplicate_publish_cmd(
+    state: tauri::State<'_, DbState>,
+    task_id: String,
+    content_item_id: String,
+    channel_id: String,
+) -> Result<Option<DuplicatePublishWarning>, String> {
+    db::with_conn(&state, |conn| {
+        duplicate_publish_warning(conn, &content_item_id, &channel_id, &task_id, 30)
     })
+}
+
+#[tauri::command]
+fn import_backup_cmd(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, DbState>,
+    zip_path: String,
+    mode: Option<String>,
+) -> Result<ImportBackupResult, String> {
+    let mode = mode.unwrap_or_else(|| "replace".into());
+    match mode.as_str() {
+        "merge" => {
+            let (merged, includes_thumbs) = db::with_conn(&state, |conn| {
+                backup::merge_backup_from_zip(&app, conn, Path::new(&zip_path))
+            })?;
+            Ok(ImportBackupResult {
+                mode,
+                file_count: merged.content_items_added
+                    + merged.publish_tasks_added
+                    + merged.media_assets_added,
+                includes_thumbs,
+                merged: Some(merged),
+            })
+        }
+        "replace" => {
+            let summary = backup::stage_restore_from_zip(&app, Path::new(&zip_path))?;
+            app.restart();
+            #[allow(unreachable_code)]
+            Ok(ImportBackupResult {
+                mode,
+                file_count: summary.file_count,
+                includes_thumbs: summary.includes_thumbs,
+                merged: None,
+            })
+        }
+        _ => Err(format!("未知恢复模式: {mode}")),
+    }
 }
 
 #[tauri::command]
@@ -1396,6 +1438,7 @@ pub fn run() {
             delete_content_item_cmd,
             delete_content_items_cmd,
             export_backup_cmd,
+            check_duplicate_publish_cmd,
             import_backup_cmd,
             get_api_status_cmd,
             regenerate_pairing_token_cmd
