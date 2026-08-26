@@ -1,6 +1,6 @@
 [package]
 name = "publishkit-desktop"
-version = "0.2.1"
+version = "0.2.2"
 description = "PublishKit desktop app"
 authors = ["PongRabbit"]
 edition = "2021"

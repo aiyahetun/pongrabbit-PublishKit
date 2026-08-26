@@ -361,11 +361,6 @@ pub fn update_publish_task_status(
     note: Option<&str>,
 ) -> Result<(), String> {
     let now = chrono::Utc::now().to_rfc3339();
-    let published_at: Option<String> = if status == "published" {
-        Some(now.clone())
-    } else {
-        None
-    };
 
     conn.execute(
         "UPDATE publish_tasks SET
@@ -373,13 +368,13 @@ pub fn update_publish_task_status(
             publish_url = COALESCE(?2, publish_url),
             note = COALESCE(?3, note),
             scheduled_at = CASE
-                WHEN ?1 = 'ready' AND scheduled_at IS NULL THEN ?5
+                WHEN ?1 = 'ready' AND scheduled_at IS NULL THEN ?4
                 ELSE scheduled_at
             END,
-            published_at = ?4,
-            updated_at = ?5
-         WHERE id = ?6",
-        rusqlite::params![status, publish_url, note, published_at, now, task_id],
+            published_at = CASE WHEN ?1 = 'published' THEN ?4 ELSE published_at END,
+            updated_at = ?4
+         WHERE id = ?5",
+        rusqlite::params![status, publish_url, note, now, task_id],
     )
     .map_err(|e| e.to_string())?;
 
@@ -693,18 +688,20 @@ pub fn duplicate_publish_warning(
     conn: &Connection,
     content_item_id: &str,
     channel_id: &str,
-    exclude_task_id: &str,
+    _task_id: &str,
     within_days: i64,
 ) -> Result<Option<DuplicatePublishWarning>, String> {
     let cutoff = chrono::Utc::now() - chrono::Duration::days(within_days);
+    // content_item_id + channel_id is unique — the only publish row is the current task.
+    // Look at published_at history, not other task ids.
     let row: Option<(String, String)> = conn
         .query_row(
             "SELECT published_at, COALESCE(publish_url, '')
              FROM publish_tasks
-             WHERE content_item_id = ?1 AND channel_id = ?2 AND status = 'published'
-               AND id != ?3 AND published_at IS NOT NULL AND published_at != ''
+             WHERE content_item_id = ?1 AND channel_id = ?2
+               AND published_at IS NOT NULL AND published_at != ''
              ORDER BY published_at DESC LIMIT 1",
-            rusqlite::params![content_item_id, channel_id, exclude_task_id],
+            rusqlite::params![content_item_id, channel_id],
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .optional()
@@ -728,4 +725,71 @@ pub fn duplicate_publish_warning(
         previous_publish_url: publish_url,
         days_since,
     }))
+}
+
+#[cfg(test)]
+mod duplicate_publish_tests {
+    use super::*;
+
+    fn test_conn() -> Connection {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        migrate(&conn).expect("migrate");
+        conn
+    }
+
+    fn insert_test_task(conn: &Connection, task_id: &str, content_id: &str, channel_id: &str) {
+        let now = chrono::Utc::now().to_rfc3339();
+        conn.execute(
+            "INSERT INTO content_items (id, source_path, source_anchor, title, fields_json, created_at, updated_at)
+             VALUES (?1, '/test.md', 'a', 'Test', '{}', ?2, ?2)",
+            rusqlite::params![content_id, now],
+        )
+        .expect("insert content");
+        conn.execute(
+            "INSERT INTO publish_tasks (id, content_item_id, channel_id, status, created_at, updated_at)
+             VALUES (?1, ?2, ?3, 'ready', ?4, ?4)",
+            rusqlite::params![task_id, content_id, channel_id, now],
+        )
+        .expect("insert task");
+    }
+
+    #[test]
+    fn warns_when_same_task_already_published() {
+        let conn = test_conn();
+        insert_test_task(&conn, "task-1", "content-1", "xhs");
+        update_publish_task_status(&conn, "task-1", "published", Some("https://example.com"), None)
+            .expect("publish");
+
+        let warning =
+            duplicate_publish_warning(&conn, "content-1", "xhs", "task-1", 30).expect("query");
+        assert!(
+            warning.is_some(),
+            "same task already published should trigger warning"
+        );
+    }
+
+    #[test]
+    fn no_warning_for_never_published() {
+        let conn = test_conn();
+        insert_test_task(&conn, "task-1", "content-1", "xhs");
+
+        let warning =
+            duplicate_publish_warning(&conn, "content-1", "xhs", "task-1", 30).expect("query");
+        assert!(warning.is_none());
+    }
+
+    #[test]
+    fn warns_after_undo_when_published_at_retained() {
+        let conn = test_conn();
+        insert_test_task(&conn, "task-1", "content-1", "xhs");
+        update_publish_task_status(&conn, "task-1", "published", None, None).expect("publish");
+        update_publish_task_status(&conn, "task-1", "ready", None, None).expect("undo");
+
+        let warning =
+            duplicate_publish_warning(&conn, "content-1", "xhs", "task-1", 30).expect("query");
+        assert!(
+            warning.is_some(),
+            "re-publish after undo within 30 days should warn"
+        );
+    }
 }

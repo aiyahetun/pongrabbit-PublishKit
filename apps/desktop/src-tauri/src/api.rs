@@ -6,7 +6,7 @@ use axum::{
     Json, Router,
 };
 use crate::content_images;
-use crate::db::{fields_body, get_content_item_by_id, list_media_for_content, list_publish_tasks, update_publish_task_status, DbState};
+use crate::db::{fields_body, get_content_item_by_id, duplicate_publish_warning, list_media_for_content, list_publish_tasks, update_publish_task_status, DbState, DuplicatePublishWarning};
 use crate::rich_text;
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
@@ -256,6 +256,7 @@ async fn root() -> Json<RootResponse> {
             "/tasks/:id/prepare",
             "/tasks/:id/publish",
             "/tasks/:id/unpublish",
+            "/tasks/:id/duplicate-publish-warning",
             "/tasks/:id/copy-image",
             "/tasks/:id/stage-images",
         ],
@@ -404,6 +405,31 @@ async fn task_stage_images(
     }))
 }
 
+async fn task_duplicate_warning(
+    State(ctx): State<ApiContext>,
+    headers: HeaderMap,
+    Path(task_id): Path<String>,
+) -> Result<Json<Option<DuplicatePublishWarning>>, ApiError> {
+    auth(&headers, &ctx.token)?;
+    let state = ctx.app.state::<DbState>();
+    let detail = load_task_detail(&state, &task_id)?;
+    let warning = crate::db::with_conn(&state, |conn| {
+        duplicate_publish_warning(
+            conn,
+            &detail.content.id,
+            &detail.channel.id,
+            &task_id,
+            30,
+        )
+    })
+    .map_err(|message| ApiError {
+        status: StatusCode::INTERNAL_SERVER_ERROR,
+        code: "internal",
+        message,
+    })?;
+    Ok(Json(warning))
+}
+
 async fn task_unpublish(
     State(ctx): State<ApiContext>,
     headers: HeaderMap,
@@ -492,6 +518,10 @@ pub fn start_server(app: AppHandle, port: u16, token: String) {
         .route("/tasks/:id/prepare", post(task_prepare))
         .route("/tasks/:id/publish", post(task_publish))
         .route("/tasks/:id/unpublish", post(task_unpublish))
+        .route(
+            "/tasks/:id/duplicate-publish-warning",
+            get(task_duplicate_warning),
+        )
         .route("/tasks/:id/copy-image", post(task_copy_image))
         .route("/tasks/:id/stage-images", post(task_stage_images))
         .layer(cors_layer())

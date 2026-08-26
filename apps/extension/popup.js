@@ -33,6 +33,10 @@ const STRINGS = {
     undoPublish: "撤销发布",
     undoDone: "已撤销，任务恢复待发",
     undoFailed: "撤销失败",
+    duplicatePublishTitle: "重复发布提醒",
+    duplicatePublishConfirm: "「{title}」在 {channel} 已于 {when}（{days} 天前）标记发布。{detail}仍要再次标记已发布吗？",
+    duplicatePublishWithUrl: "上次链接：{url}。",
+    duplicatePublishNoUrl: "上次未填写链接。",
   },
   en: {
     hint: "Copy port and token from desktop Settings → Browser extension.",
@@ -66,6 +70,10 @@ const STRINGS = {
     undoPublish: "Undo publish",
     undoDone: "Reverted to ready",
     undoFailed: "Undo failed",
+    duplicatePublishTitle: "Duplicate publish warning",
+    duplicatePublishConfirm: "\"{title}\" on {channel} was marked published on {when} ({days} days ago). {detail}Mark as published again?",
+    duplicatePublishWithUrl: "Previous URL: {url}. ",
+    duplicatePublishNoUrl: "No URL was saved last time. ",
   },
 };
 
@@ -192,6 +200,28 @@ async function undoTaskPublish(taskId) {
   await apiFetch(`/tasks/${encodeURIComponent(taskId)}/unpublish`, { method: "POST" });
 }
 
+async function fetchDuplicateWarning(taskId) {
+  return apiFetch(`/tasks/${encodeURIComponent(taskId)}/duplicate-publish-warning`);
+}
+
+async function confirmPublishIfDuplicate(task) {
+  const warning = await fetchDuplicateWarning(task.id);
+  if (!warning) return true;
+  const when = warning.previousPublishedAt.slice(0, 10);
+  const detail = warning.previousPublishUrl
+    ? t("duplicatePublishWithUrl", { url: warning.previousPublishUrl })
+    : t("duplicatePublishNoUrl");
+  return confirm(
+    t("duplicatePublishConfirm", {
+      title: task.contentTitle,
+      channel: task.channelName,
+      when,
+      days: warning.daysSince,
+      detail,
+    })
+  );
+}
+
 async function markTaskPublished(taskId, urlInput) {
   const url = urlInput.value.trim() || (await getActiveTabUrl());
   await apiFetch(`/tasks/${encodeURIComponent(taskId)}/publish`, {
@@ -281,6 +311,10 @@ function renderTaskItem(task) {
   publishBtn.addEventListener("click", async () => {
     setStatus(t("connecting"));
     try {
+      if (!(await confirmPublishIfDuplicate(task))) {
+        setStatus("", "");
+        return;
+      }
       await markTaskPublished(task.id, urlInput);
       setStatus(t("publishedDone"), "ok");
       item.classList.add("done");
