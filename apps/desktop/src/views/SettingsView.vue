@@ -2,10 +2,17 @@
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
-import type { UiLocale, Channel } from "@publishkit/shared";
+import { ask, open, save } from "@tauri-apps/plugin-dialog";
+import type { UiLocale, Channel, ExportBackupResult, ImportBackupResult, ApiStatus } from "@publishkit/shared";
 
 const { t, locale } = useI18n();
 const saving = ref(false);
+const backingUp = ref(false);
+const restoring = ref(false);
+const includeThumbs = ref(false);
+const backupNotice = ref("");
+const apiStatus = ref<ApiStatus | null>(null);
+const apiLoading = ref(false);
 const channels = ref<Channel[]>([]);
 const newChannelName = ref("");
 const newChannelMarket = ref<"domestic" | "overseas" | "both">("both");
@@ -62,7 +69,87 @@ function marketLabel(market: string) {
   return t(`channels.market_${market}`, market);
 }
 
-onMounted(loadChannels);
+async function exportBackup() {
+  backupNotice.value = "";
+  channelError.value = "";
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const picked = await save({
+    defaultPath: `publishkit-backup-${stamp}.zip`,
+    filters: [{ name: "ZIP", extensions: ["zip"] }],
+    title: t("settings.backupTitle"),
+  });
+  if (!picked || typeof picked !== "string") return;
+
+  backingUp.value = true;
+  try {
+    const result = await invoke<ExportBackupResult>("export_backup_cmd", {
+      destPath: picked,
+      includeThumbs: includeThumbs.value,
+    });
+    backupNotice.value = t("settings.backupDone", {
+      count: result.fileCount,
+      thumbs: result.includesThumbs ? t("settings.backupWithThumbs") : t("settings.backupWithoutThumbs"),
+    });
+  } catch (e) {
+    channelError.value = String(e);
+  } finally {
+    backingUp.value = false;
+  }
+}
+
+async function loadApiStatus() {
+  apiLoading.value = true;
+  try {
+    apiStatus.value = await invoke<ApiStatus>("get_api_status_cmd");
+  } catch (e) {
+    channelError.value = String(e);
+  } finally {
+    apiLoading.value = false;
+  }
+}
+
+async function regeneratePairingToken() {
+  channelError.value = "";
+  backupNotice.value = "";
+  apiLoading.value = true;
+  try {
+    apiStatus.value = await invoke<ApiStatus>("regenerate_pairing_token_cmd");
+    backupNotice.value = t("settings.extensionTokenRotated");
+  } catch (e) {
+    channelError.value = String(e);
+  } finally {
+    apiLoading.value = false;
+  }
+}
+
+async function importBackup() {
+  backupNotice.value = "";
+  channelError.value = "";
+  const picked = await open({
+    filters: [{ name: "ZIP", extensions: ["zip"] }],
+    title: t("settings.restoreTitle"),
+    multiple: false,
+  });
+  if (!picked || typeof picked !== "string") return;
+
+  const confirmed = await ask(t("settings.restoreConfirm"), {
+    title: t("settings.restoreTitle"),
+    kind: "warning",
+  });
+  if (!confirmed) return;
+
+  restoring.value = true;
+  try {
+    await invoke<ImportBackupResult>("import_backup_cmd", { zipPath: picked });
+  } catch (e) {
+    channelError.value = String(e);
+    restoring.value = false;
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([loadChannels(), loadApiStatus()]);
+});
 </script>
 
 <template>
@@ -91,6 +178,43 @@ onMounted(loadChannels);
           {{ t("settings.localeEn") }}
         </button>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>{{ t("settings.backupSection") }}</h2>
+      <p class="muted">{{ t("settings.backupHint") }}</p>
+      <label class="check-row">
+        <input v-model="includeThumbs" type="checkbox" />
+        <span>{{ t("settings.backupIncludeThumbs") }}</span>
+      </label>
+      <button type="button" class="pk-btn pk-btn--secondary" :disabled="backingUp || restoring" @click="exportBackup">
+        {{ backingUp ? t("settings.backingUp") : t("settings.exportBackup") }}
+      </button>
+      <button type="button" class="pk-btn pk-btn--ghost" :disabled="backingUp || restoring" @click="importBackup">
+        {{ restoring ? t("settings.restoring") : t("settings.importBackup") }}
+      </button>
+      <p v-if="backupNotice" class="notice">{{ backupNotice }}</p>
+    </div>
+
+    <div class="card">
+      <h2>{{ t("settings.extensionSection") }}</h2>
+      <p class="muted">{{ t("settings.extensionHint") }}</p>
+      <div v-if="apiLoading && !apiStatus" class="muted">{{ t("settings.extensionLoading") }}</div>
+      <template v-else-if="apiStatus">
+        <label>
+          <span>{{ t("settings.extensionPort") }}</span>
+          <input class="pk-input" :value="apiStatus.baseUrl" readonly />
+        </label>
+        <label>
+          <span>{{ t("settings.extensionToken") }}</span>
+          <input class="pk-input token" :value="apiStatus.pairingToken" readonly />
+        </label>
+        <div class="actions-inline">
+          <button type="button" class="pk-btn pk-btn--ghost" :disabled="apiLoading" @click="regeneratePairingToken">
+            {{ t("settings.extensionRotate") }}
+          </button>
+        </div>
+      </template>
     </div>
 
     <div class="card wide">
@@ -162,6 +286,9 @@ onMounted(loadChannels);
   padding: var(--pk-space-4);
   max-width: 480px;
   box-shadow: var(--pk-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--pk-space-2);
 }
 .card.wide {
   max-width: 720px;
@@ -170,6 +297,36 @@ onMounted(loadChannels);
   margin: 0 0 4px;
   font-size: 16px;
   font-weight: 600;
+}
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: var(--pk-space-3) 0;
+  font-size: 13px;
+  color: var(--pk-ink-secondary);
+}
+.actions-inline {
+  display: flex;
+  gap: var(--pk-space-2);
+}
+.token {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+.card .field-label {
+  display: block;
+  font-size: 12px;
+  color: var(--pk-ink-muted);
+  margin-bottom: 6px;
+}
+.card .pk-input {
+  width: 100%;
+}
+.notice {
+  margin: var(--pk-space-2) 0 0;
+  color: var(--pk-accent);
+  font-size: 13px;
 }
 label {
   display: block;

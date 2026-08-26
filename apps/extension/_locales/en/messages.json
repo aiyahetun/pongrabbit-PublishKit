@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "PublishKit Companion"
+  },
+  "extDescription": {
+    "message": "Connect to the PublishKit desktop app on localhost."
+  }
+}

@@ -1,10 +1,15 @@
+mod api;
+mod backup;
+mod content_images;
 mod db;
 mod md_split;
 mod media;
 mod media_suggest;
+mod rich_text;
+mod staging;
 
 use db::{
-    create_custom_channel, create_publish_task, delete_content_items_for_source,
+    create_custom_channel, create_publish_task, delete_content_items, delete_content_items_for_source,
     delete_custom_channel, fields_body, get_content_item_by_id, insert_content_item, link_content_media,
     linked_media_ids, list_calendar_tasks, list_channels, list_content_items, list_media_assets,
     list_media_for_content, list_publish_tasks, unlink_content_media, update_publish_task_status,
@@ -36,6 +41,10 @@ pub struct WorkspaceSettings {
     pub copy_root: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub media_root: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub api_port: Option<u16>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pairing_token: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -152,6 +161,43 @@ pub struct ExportContentPackResult {
 pub struct ExportTasksCsvResult {
     pub path: String,
     pub row_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StageImagesResult {
+    pub folder_path: String,
+    pub copied_count: usize,
+    pub is_temporary: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteContentResult {
+    pub deleted_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportBackupResult {
+    pub path: String,
+    pub file_count: usize,
+    pub includes_thumbs: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportBackupResult {
+    pub file_count: usize,
+    pub includes_thumbs: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiStatusRow {
+    pub port: u16,
+    pub pairing_token: String,
+    pub base_url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -278,13 +324,15 @@ fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(dir.join("settings.json"))
 }
 
-fn load_settings(app: &tauri::AppHandle) -> Result<WorkspaceSettings, String> {
+pub fn load_settings(app: &tauri::AppHandle) -> Result<WorkspaceSettings, String> {
     let path = settings_path(app)?;
     if !path.exists() {
         return Ok(WorkspaceSettings {
             ui_locale: detect_ui_locale(),
             copy_root: None,
             media_root: None,
+            api_port: None,
+            pairing_token: None,
         });
     }
     let raw = fs::read_to_string(path).map_err(|e| e.to_string())?;
@@ -860,6 +908,11 @@ async fn generate_media_thumbnails_cmd(
 }
 
 #[tauri::command]
+fn copy_markdown_rich_text_cmd(markdown: String) -> Result<(), String> {
+    rich_text::copy_markdown_rich_text(&markdown)
+}
+
+#[tauri::command]
 fn copy_media_image_cmd(path: String) -> Result<(), String> {
     media::copy_image_to_clipboard(&path)
 }
@@ -1070,6 +1123,90 @@ fn export_tasks_csv_cmd(
 }
 
 #[tauri::command]
+fn stage_content_images_cmd(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, DbState>,
+    content_item_id: String,
+) -> Result<StageImagesResult, String> {
+    db::with_conn(&state, |conn| {
+        let (title, _, _) = get_content_item_by_id(conn, &content_item_id)?;
+        let images = content_images::list_content_image_paths(conn, &content_item_id)?;
+        let (dir, copied_count) = content_images::stage_images(&app, &title, &images.paths)?;
+        Ok(StageImagesResult {
+            folder_path: dir.to_string_lossy().to_string(),
+            copied_count,
+            is_temporary: true,
+        })
+    })
+}
+
+#[tauri::command]
+fn delete_content_item_cmd(
+    state: tauri::State<'_, DbState>,
+    content_item_id: String,
+) -> Result<DeleteContentResult, String> {
+    db::with_conn(&state, |conn| {
+        let deleted = delete_content_items(conn, std::slice::from_ref(&content_item_id))?;
+        if deleted == 0 {
+            return Err("内容条目不存在".into());
+        }
+        Ok(DeleteContentResult { deleted_count: deleted })
+    })
+}
+
+#[tauri::command]
+fn delete_content_items_cmd(
+    state: tauri::State<'_, DbState>,
+    content_item_ids: Vec<String>,
+) -> Result<DeleteContentResult, String> {
+    db::with_conn(&state, |conn| {
+        let deleted = delete_content_items(conn, &content_item_ids)?;
+        if deleted == 0 {
+            return Err("没有可删除的内容条目".into());
+        }
+        Ok(DeleteContentResult { deleted_count: deleted })
+    })
+}
+
+#[tauri::command]
+fn export_backup_cmd(
+    app: tauri::AppHandle,
+    dest_path: String,
+    include_thumbs: Option<bool>,
+) -> Result<ExportBackupResult, String> {
+    let include_thumbs = include_thumbs.unwrap_or(false);
+    let db_path = db::db_file_path(&app)?;
+    let settings = settings_path(&app)?;
+    let thumb_dir = media::thumb_cache_dir(&app)?;
+
+    let summary = backup::export_backup_zip(
+        &app,
+        Path::new(&dest_path),
+        &db_path,
+        &settings,
+        &thumb_dir,
+        include_thumbs,
+    )?;
+
+    Ok(ExportBackupResult {
+        path: dest_path,
+        file_count: summary.file_count,
+        includes_thumbs: include_thumbs,
+    })
+}
+
+#[tauri::command]
+fn import_backup_cmd(app: tauri::AppHandle, zip_path: String) -> Result<ImportBackupResult, String> {
+    let summary = backup::stage_restore_from_zip(&app, Path::new(&zip_path))?;
+    app.restart();
+    #[allow(unreachable_code)]
+    Ok(ImportBackupResult {
+        file_count: summary.file_count,
+        includes_thumbs: summary.includes_thumbs,
+    })
+}
+
+#[tauri::command]
 fn list_calendar_entries_cmd(
     state: tauri::State<'_, DbState>,
     year: i32,
@@ -1096,13 +1233,57 @@ fn list_calendar_entries_cmd(
     })
 }
 
+fn ensure_api_settings(app: &tauri::AppHandle) -> Result<(u16, String), String> {
+    let mut settings = load_settings(app)?;
+    let mut changed = false;
+    if settings.pairing_token.is_none() {
+        settings.pairing_token = Some(api::generate_pairing_token());
+        changed = true;
+    }
+    if settings.api_port.is_none() {
+        settings.api_port = Some(api::pick_api_port()?);
+        changed = true;
+    }
+    if changed {
+        save_settings(app, &settings)?;
+    }
+    Ok((
+        settings.api_port.unwrap_or(17345),
+        settings
+            .pairing_token
+            .unwrap_or_else(api::generate_pairing_token),
+    ))
+}
+
+#[tauri::command]
+fn get_api_status_cmd(app: tauri::AppHandle) -> Result<ApiStatusRow, String> {
+    let (port, token) = ensure_api_settings(&app)?;
+    Ok(ApiStatusRow {
+        port,
+        pairing_token: token,
+        base_url: format!("http://127.0.0.1:{port}"),
+    })
+}
+
+#[tauri::command]
+fn regenerate_pairing_token_cmd(app: tauri::AppHandle) -> Result<ApiStatusRow, String> {
+    let mut settings = load_settings(&app)?;
+    settings.pairing_token = Some(api::generate_pairing_token());
+    save_settings(&app, &settings)?;
+    get_api_status_cmd(app)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            backup::apply_pending_restore_if_any(app.handle())?;
             db::init(app.handle())?;
+            staging::run_startup_staging_cleanup(app.handle());
+            let (port, token) = ensure_api_settings(app.handle())?;
+            api::start_server(app.handle().clone(), port, token);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -1131,11 +1312,19 @@ pub fn run() {
             list_calendar_entries_cmd,
             generate_media_thumbnails_cmd,
             copy_media_image_cmd,
+            copy_markdown_rich_text_cmd,
             reveal_media_in_folder_cmd,
             suggest_media_for_content_cmd,
             update_publish_task_scheduled_cmd,
             export_content_pack_cmd,
-            export_tasks_csv_cmd
+            export_tasks_csv_cmd,
+            stage_content_images_cmd,
+            delete_content_item_cmd,
+            delete_content_items_cmd,
+            export_backup_cmd,
+            import_backup_cmd,
+            get_api_status_cmd,
+            regenerate_pairing_token_cmd
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

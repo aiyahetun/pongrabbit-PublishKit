@@ -12,6 +12,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   copy: [];
+  copySingleImage: [];
+  openLinkedImagesFolder: [];
   markReady: [];
   markPublished: [];
   undoPublish: [];
@@ -36,6 +38,14 @@ const showScheduleField = computed(
     <div class="btn-row">
       <button type="button" class="pk-btn pk-btn--ghost" @click="emit('copy')">
         {{ copied ? t("content.copied") : t("content.copyRich") }}
+      </button>
+
+      <button type="button" class="pk-btn pk-btn--ghost" @click="emit('copySingleImage')">
+        {{ t("media.copyImage") }}
+      </button>
+
+      <button type="button" class="pk-btn pk-btn--ghost" @click="emit('openLinkedImagesFolder')">
+        {{ t("media.openLinkedImagesFolder") }}
       </button>
 
       <button

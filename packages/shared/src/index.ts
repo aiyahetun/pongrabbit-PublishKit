@@ -22,6 +22,22 @@ export type WorkspaceSettings = {
 
   mediaRoot?: string;
 
+  apiPort?: number;
+
+  pairingToken?: string;
+
+};
+
+
+
+export type ApiStatus = {
+
+  port: number;
+
+  pairingToken: string;
+
+  baseUrl: string;
+
 };
 
 
@@ -195,6 +211,48 @@ export type ExportTasksCsvResult = {
   path: string;
 
   rowCount: number;
+
+};
+
+
+
+export type StageImagesResult = {
+
+  folderPath: string;
+
+  copiedCount: number;
+
+  isTemporary?: boolean;
+
+};
+
+
+
+export type DeleteContentResult = {
+
+  deletedCount: number;
+
+};
+
+
+
+export type ExportBackupResult = {
+
+  path: string;
+
+  fileCount: number;
+
+  includesThumbs: boolean;
+
+};
+
+
+
+export type ImportBackupResult = {
+
+  fileCount: number;
+
+  includesThumbs: boolean;
 
 };
 

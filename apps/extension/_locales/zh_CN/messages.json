@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "发稿匣助手"
+  },
+  "extDescription": {
+    "message": "连接本地 PublishKit 桌面端 API。"
+  }
+}

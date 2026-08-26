@@ -58,6 +58,10 @@ fn db_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir.join("publishkit.db"))
 }
 
+pub fn db_file_path(app: &AppHandle) -> Result<PathBuf, String> {
+    db_path(app)
+}
+
 fn migration_applied(conn: &Connection, version: i64) -> Result<bool, String> {
     let applied: Option<i64> = conn
         .query_row(
@@ -230,6 +234,20 @@ pub fn list_content_items(
         .map_err(|e| e.to_string())?;
 
     Ok(rows)
+}
+
+pub fn delete_content_items(conn: &Connection, ids: &[String]) -> Result<usize, String> {
+    if ids.is_empty() {
+        return Ok(0);
+    }
+    let placeholders = (1..=ids.len())
+        .map(|index| format!("?{index}"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let sql = format!("DELETE FROM content_items WHERE id IN ({placeholders})");
+    conn.execute(&sql, rusqlite::params_from_iter(ids.iter()))
+        .map_err(|e| e.to_string())?;
+    Ok(conn.changes() as usize)
 }
 
 pub fn list_channels(conn: &Connection) -> Result<Vec<(String, String, String, String, i64)>, String> {

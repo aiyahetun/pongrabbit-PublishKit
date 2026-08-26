@@ -2,12 +2,12 @@
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
-import type { Channel, ContentItem, MediaAsset } from "@publishkit/shared";
+import { ask, open } from "@tauri-apps/plugin-dialog";
+import type { Channel, ContentItem, DeleteContentResult, MediaAsset } from "@publishkit/shared";
 import { copyMarkdownAsRichText } from "../utils/clipboard";
 import MediaLinkDialog from "../components/MediaLinkDialog.vue";
 import MediaThumb from "../components/MediaThumb.vue";
-import { copyMediaImage } from "../utils/mediaActions";
+import { copyLinkedImagesWorkflow } from "../utils/mediaActions";
 
 const { t } = useI18n();
 const items = ref<ContentItem[]>([]);
@@ -25,6 +25,14 @@ const newBody = ref("");
 const creating = ref(false);
 const taskCreating = ref(false);
 const quickChannelName = ref("");
+const selectedIds = ref<Set<string>>(new Set());
+const deleting = ref(false);
+
+const selectedCount = computed(() => selectedIds.value.size);
+const allSelected = computed(
+  () => items.value.length > 0 && selectedIds.value.size === items.value.length
+);
+const hasSelection = computed(() => selectedIds.value.size > 0);
 
 const domesticChannels = computed(() =>
   channels.value.filter((c) => !c.isCustom && (c.market === "domestic" || c.market === "both"))
@@ -39,6 +47,8 @@ async function loadItems() {
   error.value = "";
   try {
     items.value = await invoke<ContentItem[]>("list_content_items_cmd");
+    const valid = new Set(items.value.map((item) => item.id));
+    selectedIds.value = new Set([...selectedIds.value].filter((id) => valid.has(id)));
     await refreshMediaMap();
   } catch (e) {
     error.value = String(e);
@@ -121,17 +131,21 @@ async function copyLinkedImagesForItem(item: ContentItem) {
   error.value = "";
   notice.value = "";
   const assets = itemMedia.value[item.id] ?? [];
-  const images = assets.filter((asset) => asset.kind === "image");
-  if (!images.length) return;
   try {
-    await copyMediaImage(images[0]);
-    notice.value =
-      images.length > 1
-        ? t("media.copiedMultipleHint", { count: images.length })
-        : t("media.copied");
+    const result = await copyLinkedImagesWorkflow(item.id, assets);
+    if (result.mode === "none") return;
+    if (result.mode === "clipboard") {
+      notice.value = t("media.copied");
+      return;
+    }
+    notice.value = t("media.stagedMultiple", { count: result.count });
   } catch (e) {
     error.value = String(e);
   }
+}
+
+function linkedImageCount(itemId: string) {
+  return (itemMedia.value[itemId] ?? []).filter((asset) => asset.kind === "image").length;
 }
 
 async function exportPack(item: ContentItem) {
@@ -155,6 +169,56 @@ async function exportPack(item: ContentItem) {
   } catch (e) {
     error.value = String(e);
   }
+}
+
+function toggleSelected(id: string) {
+  const next = new Set(selectedIds.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  selectedIds.value = next;
+}
+
+function toggleSelectAll() {
+  if (allSelected.value) {
+    selectedIds.value = new Set();
+    return;
+  }
+  selectedIds.value = new Set(items.value.map((item) => item.id));
+}
+
+async function deleteItems(ids: string[], confirmKey: string, confirmParams?: Record<string, unknown>) {
+  if (!ids.length) return;
+  const confirmed = await ask(t(confirmKey, confirmParams ?? {}), {
+    title: t("content.deleteTitle"),
+    kind: "warning",
+  });
+  if (!confirmed) return;
+
+  deleting.value = true;
+  error.value = "";
+  notice.value = "";
+  try {
+    const result = await invoke<DeleteContentResult>("delete_content_items_cmd", {
+      contentItemIds: ids,
+    });
+    notice.value = t("content.deleted", { count: result.deletedCount });
+    selectedIds.value = new Set();
+    await loadItems();
+  } catch (e) {
+    error.value = String(e);
+  } finally {
+    deleting.value = false;
+  }
+}
+
+async function deleteOne(item: ContentItem) {
+  await deleteItems([item.id], "content.deleteConfirmOne", { title: item.title });
+}
+
+async function deleteSelected() {
+  await deleteItems([...selectedIds.value], "content.deleteConfirmMany", {
+    count: selectedIds.value.size,
+  });
 }
 
 async function addQuickChannel() {
@@ -186,9 +250,28 @@ onMounted(async () => {
       </div>
       <div class="actions">
         <button type="button" class="pk-btn pk-btn--primary" @click="showCreate = true">{{ t("content.create") }}</button>
+        <button
+          v-if="hasSelection"
+          type="button"
+          class="pk-btn pk-btn--ghost danger"
+          :disabled="deleting || loading"
+          @click="deleteSelected"
+        >
+          {{ deleting ? t("content.deleting") : t("content.deleteSelected", { count: selectedCount }) }}
+        </button>
         <button type="button" class="pk-btn pk-btn--secondary" :disabled="loading" @click="loadItems">{{ t("content.refresh") }}</button>
       </div>
     </header>
+
+    <div v-if="items.length" class="bulk-bar card">
+      <label class="select-all">
+        <input type="checkbox" :checked="allSelected" @change="toggleSelectAll" />
+        <span>{{ t("content.selectAll") }}</span>
+      </label>
+      <span v-if="hasSelection" class="selected-count">
+        {{ t("content.selectedCount", { count: selectedCount }) }}
+      </span>
+    </div>
 
     <p v-if="notice" class="notice">{{ notice }}</p>
     <p v-if="loading" class="muted">{{ t("content.loading") }}</p>
@@ -196,20 +279,27 @@ onMounted(async () => {
     <p v-else-if="!items.length" class="muted">{{ t("content.empty") }}</p>
 
     <ul v-else class="list card">
-      <li v-for="item in items" :key="item.id">
+      <li v-for="item in items" :key="item.id" :class="{ selected: selectedIds.has(item.id) }">
         <div class="row">
+          <label class="item-check">
+            <input type="checkbox" :checked="selectedIds.has(item.id)" @change="toggleSelected(item.id)" />
+          </label>
           <div class="meta">
             <strong>{{ item.title }}</strong>
             <span class="badge">{{ item.language }}</span>
           </div>
           <div class="row-actions">
             <button
-              v-if="itemMedia[item.id]?.some((m) => m.kind === 'image')"
+              v-if="linkedImageCount(item.id) > 0"
               type="button"
               class="pk-btn pk-btn--ghost"
               @click="copyLinkedImagesForItem(item)"
             >
-              {{ t("media.copyImage") }}
+              {{
+                linkedImageCount(item.id) > 1
+                  ? t("media.copyImages", { count: linkedImageCount(item.id) })
+                  : t("media.copyImage")
+              }}
             </button>
             <button type="button" class="pk-btn pk-btn--ghost" @click="showMediaFor = item">
               {{ t("content.linkMedia") }}
@@ -221,6 +311,14 @@ onMounted(async () => {
             <button type="button" class="pk-btn pk-btn--ghost" @click="showTaskFor = item">{{ t("content.addTask") }}</button>
             <button type="button" class="pk-btn pk-btn--secondary" @click="copyBody(item)">
               {{ copiedId === item.id ? t("content.copied") : t("content.copyRich") }}
+            </button>
+            <button
+              type="button"
+              class="pk-btn pk-btn--ghost danger"
+              :disabled="deleting"
+              @click="deleteOne(item)"
+            >
+              {{ t("content.deleteOne") }}
             </button>
           </div>
         </div>
@@ -385,6 +483,42 @@ li:first-child {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
+}
+.item-check {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+.select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--pk-ink-secondary);
+  cursor: pointer;
+}
+.selected-count {
+  font-size: 12px;
+  color: var(--pk-ink-muted);
+}
+li.selected {
+  background: var(--pk-bg-alt);
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.danger {
+  color: var(--pk-status-blocked);
+}
+.danger:hover {
+  color: var(--pk-status-blocked);
+  background: rgba(180, 35, 24, 0.08);
 }
 .meta {
   display: flex;

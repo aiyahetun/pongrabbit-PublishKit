@@ -6,6 +6,7 @@ import type { PublishTask } from "@publishkit/shared";
 import TaskCard from "../components/TaskCard.vue";
 import TaskActionBar from "../components/TaskActionBar.vue";
 import { copyMarkdownAsRichText } from "../utils/clipboard";
+import { copyFirstLinkedImage, openLinkedImagesFolder } from "../utils/taskMediaActions";
 
 const { t } = useI18n();
 const tasks = ref<PublishTask[]>([]);
@@ -43,6 +44,36 @@ async function copyTask(task: PublishTask) {
   setTimeout(() => {
     if (copiedId.value === task.id) copiedId.value = "";
   }, 1500);
+}
+
+async function copyTaskSingleImage(task: PublishTask) {
+  error.value = "";
+  notice.value = "";
+  try {
+    const result = await copyFirstLinkedImage(task.content.id);
+    if (result.mode === "none") {
+      notice.value = t("media.suggestEmpty");
+      return;
+    }
+    notice.value = t("media.copied");
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function openTaskImagesFolder(task: PublishTask) {
+  error.value = "";
+  notice.value = "";
+  try {
+    const result = await openLinkedImagesFolder(task.content.id);
+    if (result.mode === "none") {
+      notice.value = t("media.suggestEmpty");
+      return;
+    }
+    notice.value = t("media.stagedMultiple", { count: result.count });
+  } catch (e) {
+    error.value = String(e);
+  }
 }
 
 async function markPublished(task: PublishTask) {
@@ -106,6 +137,8 @@ onMounted(loadTasks);
             @update:publish-url="publishUrls[task.id] = $event"
             @update:scheduled-date="scheduledDates[task.id] = $event"
             @copy="copyTask(task)"
+            @copy-single-image="copyTaskSingleImage(task)"
+            @open-linked-images-folder="openTaskImagesFolder(task)"
             @mark-published="markPublished(task)"
             @save-scheduled="saveScheduled(task)"
           />
