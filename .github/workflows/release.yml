@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: PublishKit ${{ github.ref_name }}
+          releaseBody: |
+            Windows NSIS installer for PublishKit ${{ github.ref_name }}.
+
+            See [产品进度一览](docs/progress/产品进度一览.md) for changelog.
+          releaseDraft: true
+          prerelease: true
+          args: "--target x86_64-pc-windows-msvc"

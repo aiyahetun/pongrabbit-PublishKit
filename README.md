@@ -15,7 +15,11 @@
 
 ## 当前阶段
 
-**M1 开发中** — 桌面端 v0.1.1-dev，`npm run tauri dev` 可本地运行（来源 → 内容 → 素材 → 任务 → 日历闭环已验收）。
+**M2 收尾 / F10** — 桌面端 v0.1.9-dev，插件 Side Panel v0.1.9；`npm run tauri dev` 本地运行，`npm run build:desktop` 可打 Windows 包。
+
+## 发布
+
+打 tag 触发 GitHub Actions 构建安装包（见 [开发环境 · GitHub Release](./docs/开发环境.md#github-releaseci)）。
 
 ## 本地开发
 
