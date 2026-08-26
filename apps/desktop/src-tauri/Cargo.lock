@@ -3048,7 +3048,7 @@ dependencies = [
 
 [[package]]
 name = "publishkit-desktop"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "arboard",
  "axum",

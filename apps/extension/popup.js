@@ -30,6 +30,9 @@ const STRINGS = {
     markPublished: "标记已发布",
     publishedDone: "已标记发布",
     publishedFailed: "标记失败",
+    undoPublish: "撤销发布",
+    undoDone: "已撤销，任务恢复待发",
+    undoFailed: "撤销失败",
   },
   en: {
     hint: "Copy port and token from desktop Settings → Browser extension.",
@@ -60,6 +63,9 @@ const STRINGS = {
     markPublished: "Mark published",
     publishedDone: "Marked as published",
     publishedFailed: "Publish failed",
+    undoPublish: "Undo publish",
+    undoDone: "Reverted to ready",
+    undoFailed: "Undo failed",
   },
 };
 
@@ -182,9 +188,13 @@ async function getActiveTabUrl() {
   return tabs[0]?.url ?? "";
 }
 
+async function undoTaskPublish(taskId) {
+  await apiFetch(`/tasks/${encodeURIComponent(taskId)}/unpublish`, { method: "POST" });
+}
+
 async function markTaskPublished(taskId, urlInput) {
   const url = urlInput.value.trim() || (await getActiveTabUrl());
-  await apiFetch(`/tasks/${taskId}/publish`, {
+  await apiFetch(`/tasks/${encodeURIComponent(taskId)}/publish`, {
     method: "POST",
     body: JSON.stringify({ url: url || undefined }),
   });
@@ -275,11 +285,30 @@ function renderTaskItem(task) {
       setStatus(t("publishedDone"), "ok");
       item.classList.add("done");
       publishBtn.disabled = true;
+      undoBtn.classList.add("visible");
     } catch (error) {
       setStatus(`${t("publishedFailed")}: ${error}`, "error");
     }
   });
   actions.appendChild(publishBtn);
+
+  const undoBtn = document.createElement("button");
+  undoBtn.type = "button";
+  undoBtn.className = "undo";
+  undoBtn.textContent = t("undoPublish");
+  undoBtn.addEventListener("click", async () => {
+    setStatus(t("connecting"));
+    try {
+      await undoTaskPublish(task.id);
+      item.classList.remove("done");
+      publishBtn.disabled = false;
+      undoBtn.classList.remove("visible");
+      setStatus(t("undoDone"), "ok");
+    } catch (error) {
+      setStatus(`${t("undoFailed")}: ${error}`, "error");
+    }
+  });
+  actions.appendChild(undoBtn);
 
   item.appendChild(actions);
   return item;

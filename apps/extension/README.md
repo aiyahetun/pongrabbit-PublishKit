@@ -8,7 +8,10 @@ Chrome/Edge MV3 companion for the desktop app's localhost API.
 2. Open **Settings → Browser extension** and copy **port + pairing token**
 3. Chrome → `chrome://extensions` → Developer mode → **Load unpacked**
 4. Select this folder: `apps/extension`
-5. Open extension popup → paste port/token → **Test connection**
+5. Click the PublishKit icon → **Side Panel** opens on the right
+6. Paste port/token → **Test connection**
+
+Popup HTML (`popup.html`) remains for debugging; primary UI is `sidepanel.html`.
 
 ## Workflow
 

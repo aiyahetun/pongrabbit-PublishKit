@@ -255,6 +255,7 @@ async fn root() -> Json<RootResponse> {
             "/tasks/:id",
             "/tasks/:id/prepare",
             "/tasks/:id/publish",
+            "/tasks/:id/unpublish",
             "/tasks/:id/copy-image",
             "/tasks/:id/stage-images",
         ],
@@ -403,6 +404,24 @@ async fn task_stage_images(
     }))
 }
 
+async fn task_unpublish(
+    State(ctx): State<ApiContext>,
+    headers: HeaderMap,
+    Path(task_id): Path<String>,
+) -> Result<Json<ApiTaskDetail>, ApiError> {
+    auth(&headers, &ctx.token)?;
+    let state = ctx.app.state::<DbState>();
+    crate::db::with_conn(&state, |conn| {
+        update_publish_task_status(conn, &task_id, "ready", None, None)
+    })
+    .map_err(|message| ApiError {
+        status: StatusCode::BAD_REQUEST,
+        code: "bad_request",
+        message,
+    })?;
+    load_task_detail(&state, &task_id).map(Json)
+}
+
 async fn task_publish(
     State(ctx): State<ApiContext>,
     headers: HeaderMap,
@@ -472,6 +491,7 @@ pub fn start_server(app: AppHandle, port: u16, token: String) {
         .route("/tasks/:id", get(task_detail))
         .route("/tasks/:id/prepare", post(task_prepare))
         .route("/tasks/:id/publish", post(task_publish))
+        .route("/tasks/:id/unpublish", post(task_unpublish))
         .route("/tasks/:id/copy-image", post(task_copy_image))
         .route("/tasks/:id/stage-images", post(task_stage_images))
         .layer(cors_layer())

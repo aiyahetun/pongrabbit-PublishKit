@@ -1,3 +1,5 @@
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("PublishKit Companion installed");
+  if (chrome.sidePanel?.setPanelBehavior) {
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+  }
 });
