@@ -1,6 +1,6 @@
 [package]
 name = "publishkit-desktop"
-version = "0.1.9"
+version = "0.2.0"
 description = "PublishKit desktop app"
 authors = ["PongRabbit"]
 edition = "2021"
@@ -27,7 +27,11 @@ arboard = "3"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "gif"] }
 regex = "1"
 zip = { version = "2", default-features = false, features = ["deflate"] }
+roxmltree = "0.20"
 axum = "0.7"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
 tower-http = { version = "0.6", features = ["cors"] }
 comrak = { version = "0.36", default-features = false, features = ["bon"] }
+calamine = "0.26"
+csv = "1"
+pdf-extract = "0.7"

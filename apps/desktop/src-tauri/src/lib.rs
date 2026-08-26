@@ -1,8 +1,10 @@
+pub mod doc_import;
+pub mod md_split;
+pub mod table_import;
 mod api;
 mod backup;
 mod content_images;
 mod db;
-mod md_split;
 mod media;
 mod media_suggest;
 mod rich_text;
@@ -53,6 +55,7 @@ pub struct MarkdownScanItem {
     pub path: String,
     pub title: String,
     pub size_bytes: u64,
+    pub format: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -454,20 +457,21 @@ fn scan_markdown(root: String) -> Result<Vec<MarkdownScanItem>, String> {
         if !path.is_file() || should_skip(path) {
             continue;
         }
-        let ext = path
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("")
-            .to_ascii_lowercase();
-        if ext != "md" && ext != "markdown" && ext != "txt" {
+        let Some(format) = doc_import::source_format(path) else {
             continue;
-        }
+        };
         let meta = fs::metadata(path).map_err(|e| e.to_string())?;
-        let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
+        let title = if doc_import::is_split_format(format) && format != "pdf" && format != "docx" {
+            let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
+            title_from_markdown(path, &content)
+        } else {
+            db::title_from_path(path)
+        };
         items.push(MarkdownScanItem {
             path: path.to_string_lossy().into_owned(),
-            title: title_from_markdown(path, &content),
+            title,
             size_bytes: meta.len(),
+            format: format.to_string(),
         });
     }
 
@@ -509,7 +513,7 @@ fn import_md_splits(
     }
 
     let source_path = PathBuf::from(&path);
-    let doc_title = fs::read_to_string(&path)
+    let doc_title = doc_import::read_source_content(&path)
         .ok()
         .map(|content| title_from_markdown(&source_path, &content))
         .unwrap_or_else(|| db::title_from_path(&source_path));
@@ -550,6 +554,74 @@ fn import_md_splits(
                 &anchor_json(&anchor)?,
                 &preview.title,
                 &preview.language,
+                &fields_json,
+            )?;
+            content_ids.push(item_id);
+        }
+
+        Ok(ImportSplitsResult {
+            imported_count: content_ids.len(),
+            content_ids,
+        })
+    })
+}
+
+#[tauri::command]
+fn preview_table_import_cmd(path: String) -> Result<table_import::TableImportPreview, String> {
+    table_import::preview_table_import(&path)
+}
+
+#[tauri::command]
+fn import_table_rows_cmd(
+    state: tauri::State<'_, DbState>,
+    path: String,
+    selected_indexes: Vec<usize>,
+    replace_existing: bool,
+) -> Result<ImportSplitsResult, String> {
+    let rows = table_import::selected_table_rows(&path, &selected_indexes)?;
+    if rows.is_empty() {
+        return Err("请至少选择一行".into());
+    }
+
+    let source_path = PathBuf::from(&path);
+    let doc_title = db::title_from_path(&source_path);
+    let doc_id = Uuid::new_v4().to_string();
+
+    db::with_conn(&state, |conn| {
+        if replace_existing {
+            delete_content_items_for_source(conn, &path)?;
+        }
+        upsert_source_document(conn, &doc_id, &path, &doc_title)?;
+
+        let existing_doc_id: String = conn
+            .query_row(
+                "SELECT id FROM source_documents WHERE path = ?1",
+                [&path],
+                |row| row.get(0),
+            )
+            .map_err(|e| e.to_string())?;
+
+        let mut content_ids = Vec::new();
+        for row in rows {
+            let anchor = SourceAnchor {
+                start_line: row.index as u32,
+                end_line: row.index as u32,
+                heading: Some(format!("row:{}", row.index + 1)),
+            };
+            let fields_json = serde_json::json!({
+                "title": row.title,
+                "body": row.body,
+            })
+            .to_string();
+            let item_id = Uuid::new_v4().to_string();
+            insert_content_item(
+                conn,
+                &item_id,
+                &existing_doc_id,
+                &path,
+                &anchor_json(&anchor)?,
+                &row.title,
+                &row.language,
                 &fields_json,
             )?;
             content_ids.push(item_id);
@@ -1295,6 +1367,8 @@ pub fn run() {
             scan_markdown,
             preview_md_splits,
             import_md_splits,
+            preview_table_import_cmd,
+            import_table_rows_cmd,
             create_manual_content,
             list_content_items_cmd,
             list_channels_cmd,

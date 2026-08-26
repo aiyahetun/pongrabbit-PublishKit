@@ -10,6 +10,8 @@ export type MarkdownScanItem = {
 
   sizeBytes: number;
 
+  format: string;
+
 };
 
 
@@ -99,6 +101,44 @@ export type ImportSplitsResult = {
   importedCount: number;
 
   contentIds: string[];
+
+};
+
+
+
+export type TableRowPreview = {
+
+  index: number;
+
+  title: string;
+
+  body: string;
+
+  language: string;
+
+  channelName?: string;
+
+  bodyPreview: string;
+
+  recommended: boolean;
+
+};
+
+
+
+export type TableImportPreview = {
+
+  columns: string[];
+
+  titleColumn: string;
+
+  bodyColumn: string;
+
+  languageColumn?: string;
+
+  channelColumn?: string;
+
+  rows: TableRowPreview[];
 
 };
 

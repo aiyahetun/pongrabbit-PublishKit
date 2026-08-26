@@ -111,7 +111,7 @@ const PLATFORM_KEYWORDS: &[&str] = &[
 ];
 
 pub fn preview_splits(path: &str, strategy: SplitStrategy) -> Result<Vec<SplitPreview>, String> {
-    let content = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let content = crate::doc_import::read_source_content(path)?;
     preview_splits_from_content(&content, strategy)
 }
 
