@@ -10,6 +10,7 @@ type ThumbBatchResult = { generated: number; remaining: number };
 
 const { t } = useI18n();
 const assets = ref<MediaAsset[]>([]);
+const usagesByMedia = ref<Record<string, Array<{ id: string; title: string }>>>({});
 const settings = ref<WorkspaceSettings | null>(null);
 const loading = ref(false);
 const scanning = ref(false);
@@ -27,6 +28,24 @@ function formatSize(bytes: number) {
 
 function hasMissingThumbs(list: MediaAsset[]) {
   return list.some((item) => item.kind === "image" && !item.thumbPath);
+}
+
+async function loadUsages() {
+  try {
+    const rows = await invoke<
+      Array<{ mediaAssetId: string; contentId: string; contentTitle: string }>
+    >("list_media_content_usages_cmd");
+    const next: Record<string, Array<{ id: string; title: string }>> = {};
+    for (const row of rows) {
+      (next[row.mediaAssetId] ??= []).push({
+        id: row.contentId,
+        title: row.contentTitle,
+      });
+    }
+    usagesByMedia.value = next;
+  } catch (e) {
+    error.value = String(e);
+  }
 }
 
 async function loadAssets() {
@@ -63,7 +82,7 @@ async function generateThumbnailsInBackground() {
 }
 
 async function refreshList() {
-  await loadAssets();
+  await Promise.all([loadAssets(), loadUsages()]);
   if (hasMissingThumbs(assets.value)) {
     void generateThumbnailsInBackground();
   }
@@ -157,6 +176,13 @@ onBeforeUnmount(() => {
           <strong>{{ item.fileName }}</strong>
           <span class="size">{{ formatSize(item.sizeBytes) }}</span>
           <span class="path">{{ item.path }}</span>
+          <div v-if="usagesByMedia[item.id]?.length" class="usage">
+            <span class="usage-label">{{ t("media.usageTitle") }}</span>
+            <ul class="usage-list">
+              <li v-for="usage in usagesByMedia[item.id]" :key="usage.id">{{ usage.title }}</li>
+            </ul>
+          </div>
+          <p v-else class="usage-empty">{{ t("media.usageEmpty") }}</p>
           <div class="actions">
             <button
               v-if="item.kind === 'image'"
@@ -240,6 +266,26 @@ onBeforeUnmount(() => {
 .size {
   font-size: 11px;
   color: var(--pk-ink-secondary);
+}
+.usage {
+  margin-top: 4px;
+}
+.usage-label {
+  display: block;
+  font-size: 11px;
+  color: var(--pk-ink-muted);
+  margin-bottom: 2px;
+}
+.usage-list {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 11px;
+  color: var(--pk-ink-secondary);
+}
+.usage-empty {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--pk-ink-muted);
 }
 .actions {
   display: flex;

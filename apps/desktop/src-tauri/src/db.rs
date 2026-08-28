@@ -593,6 +593,33 @@ pub fn list_media_for_content(
     Ok(rows)
 }
 
+pub fn list_media_content_usages(
+    conn: &Connection,
+) -> Result<Vec<(String, String, String)>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT cm.media_asset_id, ci.id, ci.title
+             FROM content_media cm
+             JOIN content_items ci ON ci.id = cm.content_item_id
+             ORDER BY ci.title ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(rows)
+}
+
 pub fn link_content_media(
     conn: &Connection,
     content_item_id: &str,

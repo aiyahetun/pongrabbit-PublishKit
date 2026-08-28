@@ -148,6 +148,8 @@
   "media.stagedMultiple": "已复制 {count} 张到系统临时文件夹并打开，下次复制会自动清理旧文件夹",
   "media.copiedMultipleHint": "已复制首张图片（共 {count} 张关联素材，其余请在素材页单独复制）",
   "media.revealInFolder": "在文件夹中显示",
+  "media.usageTitle": "被以下内容引用",
+  "media.usageEmpty": "未被任何内容关联",
   "media.thumbGenerating": "正在后台生成预览图，列表可先浏览…",
   "media.suggestTitle": "推荐关联",
   "media.suggestApply": "选中全部推荐",

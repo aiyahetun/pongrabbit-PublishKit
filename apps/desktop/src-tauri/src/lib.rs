@@ -15,7 +15,7 @@ use db::{
     create_custom_channel, create_publish_task, delete_content_items, delete_content_items_for_source,
     delete_custom_channel, duplicate_publish_warning, fields_body, get_content_item_by_id,
     insert_content_item, link_content_media, linked_media_ids, list_calendar_tasks, list_channels,
-    list_content_items, list_media_assets, list_media_for_content, list_publish_tasks,
+    list_content_items, list_media_assets, list_media_content_usages, list_media_for_content, list_publish_tasks,
     unlink_content_media, update_publish_task_status, update_task_scheduled_at, upsert_media_asset,
     upsert_source_document, DbState, DuplicatePublishWarning,
 };
@@ -119,6 +119,14 @@ pub struct PublishTaskRow {
     pub published_at: String,
     pub channel: TaskChannelRef,
     pub content: TaskContentRef,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaContentUsageRow {
+    pub media_asset_id: String,
+    pub content_id: String,
+    pub content_title: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -925,6 +933,22 @@ fn list_media_assets_cmd(
 }
 
 #[tauri::command]
+fn list_media_content_usages_cmd(
+    state: tauri::State<'_, DbState>,
+) -> Result<Vec<MediaContentUsageRow>, String> {
+    db::with_conn(&state, |conn| {
+        Ok(list_media_content_usages(conn)?
+            .into_iter()
+            .map(|(media_asset_id, content_id, content_title)| MediaContentUsageRow {
+                media_asset_id,
+                content_id,
+                content_title,
+            })
+            .collect())
+    })
+}
+
+#[tauri::command]
 fn list_content_media_cmd(
     app: tauri::AppHandle,
     state: tauri::State<'_, DbState>,
@@ -1503,6 +1527,7 @@ pub fn run() {
             update_publish_task_status_cmd,
             scan_media_cmd,
             list_media_assets_cmd,
+            list_media_content_usages_cmd,
             list_content_media_cmd,
             link_content_media_cmd,
             unlink_content_media_cmd,

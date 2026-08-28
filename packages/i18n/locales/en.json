@@ -148,6 +148,8 @@
   "media.stagedMultiple": "Copied {count} images to a temp folder and opened it. Older temp folders are cleaned on the next copy.",
   "media.copiedMultipleHint": "Copied the first image ({count} linked — copy others from Media)",
   "media.revealInFolder": "Show in folder",
+  "media.usageTitle": "Used by content",
+  "media.usageEmpty": "Not linked to any content",
   "media.thumbGenerating": "Generating previews in the background…",
   "media.suggestTitle": "Suggested links",
   "media.suggestApply": "Select all suggested",
