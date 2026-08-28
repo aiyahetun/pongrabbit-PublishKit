@@ -67,6 +67,13 @@ pub fn copy_markdown_rich_text(markdown: &str) -> Result<(), String> {
     copy_rich_text(&html, &plain)
 }
 
+pub fn copy_plain_text(plain: &str) -> Result<(), String> {
+    let mut clipboard = arboard::Clipboard::new().map_err(|e| e.to_string())?;
+    clipboard
+        .set_text(plain.to_string())
+        .map_err(|e| e.to_string())
+}
+
 pub fn copy_rich_text(html: &str, plain: &str) -> Result<(), String> {
     let fragment = format!(
         "<!DOCTYPE html><html><body><!--StartFragment-->{html}<!--EndFragment--></body></html>"

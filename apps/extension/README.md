@@ -18,9 +18,10 @@ Popup HTML (`popup.html`) remains for debugging; primary UI is `sidepanel.html`.
 1. **Test connection** — verifies `/health` and syncs UI locale from desktop
 2. **Load today's tasks** — lists `ready` tasks from desktop
 3. Per task:
-   - **Copy body** — `POST /tasks/{id}/prepare` → clipboard
+   - **Copy body** — `POST /tasks/{id}/prepare` → clipboard (channel-aware plain/rich)
    - **This tab** — fills URL from active browser tab
    - **Mark published** — checks duplicate warning, then `POST /tasks/{id}/publish` with URL
+   - Side Panel auto-loads today's tasks on open; refreshes after publish/undo and when panel refocuses
 
 ## API endpoints used
 

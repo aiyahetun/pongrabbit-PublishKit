@@ -97,6 +97,7 @@ struct PrepareResponse {
     body: String,
     body_html: String,
     body_plain: String,
+    copy_mode: &'static str,
     media_paths: Vec<String>,
     image_count: usize,
 }
@@ -329,11 +330,27 @@ async fn task_prepare(
         .filter(|item| item.kind == "image")
         .count();
     let body = detail.content.body.clone();
+    let body_plain = crate::channel_pack::format_plain_for_channel(
+        &detail.channel.id,
+        &detail.content.title,
+        &body,
+    );
+    let copy_mode = if crate::channel_pack::uses_plain_copy(&detail.channel.id) {
+        "plain"
+    } else {
+        "rich"
+    };
+    let (response_body, response_html) = if copy_mode == "plain" {
+        (body_plain.clone(), rich_text::markdown_to_html(&body_plain))
+    } else {
+        (body.clone(), rich_text::markdown_to_html(&body))
+    };
     Ok(Json(PrepareResponse {
         task_id: detail.id,
-        body_html: rich_text::markdown_to_html(&body),
-        body_plain: rich_text::markdown_to_plain(&body),
-        body,
+        body_html: response_html,
+        body_plain,
+        body: response_body,
+        copy_mode,
         media_paths,
         image_count,
     }))

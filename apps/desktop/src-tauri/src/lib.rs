@@ -3,6 +3,7 @@ pub mod md_split;
 pub mod table_import;
 mod api;
 mod backup;
+mod channel_pack;
 mod content_images;
 mod db;
 mod media;
@@ -1164,6 +1165,86 @@ fn export_content_pack_cmd(
     })
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportTaskPackResult {
+    pub folder_path: String,
+    pub media_count: usize,
+    pub channel_id: String,
+    pub file_count: usize,
+}
+
+#[tauri::command]
+fn export_task_pack_cmd(
+    state: tauri::State<'_, DbState>,
+    task_id: String,
+    dest_folder: String,
+) -> Result<ExportTaskPackResult, String> {
+    db::with_conn(&state, |conn| {
+        let rows = list_publish_tasks(conn, None)?;
+        let row = rows
+            .into_iter()
+            .find(|item| item.0 == task_id)
+            .ok_or_else(|| "任务不存在".to_string())?;
+        let channel_id = row.7.clone();
+        let channel_name = row.8.clone();
+        let content_item_id = row.10.clone();
+        let title = row.11.clone();
+        let body = fields_body(&row.13);
+        let media = list_media_for_content(conn, &content_item_id)?;
+
+        let dest = PathBuf::from(&dest_folder);
+        if !dest.is_dir() {
+            return Err("目标路径不是文件夹".into());
+        }
+
+        let pack = channel_pack::build_channel_pack(&channel_id, &channel_name, &title, &body);
+        let base = format!(
+            "{}-{}",
+            sanitize_folder_name(&title),
+            pack.folder_tag
+        );
+        let pack_dir = unique_pack_dir(&dest, &base);
+        fs::create_dir_all(&pack_dir).map_err(|e| e.to_string())?;
+
+        for file in &pack.files {
+            fs::write(pack_dir.join(file.file_name), &file.content).map_err(|e| e.to_string())?;
+        }
+        fs::write(pack_dir.join("README.txt"), &pack.readme).map_err(|e| e.to_string())?;
+
+        let mut media_count = 0;
+        if !media.is_empty() {
+            let media_dir = pack_dir.join("media");
+            fs::create_dir_all(&media_dir).map_err(|e| e.to_string())?;
+            for (_, path, file_name, _, _) in media {
+                let target = unique_dest_path(&media_dir, &file_name);
+                fs::copy(&path, &target)
+                    .map_err(|e| format!("复制素材失败 {path}: {e}"))?;
+                media_count += 1;
+            }
+        }
+
+        Ok(ExportTaskPackResult {
+            folder_path: pack_dir.to_string_lossy().to_string(),
+            media_count,
+            channel_id,
+            file_count: pack.files.len(),
+        })
+    })
+}
+
+#[tauri::command]
+fn copy_task_body_cmd(state: tauri::State<'_, DbState>, task_id: String) -> Result<(), String> {
+    db::with_conn(&state, |conn| {
+        let rows = list_publish_tasks(conn, None)?;
+        let row = rows
+            .into_iter()
+            .find(|item| item.0 == task_id)
+            .ok_or_else(|| "任务不存在".to_string())?;
+        channel_pack::copy_task_body(&row.7, &row.11, &fields_body(&row.13))
+    })
+}
+
 #[tauri::command]
 fn export_tasks_csv_cmd(
     state: tauri::State<'_, DbState>,
@@ -1429,10 +1510,12 @@ pub fn run() {
             generate_media_thumbnails_cmd,
             copy_media_image_cmd,
             copy_markdown_rich_text_cmd,
+            copy_task_body_cmd,
             reveal_media_in_folder_cmd,
             suggest_media_for_content_cmd,
             update_publish_task_scheduled_cmd,
             export_content_pack_cmd,
+            export_task_pack_cmd,
             export_tasks_csv_cmd,
             stage_content_images_cmd,
             delete_content_item_cmd,

@@ -2,11 +2,10 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
-import { save } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import type { PublishTask, TaskStatus } from "@publishkit/shared";
 import TaskCard from "../components/TaskCard.vue";
 import TaskActionBar from "../components/TaskActionBar.vue";
-import { copyMarkdownAsRichText } from "../utils/clipboard";
 import { copyFirstLinkedImage, openLinkedImagesFolder } from "../utils/taskMediaActions";
 import { buildTaskSections, type TaskSection } from "../utils/taskGroups";
 import { confirmPublishIfDuplicate } from "../utils/confirmPublish";
@@ -85,11 +84,39 @@ async function loadTasks() {
 }
 
 async function copyTask(task: PublishTask) {
-  await copyMarkdownAsRichText(task.content.body);
+  await invoke("copy_task_body_cmd", { taskId: task.id });
   copiedId.value = task.id;
   setTimeout(() => {
     if (copiedId.value === task.id) copiedId.value = "";
   }, 1500);
+}
+
+async function exportTaskPack(task: PublishTask) {
+  error.value = "";
+  notice.value = "";
+  const picked = await open({
+    directory: true,
+    multiple: false,
+    title: t("tasks.exportChannelPackTitle"),
+  });
+  if (!picked || typeof picked !== "string") return;
+  try {
+    const result = await invoke<{
+      folderPath: string;
+      mediaCount: number;
+      fileCount: number;
+    }>("export_task_pack_cmd", {
+      taskId: task.id,
+      destFolder: picked,
+    });
+    notice.value = t("tasks.exportChannelPackDone", {
+      path: result.folderPath,
+      files: result.fileCount,
+      count: result.mediaCount,
+    });
+  } catch (e) {
+    error.value = String(e);
+  }
 }
 
 async function copyTaskSingleImage(task: PublishTask) {
@@ -243,6 +270,7 @@ onMounted(loadTasks);
                 @copy="copyTask(task)"
                 @copy-single-image="copyTaskSingleImage(task)"
                 @open-linked-images-folder="openTaskImagesFolder(task)"
+                @export-pack="exportTaskPack(task)"
                 @mark-ready="updateTask(task, 'ready')"
                 @mark-published="updateTask(task, 'published')"
                 @undo-publish="updateTask(task, 'draft')"

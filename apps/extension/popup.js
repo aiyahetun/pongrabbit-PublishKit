@@ -9,6 +9,7 @@ const STRINGS = {
     save: "保存",
     test: "测试连接",
     loadToday: "加载今日待发",
+    refreshTasks: "刷新列表",
     connecting: "连接中…",
     connected: "已连接",
     loadingTasks: "加载任务…",
@@ -46,6 +47,7 @@ const STRINGS = {
     save: "Save",
     test: "Test connection",
     loadToday: "Load today's tasks",
+    refreshTasks: "Refresh list",
     connecting: "Connecting…",
     connected: "Connected",
     loadingTasks: "Loading tasks…",
@@ -180,6 +182,10 @@ async function copyRichText(html, plain) {
 
 async function copyTaskBody(taskId) {
   const data = await apiFetch(`/tasks/${encodeURIComponent(taskId)}/prepare`, { method: "POST" });
+  if (data.copyMode === "plain") {
+    await navigator.clipboard.writeText(data.bodyPlain ?? data.body ?? "");
+    return;
+  }
   await copyRichText(data.bodyHtml ?? data.body ?? "", data.bodyPlain ?? data.body ?? "");
 }
 
@@ -317,9 +323,7 @@ function renderTaskItem(task) {
       }
       await markTaskPublished(task.id, urlInput);
       setStatus(t("publishedDone"), "ok");
-      item.classList.add("done");
-      publishBtn.disabled = true;
-      undoBtn.classList.add("visible");
+      await loadToday();
     } catch (error) {
       setStatus(`${t("publishedFailed")}: ${error}`, "error");
     }
@@ -334,10 +338,8 @@ function renderTaskItem(task) {
     setStatus(t("connecting"));
     try {
       await undoTaskPublish(task.id);
-      item.classList.remove("done");
-      publishBtn.disabled = false;
-      undoBtn.classList.remove("visible");
       setStatus(t("undoDone"), "ok");
+      await loadToday();
     } catch (error) {
       setStatus(`${t("undoFailed")}: ${error}`, "error");
     }
@@ -375,8 +377,18 @@ document.getElementById("save").addEventListener("click", saveConfig);
 document.getElementById("test").addEventListener("click", testConnection);
 document.getElementById("today").addEventListener("click", loadToday);
 
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    loadToday().catch(() => {});
+  }
+});
+
 (async () => {
   applyLocale();
   await loadConfig();
   await syncUiLocale();
+  const stored = await chrome.storage.local.get(["pairingToken"]);
+  if (stored.pairingToken) {
+    await loadToday().catch(() => {});
+  }
 })();

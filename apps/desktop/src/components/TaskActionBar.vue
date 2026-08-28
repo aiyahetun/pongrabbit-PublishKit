@@ -14,6 +14,7 @@ const emit = defineEmits<{
   copy: [];
   copySingleImage: [];
   openLinkedImagesFolder: [];
+  exportPack: [];
   markReady: [];
   markPublished: [];
   undoPublish: [];
@@ -46,6 +47,10 @@ const showScheduleField = computed(
 
       <button type="button" class="pk-btn pk-btn--ghost" @click="emit('openLinkedImagesFolder')">
         {{ t("media.openLinkedImagesFolder") }}
+      </button>
+
+      <button type="button" class="pk-btn pk-btn--ghost" @click="emit('exportPack')">
+        {{ t("tasks.exportChannelPack") }}
       </button>
 
       <button
