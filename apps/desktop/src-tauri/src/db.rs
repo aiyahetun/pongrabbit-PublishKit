@@ -10,6 +10,9 @@ const MIGRATION_001: &str = include_str!("../migrations/001_init.sql");
 const MIGRATION_002: &str = include_str!("../migrations/002_tasks.sql");
 const MIGRATION_003: &str = include_str!("../migrations/003_channels.sql");
 const MIGRATION_004: &str = include_str!("../migrations/004_media.sql");
+const MIGRATION_005: &str = include_str!("../migrations/005_fts.sql");
+const MIGRATION_006: &str = include_str!("../migrations/006_task_blocked_reason.sql");
+const MIGRATION_007: &str = include_str!("../migrations/007_task_checklist.sql");
 
 const DEFAULT_CHANNELS: &[(&str, &str, &str, &str, i32)] = &[
     // 国内
@@ -136,7 +139,56 @@ fn migrate(conn: &Connection) -> Result<(), String> {
         mark_migration(conn, 4)?;
     }
 
+    if !migration_applied(conn, 5)? {
+        conn.execute_batch(MIGRATION_005)
+            .map_err(|e| e.to_string())?;
+        rebuild_content_fts(conn)?;
+        mark_migration(conn, 5)?;
+    }
+
+    if !migration_applied(conn, 6)? {
+        conn.execute_batch(MIGRATION_006)
+            .map_err(|e| e.to_string())?;
+        if !publish_tasks_has_blocked_reason(conn)? {
+            conn.execute("ALTER TABLE publish_tasks ADD COLUMN blocked_reason TEXT", [])
+                .map_err(|e| e.to_string())?;
+        }
+        mark_migration(conn, 6)?;
+    }
+
+    if !migration_applied(conn, 7)? {
+        conn.execute_batch(MIGRATION_007)
+            .map_err(|e| e.to_string())?;
+        if !publish_tasks_has_checklist_json(conn)? {
+            conn.execute("ALTER TABLE publish_tasks ADD COLUMN checklist_json TEXT", [])
+                .map_err(|e| e.to_string())?;
+        }
+        mark_migration(conn, 7)?;
+    }
+
     Ok(())
+}
+
+fn publish_tasks_has_checklist_json(conn: &Connection) -> Result<bool, String> {
+    let count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('publish_tasks') WHERE name = 'checklist_json'",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+    Ok(count > 0)
+}
+
+fn publish_tasks_has_blocked_reason(conn: &Connection) -> Result<bool, String> {
+    let count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('publish_tasks') WHERE name = 'blocked_reason'",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+    Ok(count > 0)
 }
 
 pub fn with_conn<T, F>(state: &DbState, f: F) -> Result<T, String>
@@ -167,6 +219,12 @@ pub fn upsert_source_document(
 }
 
 pub fn delete_content_items_for_source(conn: &Connection, source_path: &str) -> Result<(), String> {
+    conn.execute(
+        "DELETE FROM content_items_fts
+         WHERE content_item_id IN (SELECT id FROM content_items WHERE source_path = ?1)",
+        [source_path],
+    )
+    .map_err(|e| e.to_string())?;
     conn.execute(
         "DELETE FROM content_items WHERE source_path = ?1",
         [source_path],
@@ -204,6 +262,7 @@ pub fn insert_content_item(
         ],
     )
     .map_err(|e| e.to_string())?;
+    sync_content_fts(conn, id, title, &fields_body(fields_json))?;
     Ok(())
 }
 
@@ -236,10 +295,153 @@ pub fn list_content_items(
     Ok(rows)
 }
 
+fn build_fts_query(raw: &str) -> Option<String> {
+    let terms: Vec<String> = raw
+        .split_whitespace()
+        .map(str::trim)
+        .filter(|term| !term.is_empty())
+        .map(|term| {
+            let escaped = term.replace('"', "\"\"");
+            format!("\"{escaped}\"*")
+        })
+        .collect();
+    if terms.is_empty() {
+        None
+    } else {
+        Some(terms.join(" AND "))
+    }
+}
+
+pub fn sync_content_fts(
+    conn: &Connection,
+    content_item_id: &str,
+    title: &str,
+    body: &str,
+) -> Result<(), String> {
+    conn.execute(
+        "DELETE FROM content_items_fts WHERE content_item_id = ?1",
+        [content_item_id],
+    )
+    .map_err(|e| e.to_string())?;
+    conn.execute(
+        "INSERT INTO content_items_fts (title, body, content_item_id) VALUES (?1, ?2, ?3)",
+        rusqlite::params![title, body, content_item_id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn remove_content_fts_for_ids(conn: &Connection, ids: &[String]) -> Result<(), String> {
+    for id in ids {
+        conn.execute(
+            "DELETE FROM content_items_fts WHERE content_item_id = ?1",
+            [id],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+pub fn rebuild_content_fts(conn: &Connection) -> Result<(), String> {
+    conn.execute("DELETE FROM content_items_fts", [])
+        .map_err(|e| e.to_string())?;
+    for (id, title, _, _, fields_json, _) in list_content_items(conn)? {
+        sync_content_fts(conn, &id, &title, &fields_body(&fields_json))?;
+    }
+    Ok(())
+}
+
+fn search_content_items_fts(
+    conn: &Connection,
+    fts_query: &str,
+    limit: i64,
+) -> Result<Vec<(String, String, String, String, String, String)>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT ci.id, ci.title, ci.source_path, ci.language, ci.fields_json, ci.created_at
+             FROM content_items_fts fts
+             JOIN content_items ci ON ci.id = fts.content_item_id
+             WHERE fts MATCH ?1
+             ORDER BY bm25(fts)
+             LIMIT ?2",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map(rusqlite::params![fts_query, limit], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
+            ))
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(rows)
+}
+
+fn search_content_items_like(
+    conn: &Connection,
+    query: &str,
+    limit: i64,
+) -> Result<Vec<(String, String, String, String, String, String)>, String> {
+    let pattern = format!("%{query}%");
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, title, source_path, language, fields_json, created_at
+             FROM content_items
+             WHERE title LIKE ?1 OR fields_json LIKE ?1
+             ORDER BY created_at DESC
+             LIMIT ?2",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map(rusqlite::params![pattern, limit], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
+            ))
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(rows)
+}
+
+pub fn search_content_items(
+    conn: &Connection,
+    query: &str,
+    limit: i64,
+) -> Result<Vec<(String, String, String, String, String, String)>, String> {
+    let trimmed = query.trim();
+    if trimmed.is_empty() {
+        return list_content_items(conn);
+    }
+    if let Some(fts_query) = build_fts_query(trimmed) {
+        match search_content_items_fts(conn, &fts_query, limit) {
+            Ok(rows) => return Ok(rows),
+            Err(_) => {}
+        }
+    }
+    search_content_items_like(conn, trimmed, limit)
+}
+
 pub fn delete_content_items(conn: &Connection, ids: &[String]) -> Result<usize, String> {
     if ids.is_empty() {
         return Ok(0);
     }
+    remove_content_fts_for_ids(conn, ids)?;
     let placeholders = (1..=ids.len())
         .map(|index| format!("?{index}"))
         .collect::<Vec<_>>()
@@ -353,12 +555,37 @@ pub fn create_publish_task(
     Ok(())
 }
 
+pub fn count_content_items(conn: &Connection) -> Result<usize, String> {
+    let count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM content_items", [], |row| row.get(0))
+        .map_err(|e| e.to_string())?;
+    Ok(count as usize)
+}
+
+pub fn update_task_checklist(
+    conn: &Connection,
+    task_id: &str,
+    checklist_json: &str,
+) -> Result<(), String> {
+    let now = chrono::Utc::now().to_rfc3339();
+    conn.execute(
+        "UPDATE publish_tasks SET checklist_json = ?1, updated_at = ?2 WHERE id = ?3",
+        rusqlite::params![checklist_json, now, task_id],
+    )
+    .map_err(|e| e.to_string())?;
+    if conn.changes() == 0 {
+        return Err("任务不存在".into());
+    }
+    Ok(())
+}
+
 pub fn update_publish_task_status(
     conn: &Connection,
     task_id: &str,
     status: &str,
     publish_url: Option<&str>,
     note: Option<&str>,
+    blocked_reason: Option<&str>,
 ) -> Result<(), String> {
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -372,12 +599,29 @@ pub fn update_publish_task_status(
                 ELSE scheduled_at
             END,
             published_at = CASE WHEN ?1 = 'published' THEN ?4 ELSE published_at END,
+            blocked_reason = CASE
+                WHEN ?1 = 'blocked' THEN COALESCE(?6, blocked_reason)
+                ELSE NULL
+            END,
             updated_at = ?4
          WHERE id = ?5",
-        rusqlite::params![status, publish_url, note, now, task_id],
+        rusqlite::params![status, publish_url, note, now, task_id, blocked_reason],
     )
     .map_err(|e| e.to_string())?;
 
+    if conn.changes() == 0 {
+        return Err("任务不存在".into());
+    }
+    Ok(())
+}
+
+pub fn update_task_note(conn: &Connection, task_id: &str, note: &str) -> Result<(), String> {
+    let now = chrono::Utc::now().to_rfc3339();
+    conn.execute(
+        "UPDATE publish_tasks SET note = ?1, updated_at = ?2 WHERE id = ?3",
+        rusqlite::params![note, now, task_id],
+    )
+    .map_err(|e| e.to_string())?;
     if conn.changes() == 0 {
         return Err("任务不存在".into());
     }
@@ -428,13 +672,13 @@ pub fn update_task_scheduled_at(
 pub fn list_publish_tasks(
     conn: &Connection,
     status_filter: Option<&str>,
-) -> Result<Vec<(String, String, String, String, String, String, String, String, String, String, String, String, String, String)>, String> {
+) -> Result<Vec<(String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String)>, String> {
     let sql = if status_filter.is_some() {
         "SELECT
-            t.id, t.status, t.publish_url, t.note, t.updated_at,
+            t.id, t.status, t.publish_url, t.note, COALESCE(t.blocked_reason, ''), t.updated_at,
             COALESCE(t.scheduled_at, ''), COALESCE(t.published_at, ''),
             c.id, c.name, COALESCE(c.color, '#888888'),
-            i.id, i.title, i.language, i.fields_json
+            i.id, i.title, i.language, i.fields_json, COALESCE(t.checklist_json, '')
          FROM publish_tasks t
          JOIN channels c ON c.id = t.channel_id
          JOIN content_items i ON i.id = t.content_item_id
@@ -442,10 +686,10 @@ pub fn list_publish_tasks(
          ORDER BY t.updated_at DESC"
     } else {
         "SELECT
-            t.id, t.status, t.publish_url, t.note, t.updated_at,
+            t.id, t.status, t.publish_url, t.note, COALESCE(t.blocked_reason, ''), t.updated_at,
             COALESCE(t.scheduled_at, ''), COALESCE(t.published_at, ''),
             c.id, c.name, COALESCE(c.color, '#888888'),
-            i.id, i.title, i.language, i.fields_json
+            i.id, i.title, i.language, i.fields_json, COALESCE(t.checklist_json, '')
          FROM publish_tasks t
          JOIN channels c ON c.id = t.channel_id
          JOIN content_items i ON i.id = t.content_item_id
@@ -470,6 +714,8 @@ pub fn list_publish_tasks(
             row.get::<_, String>(11)?,
             row.get::<_, String>(12)?,
             row.get::<_, String>(13)?,
+            row.get::<_, String>(14)?,
+            row.get::<_, String>(15)?,
         ))
     };
 
@@ -703,6 +949,55 @@ pub fn list_calendar_tasks(
     Ok(rows)
 }
 
+pub fn list_calendar_week_tasks(
+    conn: &Connection,
+    anchor_date: &str,
+) -> Result<Vec<(String, String, String, String, String, String, String)>, String> {
+    use chrono::{Datelike, Duration, NaiveDate};
+
+    let date = NaiveDate::parse_from_str(anchor_date, "%Y-%m-%d")
+        .map_err(|_| "日期格式无效".to_string())?;
+    let weekday = date.weekday().num_days_from_monday();
+    let week_start = date - Duration::days(weekday as i64);
+    let week_end = week_start + Duration::days(7);
+    let start = format!("{}T00:00:00", week_start);
+    let end = format!("{}T00:00:00", week_end);
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT
+                t.id, t.status,
+                COALESCE(t.published_at, t.scheduled_at, t.updated_at) AS event_at,
+                c.name, COALESCE(c.color, '#888888'), i.title, t.publish_url
+             FROM publish_tasks t
+             JOIN channels c ON c.id = t.channel_id
+             JOIN content_items i ON i.id = t.content_item_id
+             WHERE t.status IN ('published', 'scheduled', 'ready', 'blocked')
+               AND COALESCE(t.published_at, t.scheduled_at, t.updated_at) >= ?1
+               AND COALESCE(t.published_at, t.scheduled_at, t.updated_at) < ?2
+             ORDER BY event_at ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map(rusqlite::params![start, end], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
+                row.get::<_, Option<String>>(6)?.unwrap_or_default(),
+            ))
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(rows)
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DuplicatePublishWarning {
@@ -755,6 +1050,24 @@ pub fn duplicate_publish_warning(
 }
 
 #[cfg(test)]
+mod fts_tests {
+    use super::build_fts_query;
+
+    #[test]
+    fn builds_prefix_and_query() {
+        let query = build_fts_query("春季 上新").expect("query");
+        assert!(query.contains("春季"));
+        assert!(query.contains("AND"));
+        assert!(query.contains('*'));
+    }
+
+    #[test]
+    fn empty_query_returns_none() {
+        assert!(build_fts_query("   ").is_none());
+    }
+}
+
+#[cfg(test)]
 mod duplicate_publish_tests {
     use super::*;
 
@@ -784,7 +1097,7 @@ mod duplicate_publish_tests {
     fn warns_when_same_task_already_published() {
         let conn = test_conn();
         insert_test_task(&conn, "task-1", "content-1", "xhs");
-        update_publish_task_status(&conn, "task-1", "published", Some("https://example.com"), None)
+        update_publish_task_status(&conn, "task-1", "published", Some("https://example.com"), None, None)
             .expect("publish");
 
         let warning =
@@ -809,8 +1122,8 @@ mod duplicate_publish_tests {
     fn warns_after_undo_when_published_at_retained() {
         let conn = test_conn();
         insert_test_task(&conn, "task-1", "content-1", "xhs");
-        update_publish_task_status(&conn, "task-1", "published", None, None).expect("publish");
-        update_publish_task_status(&conn, "task-1", "ready", None, None).expect("undo");
+        update_publish_task_status(&conn, "task-1", "published", None, None, None).expect("publish");
+        update_publish_task_status(&conn, "task-1", "ready", None, None, None).expect("undo");
 
         let warning =
             duplicate_publish_warning(&conn, "content-1", "xhs", "task-1", 30).expect("query");

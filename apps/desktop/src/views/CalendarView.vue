@@ -6,17 +6,18 @@ import type { CalendarEntry } from "@publishkit/shared";
 
 const { t, locale } = useI18n();
 const today = new Date();
-const viewYear = ref(today.getFullYear());
-const viewMonth = ref(today.getMonth() + 1);
-const entries = ref<CalendarEntry[]>([]);
-const loading = ref(false);
-const error = ref("");
-const selectedDate = ref("");
-
 const todayIso = computed(() => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 });
+const viewYear = ref(today.getFullYear());
+const viewMonth = ref(today.getMonth() + 1);
+const calendarMode = ref<"month" | "week">("month");
+const weekAnchor = ref(todayIso.value);
+const entries = ref<CalendarEntry[]>([]);
+const loading = ref(false);
+const error = ref("");
+const selectedDate = ref("");
 
 const weekdayLabels = computed(() => {
   if (locale.value.startsWith("zh")) {
@@ -92,10 +93,16 @@ async function loadEntries() {
   loading.value = true;
   error.value = "";
   try {
-    entries.value = await invoke<CalendarEntry[]>("list_calendar_entries_cmd", {
-      year: viewYear.value,
-      month: viewMonth.value,
-    });
+    if (calendarMode.value === "week") {
+      entries.value = await invoke<CalendarEntry[]>("list_calendar_week_entries_cmd", {
+        anchorDate: weekAnchor.value,
+      });
+    } else {
+      entries.value = await invoke<CalendarEntry[]>("list_calendar_entries_cmd", {
+        year: viewYear.value,
+        month: viewMonth.value,
+      });
+    }
     if (selectedDate.value && !entriesByDate.value.has(selectedDate.value)) {
       selectedDate.value = "";
     }
@@ -130,7 +137,24 @@ function goToday() {
   selectedDate.value = todayIso.value;
 }
 
-watch([viewYear, viewMonth], loadEntries);
+function prevWeek() {
+  const d = new Date(weekAnchor.value);
+  d.setDate(d.getDate() - 7);
+  weekAnchor.value = d.toISOString().slice(0, 10);
+  void loadEntries();
+}
+
+function nextWeek() {
+  const d = new Date(weekAnchor.value);
+  d.setDate(d.getDate() + 7);
+  weekAnchor.value = d.toISOString().slice(0, 10);
+  void loadEntries();
+}
+
+watch([viewYear, viewMonth], () => {
+  if (calendarMode.value === "month") void loadEntries();
+});
+watch(calendarMode, loadEntries);
 onMounted(loadEntries);
 </script>
 
@@ -142,9 +166,32 @@ onMounted(loadEntries);
         <p class="subtitle">{{ t("calendar.subtitle") }}</p>
       </div>
       <div class="nav">
-        <button type="button" class="pk-btn pk-btn--ghost" @click="prevMonth">‹</button>
-        <span class="month">{{ monthLabel }}</span>
-        <button type="button" class="pk-btn pk-btn--ghost" @click="nextMonth">›</button>
+        <button
+          type="button"
+          class="pk-chip"
+          :class="{ active: calendarMode === 'month' }"
+          @click="calendarMode = 'month'"
+        >
+          {{ t("calendar.viewMonth") }}
+        </button>
+        <button
+          type="button"
+          class="pk-chip"
+          :class="{ active: calendarMode === 'week' }"
+          @click="calendarMode = 'week'"
+        >
+          {{ t("calendar.viewWeek") }}
+        </button>
+        <template v-if="calendarMode === 'month'">
+          <button type="button" class="pk-btn pk-btn--ghost" @click="prevMonth">‹</button>
+          <span class="month">{{ monthLabel }}</span>
+          <button type="button" class="pk-btn pk-btn--ghost" @click="nextMonth">›</button>
+        </template>
+        <template v-else>
+          <button type="button" class="pk-btn pk-btn--ghost" @click="prevWeek">‹</button>
+          <span class="month">{{ weekAnchor }}</span>
+          <button type="button" class="pk-btn pk-btn--ghost" @click="nextWeek">›</button>
+        </template>
         <button type="button" class="pk-btn pk-btn--secondary" @click="goToday">
           {{ t("calendar.today") }}
         </button>
@@ -154,7 +201,7 @@ onMounted(loadEntries);
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="loading" class="muted">{{ t("calendar.loading") }}</p>
 
-    <div class="layout">
+    <div v-if="calendarMode === 'month'" class="layout">
       <div class="calendar">
         <div v-for="label in weekdayLabels" :key="label" class="weekday">{{ label }}</div>
         <button
@@ -216,6 +263,19 @@ onMounted(loadEntries);
           </li>
         </ul>
       </aside>
+    </div>
+
+    <div v-else class="week-layout">
+      <p v-if="loading" class="muted">{{ t("calendar.loading") }}</p>
+      <ul v-else class="week-list">
+        <li v-for="entry in entries" :key="entry.id" class="week-item">
+          <span class="date">{{ entry.date }}</span>
+          <span class="dot" :style="{ background: entry.channelColor }" />
+          <strong>{{ entry.contentTitle }}</strong>
+          <span class="meta">{{ entry.channelName }} · {{ statusLabel(entry.status) }}</span>
+        </li>
+      </ul>
+      <p v-if="!loading && !entries.length" class="muted">{{ t("calendar.dayEmpty") }}</p>
     </div>
   </section>
 </template>
@@ -394,5 +454,40 @@ onMounted(loadEntries);
   .layout {
     grid-template-columns: 1fr;
   }
+}
+.week-layout {
+  margin-top: 12px;
+}
+.week-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.week-item {
+  display: grid;
+  grid-template-columns: 100px 10px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--pk-border);
+  border-radius: var(--pk-radius-md);
+  background: var(--pk-bg-panel);
+  font-size: 13px;
+}
+.week-item .date {
+  color: var(--pk-ink-muted);
+  font-size: 12px;
+}
+.week-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.week-item .meta {
+  color: var(--pk-ink-muted);
+  font-size: 12px;
 }
 </style>

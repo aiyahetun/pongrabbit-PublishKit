@@ -25,6 +25,9 @@ const { t } = useI18n();
         {{ t(`tasks.status_${task.status}`, task.status) }}
       </span>
     </div>
+    <p v-if="task.status === 'blocked' && task.blockedReason" class="blocked-reason">
+      {{ task.blockedReason }}
+    </p>
     <p class="preview">{{ task.content.body.slice(0, 160) }}{{ task.content.body.length > 160 ? "…" : "" }}</p>
     <slot />
   </article>
@@ -91,5 +94,13 @@ const { t } = useI18n();
   line-height: 1.5;
   color: var(--pk-ink-secondary);
   white-space: pre-wrap;
+}
+
+.blocked-reason {
+  margin: var(--pk-space-2) 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--pk-status-blocked);
+  font-weight: 500;
 }
 </style>

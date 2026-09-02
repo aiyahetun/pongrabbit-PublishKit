@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { ask, open, save } from "@tauri-apps/plugin-dialog";
-import type { UiLocale, Channel, ExportBackupResult, ImportBackupResult, ApiStatus } from "@publishkit/shared";
+import type { UiLocale, Channel, ExportBackupResult, ImportBackupResult, ApiStatus, WorkspaceSettings, LicenseStatus } from "@publishkit/shared";
 
 const { t, locale } = useI18n();
 const saving = ref(false);
@@ -18,6 +18,13 @@ const channels = ref<Channel[]>([]);
 const newChannelName = ref("");
 const newChannelMarket = ref<"domestic" | "overseas" | "both">("both");
 const channelError = ref("");
+const projectName = ref("");
+const brandDomestic = ref("");
+const brandOverseas = ref("");
+const scanIgnoreText = ref("");
+const videoRoot = ref("");
+const licenseKey = ref("");
+const licenseStatus = ref<LicenseStatus | null>(null);
 
 const domesticChannels = computed(() =>
   channels.value.filter((c) => c.market === "domestic" || c.market === "both")
@@ -162,8 +169,70 @@ async function importBackup() {
   }
 }
 
+async function loadWorkspace() {
+  const settings = await invoke<WorkspaceSettings>("get_workspace_settings");
+  projectName.value = settings.projectName ?? "";
+  brandDomestic.value = settings.brandDomestic ?? "";
+  brandOverseas.value = settings.brandOverseas ?? "";
+  videoRoot.value = settings.videoRoot ?? "";
+  scanIgnoreText.value = (settings.scanIgnoreDirs ?? []).join("\n");
+}
+
+async function loadLicense() {
+  licenseStatus.value = await invoke<LicenseStatus>("get_license_status_cmd");
+}
+
+async function saveProject() {
+  channelError.value = "";
+  backupNotice.value = "";
+  try {
+    await invoke("set_workspace_profile_cmd", {
+      projectName: projectName.value,
+      brandDomestic: brandDomestic.value || null,
+      brandOverseas: brandOverseas.value || null,
+    });
+    backupNotice.value = t("settings.projectSaved");
+  } catch (e) {
+    channelError.value = String(e);
+  }
+}
+
+async function saveScanIgnore() {
+  channelError.value = "";
+  const dirs = scanIgnoreText.value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  try {
+    await invoke("set_scan_ignore_dirs_cmd", { dirs });
+    backupNotice.value = t("settings.scanIgnoreSaved");
+  } catch (e) {
+    channelError.value = String(e);
+  }
+}
+
+async function pickVideoRoot() {
+  const picked = await open({ directory: true, multiple: false, title: t("settings.chooseVideoRoot") });
+  if (picked && typeof picked === "string") {
+    await invoke("set_video_root", { path: picked });
+    videoRoot.value = picked;
+  }
+}
+
+async function activateLicense() {
+  channelError.value = "";
+  try {
+    licenseStatus.value = await invoke<LicenseStatus>("activate_license_cmd", {
+      licenseKey: licenseKey.value,
+    });
+    backupNotice.value = t("settings.licenseActivated");
+  } catch (e) {
+    channelError.value = String(e);
+  }
+}
+
 onMounted(async () => {
-  await Promise.all([loadChannels(), loadApiStatus()]);
+  await Promise.all([loadChannels(), loadApiStatus(), loadWorkspace(), loadLicense()]);
 });
 </script>
 
@@ -241,6 +310,56 @@ onMounted(async () => {
           </button>
         </div>
       </template>
+    </div>
+
+    <div class="card">
+      <h2>{{ t("settings.projectSection") }}</h2>
+      <label>
+        <span>{{ t("settings.projectName") }}</span>
+        <input v-model="projectName" class="pk-input" type="text" />
+      </label>
+      <label>
+        <span>{{ t("settings.brandDomestic") }}</span>
+        <input v-model="brandDomestic" class="pk-input" type="text" />
+      </label>
+      <label>
+        <span>{{ t("settings.brandOverseas") }}</span>
+        <input v-model="brandOverseas" class="pk-input" type="text" />
+      </label>
+      <button type="button" class="pk-btn pk-btn--secondary" @click="saveProject">{{ t("settings.saveProject") }}</button>
+    </div>
+
+    <div class="card">
+      <h2>{{ t("settings.scanIgnoreSection") }}</h2>
+      <p class="muted">{{ t("settings.scanIgnoreHint") }}</p>
+      <textarea v-model="scanIgnoreText" class="pk-input" rows="4" :placeholder="t('settings.scanIgnorePlaceholder')" />
+      <label>
+        <span>{{ t("settings.videoRoot") }}</span>
+        <div class="row">
+          <input v-model="videoRoot" class="pk-input" type="text" readonly />
+          <button type="button" class="pk-btn pk-btn--ghost" @click="pickVideoRoot">{{ t("common.choose") }}</button>
+        </div>
+        <span class="muted">{{ t("settings.videoRootHint") }}</span>
+      </label>
+      <button type="button" class="pk-btn pk-btn--secondary" @click="saveScanIgnore">{{ t("settings.saveScanIgnore") }}</button>
+    </div>
+
+    <div class="card">
+      <h2>{{ t("settings.licenseSection") }}</h2>
+      <p v-if="licenseStatus" class="muted">
+        {{ t("settings.licenseTier", { tier: licenseStatus.tier }) }} ·
+        {{ t("settings.licenseUsage", { count: licenseStatus.contentCount, limit: licenseStatus.contentLimit }) }}
+      </p>
+      <label>
+        <span>{{ t("settings.licenseKey") }}</span>
+        <input v-model="licenseKey" class="pk-input" type="text" :placeholder="t('settings.licensePlaceholder')" />
+      </label>
+      <button type="button" class="pk-btn pk-btn--secondary" @click="activateLicense">{{ t("settings.activateLicense") }}</button>
+    </div>
+
+    <div class="card muted-card">
+      <h2>{{ t("settings.syncSection") }}</h2>
+      <p class="muted">{{ t("settings.syncHint") }}</p>
     </div>
 
     <div class="card wide">

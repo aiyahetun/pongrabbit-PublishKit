@@ -7,6 +7,7 @@ import type { Channel, ContentItem, DeleteContentResult, MediaAsset } from "@pub
 import { copyMarkdownAsRichText } from "../utils/clipboard";
 import MediaLinkDialog from "../components/MediaLinkDialog.vue";
 import MediaThumb from "../components/MediaThumb.vue";
+import ContentInspector from "../components/ContentInspector.vue";
 import { copyLinkedImagesWorkflow } from "../utils/mediaActions";
 
 const { t } = useI18n();
@@ -27,6 +28,9 @@ const taskCreating = ref(false);
 const quickChannelName = ref("");
 const selectedIds = ref<Set<string>>(new Set());
 const deleting = ref(false);
+const searchQuery = ref("");
+const inspectorItem = ref<ContentItem | null>(null);
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
 const selectedCount = computed(() => selectedIds.value.size);
 const allSelected = computed(
@@ -46,7 +50,9 @@ async function loadItems() {
   loading.value = true;
   error.value = "";
   try {
-    items.value = await invoke<ContentItem[]>("list_content_items_cmd");
+    items.value = await invoke<ContentItem[]>("list_content_items_cmd", {
+      query: searchQuery.value.trim() || null,
+    });
     const valid = new Set(items.value.map((item) => item.id));
     selectedIds.value = new Set([...selectedIds.value].filter((id) => valid.has(id)));
     await refreshMediaMap();
@@ -71,6 +77,19 @@ async function refreshMediaMap() {
 
 async function loadChannels() {
   channels.value = await invoke<Channel[]>("list_channels_cmd");
+}
+
+function onSearchInput(event: Event) {
+  searchQuery.value = (event.target as HTMLInputElement).value;
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    void loadItems();
+  }, 300);
+}
+
+function clearSearch() {
+  searchQuery.value = "";
+  void loadItems();
 }
 
 function sourceLabel(path: string) {
@@ -263,6 +282,24 @@ onMounted(async () => {
       </div>
     </header>
 
+    <div class="search-row">
+      <input
+        class="pk-input search-input"
+        type="search"
+        :value="searchQuery"
+        :placeholder="t('content.searchPlaceholder')"
+        @input="onSearchInput"
+      />
+      <button
+        v-if="searchQuery.trim()"
+        type="button"
+        class="pk-btn pk-btn--ghost"
+        @click="clearSearch"
+      >
+        {{ t("content.searchClear") }}
+      </button>
+    </div>
+
     <div v-if="items.length" class="bulk-bar card">
       <label class="select-all">
         <input type="checkbox" :checked="allSelected" @change="toggleSelectAll" />
@@ -276,10 +313,18 @@ onMounted(async () => {
     <p v-if="notice" class="notice">{{ notice }}</p>
     <p v-if="loading" class="muted">{{ t("content.loading") }}</p>
     <p v-else-if="error" class="error">{{ error }}</p>
-    <p v-else-if="!items.length" class="muted">{{ t("content.empty") }}</p>
+    <p v-else-if="!items.length" class="muted">
+      {{ searchQuery.trim() ? t("content.searchEmpty") : t("content.empty") }}
+    </p>
 
-    <ul v-else class="list card">
-      <li v-for="item in items" :key="item.id" :class="{ selected: selectedIds.has(item.id) }">
+    <div v-else class="body-layout">
+      <ul class="list card">
+      <li
+        v-for="item in items"
+        :key="item.id"
+        :class="{ selected: selectedIds.has(item.id) || inspectorItem?.id === item.id }"
+        @click="inspectorItem = item"
+      >
         <div class="row">
           <label class="item-check">
             <input type="checkbox" :checked="selectedIds.has(item.id)" @change="toggleSelected(item.id)" />
@@ -332,6 +377,14 @@ onMounted(async () => {
         <span class="path">{{ sourceLabel(item.sourcePath) }}</span>
       </li>
     </ul>
+      <ContentInspector
+        v-if="inspectorItem"
+        :item="inspectorItem"
+        :channels="channels"
+        :media="itemMedia[inspectorItem.id] ?? []"
+        @create-task="createTask(inspectorItem, $event)"
+      />
+    </div>
 
     <div v-if="showCreate" class="overlay" @click.self="showCreate = false">
       <form class="modal card" @submit.prevent="createManual">
@@ -442,6 +495,24 @@ onMounted(async () => {
   flex-direction: column;
   gap: 16px;
 }
+.body-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+.body-layout .list li {
+  cursor: pointer;
+}
+.body-layout .list li.selected {
+  outline: 2px solid var(--pk-accent);
+  outline-offset: -2px;
+}
+@media (max-width: 1100px) {
+  .body-layout {
+    grid-template-columns: 1fr;
+  }
+}
 .head {
   display: flex;
   justify-content: space-between;
@@ -450,6 +521,15 @@ onMounted(async () => {
 }
 .head h1 {
   margin: 0 0 4px;
+}
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.search-input {
+  flex: 1;
+  max-width: 420px;
 }
 .actions {
   display: flex;

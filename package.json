@@ -1,14 +1,19 @@
 {
   "name": "pongrabbit-publishkit",
   "private": true,
-  "version": "0.2.4",
+  "version": "0.3.4",
   "description": "PublishKit — local-first content ops for cross-border marketing",
   "scripts": {
     "dev": "npm run dev --workspace @publishkit/desktop",
     "build": "npm run build --workspace @publishkit/desktop",
     "tauri": "npm run tauri --workspace @publishkit/desktop",
     "build:desktop": "npm run tauri build --workspace @publishkit/desktop",
-    "check:i18n": "node scripts/check-i18n-keys.mjs"
+    "check": "node scripts/run-checks.mjs",
+    "check:quick": "node scripts/run-checks.mjs --quick",
+    "check:i18n": "node scripts/check-i18n-keys.mjs",
+    "check:versions": "node scripts/check-versions.mjs",
+    "check:rust": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml",
+    "test": "npm run check"
   },
   "workspaces": [
     "apps/*",

@@ -29,6 +29,7 @@
   --pk-radius-pill: 999px;
   --pk-shadow-sm: 0 1px 3px rgba(27, 28, 25, 0.06);
   --pk-shadow-md: 0 4px 12px rgba(27, 28, 25, 0.08);
+  --pk-shadow-lg: 0 8px 28px rgba(27, 28, 25, 0.1);
   --pk-sidebar-w: 252px;
   font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
@@ -151,6 +152,22 @@ input {
 .pk-input:focus {
   outline: 2px solid var(--pk-accent-soft);
   border-color: var(--pk-accent);
+}
+
+.pk-input--path {
+  font-family: Consolas, ui-monospace, "Cascadia Mono", monospace;
+  font-size: 12px;
+}
+
+.pk-card {
+  background: var(--pk-bg-panel);
+  border: 1px solid var(--pk-border-strong);
+  border-radius: var(--pk-radius-lg);
+  box-shadow: var(--pk-shadow-sm);
+}
+
+.pk-card--elevated {
+  box-shadow: var(--pk-shadow-lg);
 }
 
 .pk-chip {

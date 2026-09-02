@@ -16,6 +16,8 @@ const error = ref("");
 const copiedId = ref("");
 const publishUrls = ref<Record<string, string>>({});
 const scheduledDates = ref<Record<string, string>>({});
+const taskNotes = ref<Record<string, string>>({});
+const blockedReasonInputs = ref<Record<string, string>>({});
 const notice = ref("");
 
 async function loadTasks() {
@@ -26,12 +28,18 @@ async function loadTasks() {
     tasks.value = list;
     const next: Record<string, string> = {};
     const nextDates: Record<string, string> = {};
+    const nextNotes: Record<string, string> = {};
+    const nextBlocked: Record<string, string> = {};
     for (const task of list) {
       next[task.id] = task.publishUrl || "";
       nextDates[task.id] = task.scheduledAt?.slice(0, 10) ?? "";
+      nextNotes[task.id] = task.note || "";
+      nextBlocked[task.id] = task.blockedReason || "";
     }
     publishUrls.value = next;
     scheduledDates.value = nextDates;
+    taskNotes.value = nextNotes;
+    blockedReasonInputs.value = nextBlocked;
   } catch (e) {
     error.value = String(e);
   } finally {
@@ -115,6 +123,45 @@ async function markPublished(task: PublishTask) {
       taskId: task.id,
       status: "published",
       publishUrl: publishUrls.value[task.id]?.trim() || null,
+      note: null,
+      blockedReason: null,
+    });
+    await loadTasks();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function saveTaskNote(task: PublishTask) {
+  error.value = "";
+  notice.value = "";
+  try {
+    await invoke("update_task_note_cmd", {
+      taskId: task.id,
+      note: taskNotes.value[task.id] ?? "",
+    });
+    notice.value = t("tasks.noteSaved");
+    await loadTasks();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function markBlocked(task: PublishTask) {
+  const reason = blockedReasonInputs.value[task.id]?.trim();
+  if (!reason) {
+    error.value = t("tasks.blockedReasonRequired");
+    return;
+  }
+  error.value = "";
+  notice.value = "";
+  try {
+    await invoke("update_publish_task_status_cmd", {
+      taskId: task.id,
+      status: "blocked",
+      publishUrl: null,
+      note: null,
+      blockedReason: reason,
     });
     await loadTasks();
   } catch (e) {
@@ -165,13 +212,19 @@ onMounted(loadTasks);
             :copied="copiedId === task.id"
             :publish-url="publishUrls[task.id] ?? ''"
             :scheduled-date="scheduledDates[task.id] ?? ''"
+            :task-note="taskNotes[task.id] ?? ''"
+            :blocked-reason-input="blockedReasonInputs[task.id] ?? ''"
             @update:publish-url="publishUrls[task.id] = $event"
             @update:scheduled-date="scheduledDates[task.id] = $event"
+            @update:task-note="taskNotes[task.id] = $event"
+            @update:blocked-reason-input="blockedReasonInputs[task.id] = $event"
             @copy="copyTask(task)"
             @copy-single-image="copyTaskSingleImage(task)"
             @open-linked-images-folder="openTaskImagesFolder(task)"
             @export-pack="exportTaskPack(task)"
             @mark-published="markPublished(task)"
+            @mark-blocked="markBlocked(task)"
+            @save-note="saveTaskNote(task)"
             @save-scheduled="saveScheduled(task)"
           />
         </TaskCard>

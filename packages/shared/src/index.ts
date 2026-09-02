@@ -24,9 +24,37 @@ export type WorkspaceSettings = {
 
   mediaRoot?: string;
 
+  videoRoot?: string;
+
   apiPort?: number;
 
   pairingToken?: string;
+
+  projectName?: string;
+
+  brandDomestic?: string;
+
+  brandOverseas?: string;
+
+  scanIgnoreDirs?: string[];
+
+  licenseKey?: string;
+
+  onboardingDone?: boolean;
+
+};
+
+
+
+export type LicenseStatus = {
+
+  tier: "free" | "pro" | string;
+
+  contentCount: number;
+
+  contentLimit: number;
+
+  isPro: boolean;
 
 };
 
@@ -217,6 +245,10 @@ export type PublishTask = {
   publishUrl: string;
 
   note: string;
+
+  blockedReason?: string;
+
+  checklist?: string[];
 
   updatedAt: string;
 

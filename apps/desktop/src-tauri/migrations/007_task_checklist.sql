@@ -1,0 +1,1 @@
+-- Migration 007: compliance checklist on publish_tasks (applied in db.rs migrate)

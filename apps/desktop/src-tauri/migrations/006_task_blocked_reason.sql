@@ -1,0 +1,1 @@
+-- F17: blocked_reason on publish_tasks (applied via Rust migration guard)

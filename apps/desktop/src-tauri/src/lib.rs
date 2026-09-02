@@ -1,6 +1,7 @@
 pub mod doc_import;
 pub mod md_split;
 pub mod table_import;
+mod license;
 mod api;
 mod backup;
 mod channel_pack;
@@ -14,9 +15,12 @@ mod staging;
 use db::{
     create_custom_channel, create_publish_task, delete_content_items, delete_content_items_for_source,
     delete_custom_channel, duplicate_publish_warning, fields_body, get_content_item_by_id,
-    insert_content_item, link_content_media, linked_media_ids, list_calendar_tasks, list_channels,
+    insert_content_item, link_content_media, linked_media_ids, list_calendar_tasks,
+    list_calendar_week_tasks, list_channels,
     list_content_items, list_media_assets, list_media_content_usages, list_media_for_content, list_publish_tasks,
-    unlink_content_media, update_publish_task_status, update_task_scheduled_at, upsert_media_asset,
+    count_content_items, search_content_items, unlink_content_media, update_publish_task_status,
+    update_task_checklist, update_task_note,
+    update_task_scheduled_at, upsert_media_asset,
     upsert_source_document, DbState, DuplicatePublishWarning,
 };
 use md_split::{anchor_json, preview_splits, SourceAnchor, SplitPreview, SplitStrategy};
@@ -46,9 +50,23 @@ pub struct WorkspaceSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub media_root: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub video_root: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub api_port: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pairing_token: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub brand_domestic: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub brand_overseas: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub scan_ignore_dirs: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub license_key: Option<String>,
+    #[serde(default)]
+    pub onboarding_done: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,6 +130,10 @@ pub struct PublishTaskRow {
     pub status: String,
     pub publish_url: String,
     pub note: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub blocked_reason: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub checklist: Vec<String>,
     pub updated_at: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub scheduled_at: String,
@@ -235,8 +257,38 @@ pub struct CalendarEntryRow {
     pub publish_url: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LicenseStatusRow {
+    pub tier: String,
+    pub content_count: usize,
+    pub content_limit: usize,
+    pub is_pro: bool,
+}
+
+fn parse_checklist(raw: &str) -> Vec<String> {
+    serde_json::from_str(raw).unwrap_or_default()
+}
+
+fn ensure_can_add_content(app: &tauri::AppHandle, state: &DbState, add_count: usize) -> Result<(), String> {
+    let settings = load_settings(app)?;
+    if license::is_pro(settings.license_key.as_deref()) {
+        return Ok(());
+    }
+    let count = db::with_conn(state, |conn| count_content_items(conn))?;
+    if count + add_count > license::FREE_CONTENT_LIMIT {
+        return Err(format!(
+            "免费版最多 {} 条内容，请在设置中激活 Pro 许可证",
+            license::FREE_CONTENT_LIMIT
+        ));
+    }
+    Ok(())
+}
+
 fn map_task_rows(
     rows: Vec<(
+        String,
+        String,
         String,
         String,
         String,
@@ -259,19 +311,21 @@ fn map_task_rows(
             status: row.1.clone(),
             publish_url: row.2.clone(),
             note: row.3.clone(),
-            updated_at: row.4.clone(),
-            scheduled_at: row.5.clone(),
-            published_at: row.6.clone(),
+            blocked_reason: row.4.clone(),
+            checklist: parse_checklist(&row.15),
+            updated_at: row.5.clone(),
+            scheduled_at: row.6.clone(),
+            published_at: row.7.clone(),
             channel: TaskChannelRef {
-                id: row.7.clone(),
-                name: row.8.clone(),
-                color: row.9.clone(),
+                id: row.8.clone(),
+                name: row.9.clone(),
+                color: row.10.clone(),
             },
             content: TaskContentRef {
-                id: row.10.clone(),
-                title: row.11.clone(),
-                language: row.12.clone(),
-                body: fields_body(&row.13),
+                id: row.11.clone(),
+                title: row.12.clone(),
+                language: row.13.clone(),
+                body: fields_body(&row.14),
             },
         })
         .collect()
@@ -347,8 +401,15 @@ pub fn load_settings(app: &tauri::AppHandle) -> Result<WorkspaceSettings, String
             ui_locale: detect_ui_locale(),
             copy_root: None,
             media_root: None,
+            video_root: None,
             api_port: None,
             pairing_token: None,
+            project_name: Some("PublishKit".into()),
+            brand_domestic: None,
+            brand_overseas: None,
+            scan_ignore_dirs: Vec::new(),
+            license_key: None,
+            onboarding_done: false,
         });
     }
     let raw = fs::read_to_string(path).map_err(|e| e.to_string())?;
@@ -378,10 +439,13 @@ fn normalize_locale(locale: &str) -> String {
     }
 }
 
-fn should_skip(path: &Path) -> bool {
+fn should_skip(path: &Path, extra_ignore: &[String]) -> bool {
     path.components().any(|c| {
         if let Some(name) = c.as_os_str().to_str() {
-            IGNORE_DIRS.contains(&name)
+            if IGNORE_DIRS.contains(&name) {
+                return true;
+            }
+            extra_ignore.iter().any(|item| item == name)
         } else {
             false
         }
@@ -454,7 +518,86 @@ fn set_media_root(app: tauri::AppHandle, path: String) -> Result<WorkspaceSettin
 }
 
 #[tauri::command]
-fn scan_markdown(root: String) -> Result<Vec<MarkdownScanItem>, String> {
+fn set_video_root(app: tauri::AppHandle, path: String) -> Result<WorkspaceSettings, String> {
+    let mut settings = load_settings(&app)?;
+    settings.video_root = Some(path);
+    save_settings(&app, &settings)?;
+    Ok(settings)
+}
+
+#[tauri::command]
+fn set_workspace_profile_cmd(
+    app: tauri::AppHandle,
+    project_name: String,
+    brand_domestic: Option<String>,
+    brand_overseas: Option<String>,
+) -> Result<WorkspaceSettings, String> {
+    let mut settings = load_settings(&app)?;
+    settings.project_name = Some(project_name.trim().to_string());
+    settings.brand_domestic = brand_domestic.map(|v| v.trim().to_string()).filter(|v| !v.is_empty());
+    settings.brand_overseas = brand_overseas.map(|v| v.trim().to_string()).filter(|v| !v.is_empty());
+    save_settings(&app, &settings)?;
+    Ok(settings)
+}
+
+#[tauri::command]
+fn set_scan_ignore_dirs_cmd(
+    app: tauri::AppHandle,
+    dirs: Vec<String>,
+) -> Result<WorkspaceSettings, String> {
+    let mut settings = load_settings(&app)?;
+    settings.scan_ignore_dirs = dirs
+        .into_iter()
+        .map(|d| d.trim().to_string())
+        .filter(|d| !d.is_empty())
+        .collect();
+    save_settings(&app, &settings)?;
+    Ok(settings)
+}
+
+#[tauri::command]
+fn complete_onboarding_cmd(app: tauri::AppHandle) -> Result<WorkspaceSettings, String> {
+    let mut settings = load_settings(&app)?;
+    settings.onboarding_done = true;
+    save_settings(&app, &settings)?;
+    Ok(settings)
+}
+
+#[tauri::command]
+fn get_license_status_cmd(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, DbState>,
+) -> Result<LicenseStatusRow, String> {
+    let settings = load_settings(&app)?;
+    let count = db::with_conn(&state, |conn| count_content_items(conn))?;
+    let is_pro = license::is_pro(settings.license_key.as_deref());
+    Ok(LicenseStatusRow {
+        tier: license::tier_label(settings.license_key.as_deref()).into(),
+        content_count: count,
+        content_limit: license::FREE_CONTENT_LIMIT,
+        is_pro,
+    })
+}
+
+#[tauri::command]
+fn activate_license_cmd(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, DbState>,
+    license_key: String,
+) -> Result<LicenseStatusRow, String> {
+    if !license::validate_activation_key(&license_key) {
+        return Err("无效的激活码，格式应为 PKPRO-xxxxxxxx".into());
+    }
+    let mut settings = load_settings(&app)?;
+    settings.license_key = Some(license_key.trim().to_string());
+    save_settings(&app, &settings)?;
+    get_license_status_cmd(app, state)
+}
+
+#[tauri::command]
+fn scan_markdown(app: tauri::AppHandle, root: String) -> Result<Vec<MarkdownScanItem>, String> {
+    let settings = load_settings(&app)?;
+    let extra_ignore = settings.scan_ignore_dirs;
     let root_path = PathBuf::from(&root);
     if !root_path.is_dir() {
         return Err("路径不是文件夹".into());
@@ -467,7 +610,7 @@ fn scan_markdown(root: String) -> Result<Vec<MarkdownScanItem>, String> {
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        if !path.is_file() || should_skip(path) {
+        if !path.is_file() || should_skip(path, &extra_ignore) {
             continue;
         }
         let Some(format) = doc_import::source_format(path) else {
@@ -500,6 +643,7 @@ fn preview_md_splits(path: String, strategy: String) -> Result<Vec<SplitPreview>
 
 #[tauri::command]
 fn import_md_splits(
+    app: tauri::AppHandle,
     state: tauri::State<'_, DbState>,
     path: String,
     strategy: String,
@@ -524,6 +668,8 @@ fn import_md_splits(
     if selected.is_empty() {
         return Err("请至少选择一个拆分块".into());
     }
+
+    ensure_can_add_content(&app, &state, selected.len())?;
 
     let source_path = PathBuf::from(&path);
     let doc_title = doc_import::read_source_content(&path)
@@ -586,6 +732,7 @@ fn preview_table_import_cmd(path: String) -> Result<table_import::TableImportPre
 
 #[tauri::command]
 fn import_table_rows_cmd(
+    app: tauri::AppHandle,
     state: tauri::State<'_, DbState>,
     path: String,
     selected_indexes: Vec<usize>,
@@ -595,6 +742,8 @@ fn import_table_rows_cmd(
     if rows.is_empty() {
         return Err("请至少选择一行".into());
     }
+
+    ensure_can_add_content(&app, &state, rows.len())?;
 
     let source_path = PathBuf::from(&path);
     let doc_title = db::title_from_path(&source_path);
@@ -649,6 +798,7 @@ fn import_table_rows_cmd(
 
 #[tauri::command]
 fn create_manual_content(
+    app: tauri::AppHandle,
     state: tauri::State<'_, DbState>,
     title: String,
     body: String,
@@ -659,6 +809,8 @@ fn create_manual_content(
     if title.is_empty() || body.is_empty() {
         return Err("标题和正文不能为空".into());
     }
+
+    ensure_can_add_content(&app, &state, 1)?;
 
     let language = language.unwrap_or_else(|| md_split::detect_language(&body));
     let item_id = Uuid::new_v4().to_string();
@@ -803,6 +955,7 @@ fn update_publish_task_status_cmd(
     status: String,
     publish_url: Option<String>,
     note: Option<String>,
+    blocked_reason: Option<String>,
 ) -> Result<PublishTaskRow, String> {
     db::with_conn(&state, |conn| {
         update_publish_task_status(
@@ -811,6 +964,7 @@ fn update_publish_task_status_cmd(
             &status,
             publish_url.as_deref(),
             note.as_deref(),
+            blocked_reason.as_deref(),
         )
     })?;
     fetch_publish_tasks(&state, None).and_then(|tasks| {
@@ -822,9 +976,47 @@ fn update_publish_task_status_cmd(
 }
 
 #[tauri::command]
-fn list_content_items_cmd(state: tauri::State<'_, DbState>) -> Result<Vec<ContentItemRow>, String> {
+fn update_task_note_cmd(
+    state: tauri::State<'_, DbState>,
+    task_id: String,
+    note: String,
+) -> Result<PublishTaskRow, String> {
+    db::with_conn(&state, |conn| update_task_note(conn, &task_id, &note))?;
+    fetch_publish_tasks(&state, None).and_then(|tasks| {
+        tasks
+            .into_iter()
+            .find(|t| t.id == task_id)
+            .ok_or_else(|| "任务不存在".into())
+    })
+}
+
+#[tauri::command]
+fn update_task_checklist_cmd(
+    state: tauri::State<'_, DbState>,
+    task_id: String,
+    checklist: Vec<String>,
+) -> Result<PublishTaskRow, String> {
+    let raw = serde_json::to_string(&checklist).map_err(|e| e.to_string())?;
+    db::with_conn(&state, |conn| update_task_checklist(conn, &task_id, &raw))?;
+    fetch_publish_tasks(&state, None).and_then(|tasks| {
+        tasks
+            .into_iter()
+            .find(|t| t.id == task_id)
+            .ok_or_else(|| "任务不存在".into())
+    })
+}
+
+#[tauri::command]
+fn list_content_items_cmd(
+    state: tauri::State<'_, DbState>,
+    query: Option<String>,
+) -> Result<Vec<ContentItemRow>, String> {
     db::with_conn(&state, |conn| {
-        let rows = list_content_items(conn)?;
+        let rows = if let Some(q) = query.as_ref().filter(|value| !value.trim().is_empty()) {
+            search_content_items(conn, q, 200)?
+        } else {
+            list_content_items(conn)?
+        };
         let mut items = Vec::new();
         for (id, title, source_path, language, fields_json, created_at) in rows {
             let body = serde_json::from_str::<serde_json::Value>(&fields_json)
@@ -847,25 +1039,29 @@ fn list_content_items_cmd(state: tauri::State<'_, DbState>) -> Result<Vec<Conten
 #[tauri::command]
 fn scan_media_cmd(app: tauri::AppHandle, state: tauri::State<'_, DbState>) -> Result<ScanMediaResult, String> {
     let settings = load_settings(&app)?;
+    let extra_ignore = settings.scan_ignore_dirs;
     let root = settings
         .media_root
         .ok_or_else(|| "请先在「来源文件」选择图片文件夹".to_string())?;
-    let root_path = PathBuf::from(&root);
-    if !root_path.is_dir() {
-        return Err("图片路径不是文件夹".into());
-    }
-
+    let roots: Vec<String> = std::iter::once(root)
+        .chain(settings.video_root)
+        .collect();
     let mut indexed = 0usize;
     db::with_conn(&state, |conn| {
-        for entry in WalkDir::new(&root_path)
-            .follow_links(false)
-            .into_iter()
-            .filter_map(|e| e.ok())
-        {
-            let path = entry.path();
-            if !path.is_file() || should_skip(path) {
+        for root in roots {
+            let root_path = PathBuf::from(&root);
+            if !root_path.is_dir() {
                 continue;
             }
+            for entry in WalkDir::new(&root_path)
+                .follow_links(false)
+                .into_iter()
+                .filter_map(|e| e.ok())
+            {
+                let path = entry.path();
+                if !path.is_file() || should_skip(path, &extra_ignore) {
+                    continue;
+                }
             let ext = path
                 .extension()
                 .and_then(|e| e.to_str())
@@ -896,6 +1092,7 @@ fn scan_media_cmd(app: tauri::AppHandle, state: tauri::State<'_, DbState>) -> Re
                 mtime.as_deref(),
             )?;
             indexed += 1;
+            }
         }
 
         let total: i64 = conn
@@ -1210,11 +1407,11 @@ fn export_task_pack_cmd(
             .into_iter()
             .find(|item| item.0 == task_id)
             .ok_or_else(|| "任务不存在".to_string())?;
-        let channel_id = row.7.clone();
-        let channel_name = row.8.clone();
-        let content_item_id = row.10.clone();
-        let title = row.11.clone();
-        let body = fields_body(&row.13);
+        let channel_id = row.8.clone();
+        let channel_name = row.9.clone();
+        let content_item_id = row.11.clone();
+        let title = row.12.clone();
+        let body = fields_body(&row.14);
         let media = list_media_for_content(conn, &content_item_id)?;
 
         let dest = PathBuf::from(&dest_folder);
@@ -1265,7 +1462,7 @@ fn copy_task_body_cmd(state: tauri::State<'_, DbState>, task_id: String) -> Resu
             .into_iter()
             .find(|item| item.0 == task_id)
             .ok_or_else(|| "任务不存在".to_string())?;
-        channel_pack::copy_task_body(&row.7, &row.11, &fields_body(&row.13))
+        channel_pack::copy_task_body(&row.8, &row.12, &fields_body(&row.14))
     })
 }
 
@@ -1277,25 +1474,61 @@ fn export_tasks_csv_cmd(
     db::with_conn(&state, |conn| {
         let rows = list_publish_tasks(conn, None)?;
         let mut csv = String::from(
-            "id,status,channel,content_title,language,scheduled_at,published_at,publish_url,updated_at\n",
+            "id,status,channel,content_title,language,scheduled_at,published_at,publish_url,note,blocked_reason,updated_at\n",
         );
 
         for row in &rows {
             csv.push_str(&format!(
-                "{},{},{},{},{},{},{},{},{}\n",
+                "{},{},{},{},{},{},{},{},{},{},{}\n",
                 csv_cell(&row.0),
                 csv_cell(&row.1),
-                csv_cell(&row.8),
-                csv_cell(&row.11),
+                csv_cell(&row.9),
                 csv_cell(&row.12),
-                csv_cell(&scheduled_date_input(&row.5)),
+                csv_cell(&row.13),
                 csv_cell(&scheduled_date_input(&row.6)),
+                csv_cell(&scheduled_date_input(&row.7)),
                 csv_cell(&row.2),
+                csv_cell(&row.3),
                 csv_cell(&row.4),
+                csv_cell(&row.5),
             ));
         }
 
         fs::write(&dest_path, csv.as_bytes()).map_err(|e| e.to_string())?;
+        Ok(ExportTasksCsvResult {
+            path: dest_path,
+            row_count: rows.len(),
+        })
+    })
+}
+
+#[tauri::command]
+fn export_tasks_markdown_cmd(
+    state: tauri::State<'_, DbState>,
+    dest_path: String,
+) -> Result<ExportTasksCsvResult, String> {
+    db::with_conn(&state, |conn| {
+        let rows = list_publish_tasks(conn, None)?;
+        let mut md = String::from("# PublishKit Task Report\n\n");
+        md.push_str(&format!(
+            "Generated: {}\n\n",
+            chrono::Utc::now().format("%Y-%m-%d %H:%M UTC")
+        ));
+        md.push_str("| Status | Channel | Title | Language | Scheduled | Published | URL |\n");
+        md.push_str("| --- | --- | --- | --- | --- | --- | --- |\n");
+        for row in &rows {
+            md.push_str(&format!(
+                "| {} | {} | {} | {} | {} | {} | {} |\n",
+                row.1,
+                row.9,
+                row.12.replace('|', "\\|"),
+                row.13,
+                scheduled_date_input(&row.6),
+                scheduled_date_input(&row.7),
+                row.2.replace('|', "\\|"),
+            ));
+        }
+        fs::write(&dest_path, md.as_bytes()).map_err(|e| e.to_string())?;
         Ok(ExportTasksCsvResult {
             path: dest_path,
             row_count: rows.len(),
@@ -1452,6 +1685,29 @@ fn list_calendar_entries_cmd(
     })
 }
 
+#[tauri::command]
+fn list_calendar_week_entries_cmd(
+    state: tauri::State<'_, DbState>,
+    anchor_date: String,
+) -> Result<Vec<CalendarEntryRow>, String> {
+    db::with_conn(&state, |conn| {
+        Ok(list_calendar_week_tasks(conn, &anchor_date)?
+            .into_iter()
+            .filter_map(|(id, status, event_at, channel_name, channel_color, content_title, publish_url)| {
+                event_date(&event_at).map(|date| CalendarEntryRow {
+                    id,
+                    status,
+                    date,
+                    channel_name,
+                    channel_color,
+                    content_title,
+                    publish_url,
+                })
+            })
+            .collect())
+    })
+}
+
 fn ensure_api_settings(app: &tauri::AppHandle) -> Result<(u16, String), String> {
     let mut settings = load_settings(app)?;
     let mut changed = false;
@@ -1497,6 +1753,14 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .on_page_load(|webview, payload| {
+            use tauri::webview::PageLoadEvent;
+            if payload.event() == PageLoadEvent::Finished {
+                let window = webview.window();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        })
         .setup(|app| {
             backup::apply_pending_restore_if_any(app.handle())?;
             db::init(app.handle())?;
@@ -1511,6 +1775,12 @@ pub fn run() {
             get_workspace_settings,
             set_copy_root,
             set_media_root,
+            set_video_root,
+            set_workspace_profile_cmd,
+            set_scan_ignore_dirs_cmd,
+            complete_onboarding_cmd,
+            get_license_status_cmd,
+            activate_license_cmd,
             scan_markdown,
             preview_md_splits,
             import_md_splits,
@@ -1525,6 +1795,8 @@ pub fn run() {
             list_publish_tasks_cmd,
             list_today_tasks_cmd,
             update_publish_task_status_cmd,
+            update_task_note_cmd,
+            update_task_checklist_cmd,
             scan_media_cmd,
             list_media_assets_cmd,
             list_media_content_usages_cmd,
@@ -1532,6 +1804,7 @@ pub fn run() {
             link_content_media_cmd,
             unlink_content_media_cmd,
             list_calendar_entries_cmd,
+            list_calendar_week_entries_cmd,
             generate_media_thumbnails_cmd,
             copy_media_image_cmd,
             copy_markdown_rich_text_cmd,
@@ -1542,6 +1815,7 @@ pub fn run() {
             export_content_pack_cmd,
             export_task_pack_cmd,
             export_tasks_csv_cmd,
+            export_tasks_markdown_cmd,
             stage_content_images_cmd,
             delete_content_item_cmd,
             delete_content_items_cmd,

@@ -177,15 +177,15 @@ fn auth(headers: &HeaderMap, token: &str) -> Result<(), ApiError> {
 
 fn map_task_summary(row: &(
     String, String, String, String, String, String, String, String, String, String, String, String,
-    String, String,
+    String, String, String, String,
 )) -> ApiTaskSummary {
     ApiTaskSummary {
         id: row.0.clone(),
         status: row.1.clone(),
-        channel_name: row.8.clone(),
-        channel_color: row.9.clone(),
-        content_title: row.11.clone(),
-        content_language: row.12.clone(),
+        channel_name: row.9.clone(),
+        channel_color: row.10.clone(),
+        content_title: row.12.clone(),
+        content_language: row.13.clone(),
         publish_url: row.2.clone(),
     }
 }
@@ -198,7 +198,7 @@ fn load_task_detail(state: &DbState, task_id: &str) -> Result<ApiTaskDetail, Api
             .find(|row| row.0 == task_id)
             .ok_or_else(|| "Task not found".to_string())?;
 
-        let media = list_media_for_content(conn, &row.10)?
+        let media = list_media_for_content(conn, &row.11)?
             .into_iter()
             .map(|(id, path, file_name, kind, _)| ApiMediaRef {
                 id,
@@ -213,15 +213,15 @@ fn load_task_detail(state: &DbState, task_id: &str) -> Result<ApiTaskDetail, Api
             status: row.1.clone(),
             publish_url: row.2.clone(),
             channel: ApiChannelRef {
-                id: row.7.clone(),
-                name: row.8.clone(),
-                color: row.9.clone(),
+                id: row.8.clone(),
+                name: row.9.clone(),
+                color: row.10.clone(),
             },
             content: ApiContentRef {
-                id: row.10.clone(),
-                title: row.11.clone(),
-                language: row.12.clone(),
-                body: fields_body(&row.13),
+                id: row.11.clone(),
+                title: row.12.clone(),
+                language: row.13.clone(),
+                body: fields_body(&row.14),
             },
             media,
         })
@@ -455,7 +455,7 @@ async fn task_unpublish(
     auth(&headers, &ctx.token)?;
     let state = ctx.app.state::<DbState>();
     crate::db::with_conn(&state, |conn| {
-        update_publish_task_status(conn, &task_id, "ready", None, None)
+        update_publish_task_status(conn, &task_id, "ready", None, None, None)
     })
     .map_err(|message| ApiError {
         status: StatusCode::BAD_REQUEST,
@@ -479,6 +479,7 @@ async fn task_publish(
             &task_id,
             "published",
             body.url.as_deref(),
+            None,
             None,
         )
     })

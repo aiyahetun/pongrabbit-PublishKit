@@ -131,10 +131,14 @@ export function buildTaskSections(
   if (filter === "published") {
     return publishedSections(byStatus("published"));
   }
+  if (filter === "blocked") {
+    return flatSection("blocked", "tasks.sectionBlocked", byStatus("blocked"));
+  }
 
   return [
     ...flatSection("draft", "tasks.sectionDraft", byStatus("draft")),
     ...readySections(byStatus("ready")),
+    ...flatSection("blocked", "tasks.sectionBlocked", byStatus("blocked")),
     ...publishedSections(byStatus("published")),
   ];
 }

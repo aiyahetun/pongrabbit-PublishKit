@@ -288,7 +288,8 @@ pub fn merge_backup_database(
         )?;
         let publish_tasks_added = merge(
             "INSERT OR IGNORE INTO publish_tasks
-             SELECT id, content_item_id, channel_id, status, scheduled_at, published_at, publish_url, note, created_at, updated_at
+             (id, content_item_id, channel_id, status, scheduled_at, published_at, publish_url, note, blocked_reason, created_at, updated_at)
+             SELECT id, content_item_id, channel_id, status, scheduled_at, published_at, publish_url, note, NULL, created_at, updated_at
              FROM backup.publish_tasks",
         )?;
         Ok(MergeBackupSummary {

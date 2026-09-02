@@ -1,11 +1,12 @@
 {
   "name": "@publishkit/desktop",
   "private": true,
-  "version": "0.2.4",
+  "version": "0.3.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "typecheck": "vue-tsc --noEmit",
     "preview": "vite preview",
     "tauri": "tauri"
   },

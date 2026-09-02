@@ -6,6 +6,7 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import type { PublishTask, TaskStatus } from "@publishkit/shared";
 import TaskCard from "../components/TaskCard.vue";
 import TaskActionBar from "../components/TaskActionBar.vue";
+import TasksKanbanBoard from "../components/TasksKanbanBoard.vue";
 import { copyFirstLinkedImage, openLinkedImagesFolder } from "../utils/taskMediaActions";
 import { buildTaskSections, type TaskSection } from "../utils/taskGroups";
 import { confirmPublishIfDuplicate } from "../utils/confirmPublish";
@@ -13,23 +14,35 @@ import { confirmPublishIfDuplicate } from "../utils/confirmPublish";
 const { t, locale } = useI18n();
 const tasks = ref<PublishTask[]>([]);
 const filter = ref<"all" | TaskStatus>("all");
+const viewMode = ref<"list" | "kanban">("list");
 const loading = ref(false);
 const error = ref("");
 const copiedId = ref("");
 const publishUrls = ref<Record<string, string>>({});
 const scheduledDates = ref<Record<string, string>>({});
+const taskNotes = ref<Record<string, string>>({});
+const blockedReasonInputs = ref<Record<string, string>>({});
 const collapsed = ref<Set<string>>(new Set());
 const notice = ref("");
 
-const filters: Array<"all" | TaskStatus> = ["all", "draft", "ready", "published"];
+const filters: Array<"all" | TaskStatus> = ["all", "draft", "ready", "blocked", "published"];
 
 const sections = computed(() => buildTaskSections(tasks.value, filter.value));
 
-const hasTasks = computed(() => sections.value.some((section) => section.tasks.length > 0));
+const kanbanTasks = computed(() => {
+  if (filter.value === "all") return tasks.value;
+  return tasks.value.filter((task) => task.status === filter.value);
+});
 
-function syncPublishUrls(list: PublishTask[]) {
+const hasTasks = computed(() =>
+  viewMode.value === "kanban" ? kanbanTasks.value.length > 0 : sections.value.some((s) => s.tasks.length > 0)
+);
+
+function syncTaskFields(list: PublishTask[]) {
   const next: Record<string, string> = { ...publishUrls.value };
   const nextDates: Record<string, string> = { ...scheduledDates.value };
+  const nextNotes: Record<string, string> = { ...taskNotes.value };
+  const nextBlocked: Record<string, string> = { ...blockedReasonInputs.value };
   for (const task of list) {
     if (!(task.id in next)) next[task.id] = task.publishUrl || "";
     else if (task.publishUrl) next[task.id] = task.publishUrl;
@@ -38,9 +51,17 @@ function syncPublishUrls(list: PublishTask[]) {
     } else if (task.scheduledAt) {
       nextDates[task.id] = task.scheduledAt.slice(0, 10);
     }
+    if (!(task.id in nextNotes)) nextNotes[task.id] = task.note || "";
+    if (!(task.id in nextBlocked)) {
+      nextBlocked[task.id] = task.blockedReason || "";
+    } else if (task.status === "blocked" && task.blockedReason) {
+      nextBlocked[task.id] = task.blockedReason;
+    }
   }
   publishUrls.value = next;
   scheduledDates.value = nextDates;
+  taskNotes.value = nextNotes;
+  blockedReasonInputs.value = nextBlocked;
 }
 
 function sectionLabel(section: TaskSection) {
@@ -75,7 +96,7 @@ async function loadTasks() {
   try {
     const list = await invoke<PublishTask[]>("list_publish_tasks_cmd", { status: null });
     tasks.value = list;
-    syncPublishUrls(list);
+    syncTaskFields(list);
   } catch (e) {
     error.value = String(e);
   } finally {
@@ -149,7 +170,11 @@ async function openTaskImagesFolder(task: PublishTask) {
   }
 }
 
-async function updateTask(task: PublishTask, status: TaskStatus) {
+async function updateTask(
+  task: PublishTask,
+  status: TaskStatus,
+  options?: { blockedReason?: string | null }
+) {
   error.value = "";
   notice.value = "";
   if (status === "published") {
@@ -161,7 +186,49 @@ async function updateTask(task: PublishTask, status: TaskStatus) {
       taskId: task.id,
       status,
       publishUrl: publishUrls.value[task.id]?.trim() || null,
+      note: null,
+      blockedReason: options?.blockedReason ?? null,
     });
+    await loadTasks();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function saveTaskNote(task: PublishTask) {
+  error.value = "";
+  notice.value = "";
+  try {
+    await invoke("update_task_note_cmd", {
+      taskId: task.id,
+      note: taskNotes.value[task.id] ?? "",
+    });
+    notice.value = t("tasks.noteSaved");
+    await loadTasks();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function markBlocked(task: PublishTask) {
+  const reason = blockedReasonInputs.value[task.id]?.trim();
+  if (!reason) {
+    error.value = t("tasks.blockedReasonRequired");
+    return;
+  }
+  await updateTask(task, "blocked", { blockedReason: reason });
+}
+
+async function unblockTask(task: PublishTask) {
+  await updateTask(task, "draft");
+}
+
+async function saveTaskChecklist(task: PublishTask, items: string[]) {
+  error.value = "";
+  notice.value = "";
+  try {
+    await invoke("update_task_checklist_cmd", { taskId: task.id, checklist: items });
+    notice.value = t("tasks.checklistSaved");
     await loadTasks();
   } catch (e) {
     error.value = String(e);
@@ -200,6 +267,23 @@ async function exportCsv() {
   }
 }
 
+async function exportMarkdown() {
+  error.value = "";
+  notice.value = "";
+  const picked = await save({
+    defaultPath: `publishkit-tasks-${new Date().toISOString().slice(0, 10)}.md`,
+    filters: [{ name: "Markdown", extensions: ["md"] }],
+    title: t("tasks.exportMarkdownTitle"),
+  });
+  if (!picked || typeof picked !== "string") return;
+  try {
+    const result = await invoke<{ rowCount: number }>("export_tasks_markdown_cmd", { destPath: picked });
+    notice.value = t("tasks.exportMarkdownDone", { count: result.rowCount });
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
 function statusLabel(status: string) {
   return t(`tasks.status_${status}`, status);
 }
@@ -221,6 +305,9 @@ onMounted(loadTasks);
         <p class="muted">{{ t("tasks.subtitleGrouped") }}</p>
       </div>
       <div class="head-actions">
+        <button type="button" class="pk-btn pk-btn--ghost" :disabled="loading" @click="exportMarkdown">
+          {{ t("tasks.exportMarkdown") }}
+        </button>
         <button type="button" class="pk-btn pk-btn--ghost" :disabled="loading" @click="exportCsv">
           {{ t("tasks.exportCsv") }}
         </button>
@@ -233,6 +320,23 @@ onMounted(loadTasks);
     <p v-if="notice" class="notice">{{ notice }}</p>
 
     <div class="filters">
+      <button
+        type="button"
+        class="pk-chip"
+        :class="{ active: viewMode === 'list' }"
+        @click="viewMode = 'list'"
+      >
+        {{ t("tasks.viewList") }}
+      </button>
+      <button
+        type="button"
+        class="pk-chip"
+        :class="{ active: viewMode === 'kanban' }"
+        @click="viewMode = 'kanban'"
+      >
+        {{ t("tasks.viewKanban") }}
+      </button>
+      <span class="filter-sep" />
       <button
         v-for="item in filters"
         :key="item"
@@ -248,6 +352,35 @@ onMounted(loadTasks);
     <p v-if="loading" class="muted">{{ t("tasks.loading") }}</p>
     <p v-else-if="error" class="error">{{ error }}</p>
     <p v-else-if="!hasTasks" class="muted">{{ t("tasks.empty") }}</p>
+
+    <TasksKanbanBoard v-else-if="viewMode === 'kanban'" :tasks="kanbanTasks">
+      <template #default="{ task }">
+        <TaskActionBar
+          :task="task"
+          :copied="copiedId === task.id"
+          :publish-url="publishUrls[task.id] ?? ''"
+          :scheduled-date="scheduledDates[task.id] ?? ''"
+          :task-note="taskNotes[task.id] ?? ''"
+          :blocked-reason-input="blockedReasonInputs[task.id] ?? ''"
+          @update:publish-url="publishUrls[task.id] = $event"
+          @update:scheduled-date="scheduledDates[task.id] = $event"
+          @update:task-note="taskNotes[task.id] = $event"
+          @update:blocked-reason-input="blockedReasonInputs[task.id] = $event"
+          @copy="copyTask(task)"
+          @copy-single-image="copyTaskSingleImage(task)"
+          @open-linked-images-folder="openTaskImagesFolder(task)"
+          @export-pack="exportTaskPack(task)"
+          @mark-ready="updateTask(task, 'ready')"
+          @mark-published="updateTask(task, 'published')"
+          @undo-publish="updateTask(task, 'draft')"
+          @mark-blocked="markBlocked(task)"
+          @unblock="unblockTask(task)"
+          @save-note="saveTaskNote(task)"
+          @save-checklist="saveTaskChecklist(task, $event)"
+          @save-scheduled="saveScheduled(task)"
+        />
+      </template>
+    </TasksKanbanBoard>
 
     <div v-else class="sections">
       <section v-for="group in sections" :key="group.key" class="task-section">
@@ -265,8 +398,12 @@ onMounted(loadTasks);
                 :copied="copiedId === task.id"
                 :publish-url="publishUrls[task.id] ?? ''"
                 :scheduled-date="scheduledDates[task.id] ?? ''"
+                :task-note="taskNotes[task.id] ?? ''"
+                :blocked-reason-input="blockedReasonInputs[task.id] ?? ''"
                 @update:publish-url="publishUrls[task.id] = $event"
                 @update:scheduled-date="scheduledDates[task.id] = $event"
+                @update:task-note="taskNotes[task.id] = $event"
+                @update:blocked-reason-input="blockedReasonInputs[task.id] = $event"
                 @copy="copyTask(task)"
                 @copy-single-image="copyTaskSingleImage(task)"
                 @open-linked-images-folder="openTaskImagesFolder(task)"
@@ -274,6 +411,10 @@ onMounted(loadTasks);
                 @mark-ready="updateTask(task, 'ready')"
                 @mark-published="updateTask(task, 'published')"
                 @undo-publish="updateTask(task, 'draft')"
+                @mark-blocked="markBlocked(task)"
+                @unblock="unblockTask(task)"
+                @save-note="saveTaskNote(task)"
+                @save-checklist="saveTaskChecklist(task, $event)"
                 @save-scheduled="saveScheduled(task)"
               />
             </TaskCard>
@@ -310,6 +451,13 @@ onMounted(loadTasks);
   display: flex;
   flex-wrap: wrap;
   gap: var(--pk-space-2);
+  align-items: center;
+}
+.filter-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--pk-border);
+  margin: 0 4px;
 }
 .sections {
   display: flex;

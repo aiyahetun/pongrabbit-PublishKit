@@ -45,8 +45,13 @@ onMounted(loadCollapsed);
 <template>
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-title">{{ t("app.name") }}</div>
-      <div class="brand-sub">{{ t("app.subtitle") }}</div>
+      <div class="brand-row">
+        <img class="brand-logo" src="../assets/logo-128.png" alt="" width="32" height="32" />
+        <div class="brand-text">
+          <div class="brand-title">{{ t("app.name") }}</div>
+          <div class="brand-sub">{{ t("app.subtitle") }}</div>
+        </div>
+      </div>
       <p class="brand-flow">{{ t("nav.flowHint") }}</p>
     </div>
 
@@ -94,6 +99,24 @@ onMounted(loadCollapsed);
   padding: var(--pk-space-2) var(--pk-space-3) var(--pk-space-4);
   border-bottom: 1px solid var(--pk-border);
   margin-bottom: var(--pk-space-3);
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--pk-radius-md);
+  object-fit: contain;
+}
+
+.brand-text {
+  min-width: 0;
 }
 
 .brand-title {
