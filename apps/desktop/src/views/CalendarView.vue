@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import type { CalendarEntry } from "@publishkit/shared";
+import CalendarExportDialog from "../components/CalendarExportDialog.vue";
 
 const { t, locale } = useI18n();
 const today = new Date();
@@ -18,6 +19,10 @@ const entries = ref<CalendarEntry[]>([]);
 const loading = ref(false);
 const error = ref("");
 const selectedDate = ref("");
+const exportOpen = ref(false);
+const exportStart = ref("");
+const exportEnd = ref("");
+const exportMessage = ref("");
 
 const weekdayLabels = computed(() => {
   if (locale.value.startsWith("zh")) {
@@ -137,6 +142,39 @@ function goToday() {
   selectedDate.value = todayIso.value;
 }
 
+function pad(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function isoDate(date: Date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function openExport() {
+  exportMessage.value = "";
+  if (calendarMode.value === "week") {
+    const [year, month, day] = weekAnchor.value.split("-").map(Number);
+    const anchor = new Date(year, month - 1, day);
+    const offset = (anchor.getDay() + 6) % 7;
+    const start = new Date(anchor);
+    start.setDate(anchor.getDate() - offset);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    exportStart.value = isoDate(start);
+    exportEnd.value = isoDate(end);
+  } else {
+    const last = new Date(viewYear.value, viewMonth.value, 0).getDate();
+    exportStart.value = `${viewYear.value}-${pad(viewMonth.value)}-01`;
+    exportEnd.value = `${viewYear.value}-${pad(viewMonth.value)}-${pad(last)}`;
+  }
+  exportOpen.value = true;
+}
+
+function onExported(count: number) {
+  exportOpen.value = false;
+  exportMessage.value = t("calendar.exportDone", { count });
+}
+
 function prevWeek() {
   const d = new Date(weekAnchor.value);
   d.setDate(d.getDate() - 7);
@@ -166,6 +204,9 @@ onMounted(loadEntries);
         <p class="subtitle">{{ t("calendar.subtitle") }}</p>
       </div>
       <div class="nav">
+        <button type="button" class="pk-btn pk-btn--secondary" @click="openExport">
+          {{ t("calendar.export") }}
+        </button>
         <button
           type="button"
           class="pk-chip"
@@ -199,7 +240,16 @@ onMounted(loadEntries);
     </header>
 
     <p v-if="error" class="error">{{ error }}</p>
+    <p v-if="exportMessage" class="muted">{{ exportMessage }}</p>
     <p v-if="loading" class="muted">{{ t("calendar.loading") }}</p>
+
+    <CalendarExportDialog
+      v-if="exportOpen"
+      :start-date="exportStart"
+      :end-date="exportEnd"
+      @close="exportOpen = false"
+      @exported="onExported"
+    />
 
     <div v-if="calendarMode === 'month'" class="layout">
       <div class="calendar">
@@ -225,7 +275,7 @@ onMounted(loadEntries);
               class="event"
               :style="{ borderLeftColor: entry.channelColor }"
             >
-              <span class="event-text">{{ entry.channelName }}</span>
+              <span class="event-text">{{ entry.projectName ? `${entry.projectName} · ` : "" }}{{ entry.channelName }}</span>
             </div>
             <span v-if="(entriesByDate.get(cell.date)?.length ?? 0) > 3" class="more">
               +{{ (entriesByDate.get(cell.date)?.length ?? 0) - 3 }}
@@ -248,7 +298,7 @@ onMounted(loadEntries);
               <span class="dot" :style="{ background: entry.channelColor }" />
               <div>
                 <strong>{{ entry.contentTitle }}</strong>
-                <span class="meta">{{ entry.channelName }} · {{ statusLabel(entry.status) }}</span>
+                <span class="meta">{{ entry.projectName ? `${entry.projectName} · ` : "" }}{{ entry.channelName }} · {{ statusLabel(entry.status) }}</span>
               </div>
             </div>
             <a
@@ -272,7 +322,7 @@ onMounted(loadEntries);
           <span class="date">{{ entry.date }}</span>
           <span class="dot" :style="{ background: entry.channelColor }" />
           <strong>{{ entry.contentTitle }}</strong>
-          <span class="meta">{{ entry.channelName }} · {{ statusLabel(entry.status) }}</span>
+          <span class="meta">{{ entry.projectName ? `${entry.projectName} · ` : "" }}{{ entry.channelName }} · {{ statusLabel(entry.status) }}</span>
         </li>
       </ul>
       <p v-if="!loading && !entries.length" class="muted">{{ t("calendar.dayEmpty") }}</p>
@@ -302,6 +352,7 @@ onMounted(loadEntries);
 .nav {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 .month {

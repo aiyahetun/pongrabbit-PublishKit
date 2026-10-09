@@ -17,8 +17,8 @@ pub fn list_content_image_paths(
 ) -> Result<ContentImagePaths, String> {
     let paths = list_media_for_content(conn, content_item_id)?
         .into_iter()
-        .filter(|(_, _, _, kind, _)| kind == "image")
-        .map(|(_, path, _, _, _)| path)
+        .filter(|asset| asset.kind == "image")
+        .map(|asset| asset.path)
         .collect();
     Ok(ContentImagePaths { paths })
 }

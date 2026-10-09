@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PublishKit — A lighter assistant for your posts</title>
+<meta name="description" content="PublishKit is a light Windows app plus a Chrome extension for managing social posts. Line up a week or a month of copy as tasks, add platforms and links, copy the title, body, keywords, and images separately, and export a calendar list with project, platform, and link. Free for 50 items. Pro is $38 once."/>
+<link rel="canonical" href="https://get.pongrabbit.com/en/"/>
+<link rel="alternate" hreflang="zh-CN" href="https://get.pongrabbit.cn/zh/"/>
+<link rel="alternate" hreflang="en" href="https://get.pongrabbit.com/en/"/>
+<link rel="alternate" hreflang="x-default" href="https://get.pongrabbit.com/en/"/>
+<meta property="og:title" content="PublishKit — A lighter assistant for your posts"/>
+<meta property="og:description" content="A Windows app plus a Chrome extension. Line up a week or a month of copy, add platforms and links, and copy the title, body, keywords, and images separately."/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://get.pongrabbit.com/en/"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:image" content="https://get.pongrabbit.com/assets/images/publishkit_og_1200x630.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="PublishKit — A lighter assistant for your posts"/>
+<meta name="twitter:description" content="Line up a week or a month of copy, then copy the title, body, keywords, and images separately."/>
+<meta name="twitter:image" content="https://get.pongrabbit.com/assets/images/publishkit_og_1200x630.png"/>
+<link rel="icon" href="../assets/images/favicon_32.png" type="image/png" sizes="32x32"/>
+<link rel="apple-touch-icon" href="../assets/images/apple_touch_180.png"/>
+<link rel="stylesheet" href="../assets/site.css"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-container": "#efeee8", "inverse-primary": "#ebc073", "on-surface-variant": "#4e4638", "surface-variant": "#e4e2dd", "on-tertiary-fixed": "#001b3c", "secondary-container": "#e5e2db", "on-error-container": "#93000a", "on-tertiary-container": "#c6d9ff", "tertiary-container": "#7d99c9", "surface-container-low": "#f5f4ee", "surface-container-lowest": "#ffffff", "tertiary-fixed": "#d5e3ff", "on-background": "#1b1c19", "surface-container-highest": "#e4e2dd", "surface-bright": "#fbf9f4", "outline-variant": "#d1c5b3", "on-error": "#ffffff", "tertiary-fixed-dim": "#abc8fa", "on-primary-fixed-variant": "#5e4200", "outline": "#807667", "tertiary": "#435f8b", "on-tertiary-fixed-variant": "#2a4772", "surface-dim": "#dbdad5", "inverse-surface": "#30312d", "secondary-fixed-dim": "#c9c6c0", "primary-fixed": "#ffdea7", "inverse-on-surface": "#f2f1eb", "surface-container-high": "#e9e8e3", "on-primary": "#ffffff", "surface-tint": "#795916", "secondary-fixed": "#e5e2dc", "on-secondary-fixed": "#1c1c18", "background": "#fbf9f4", "primary-fixed-dim": "#ebc073", "error-container": "#ffdad6", "surface": "#fbf9f4", "secondary": "#5f5e59", "error": "#ba1a1a", "primary-container": "#795916", "primary": "#795916", "on-tertiary": "#ffffff", "on-secondary-fixed-variant": "#474742", "on-secondary-container": "#65645f", "on-surface": "#1b1c19", "on-secondary": "#ffffff", "on-primary-container": "#412c00", "on-primary-fixed": "#271900" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xs": "0.25rem", "sidebar_width": "220px", "baseline": "4px", "space-lg": "1rem", "margin": "1.5rem", "space-sm": "0.5rem", "space-md": "0.75rem", "container_gutter": "24px", "inner_padding": "16px", "element_gap": "12px", "space-xl": "1.5rem", "gutter": "1.5rem" }, fontFamily: { "label-xs": ["Inter"], "headline-lg": ["Inter"], "code-sm": ["Inter"], "headline-md": ["Inter"], "body-base": ["Inter"], "h1": ["Inter"], "h3": ["Inter"], "headline-sm": ["Inter"], "body-sm": ["Inter"], "body-md": ["Inter"], "mono": ["Inter"], "h2": ["Inter"], "body-lg": ["Inter"], "label-md": ["Inter"], "label-sm": ["Inter"] }, fontSize: { "label-xs": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "500" }], "headline-lg": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "600" }], "code-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }], "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }], "body-base": ["14px", { lineHeight: "20px", fontWeight: "400" }], "h1": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "600" }], "h3": ["16px", { lineHeight: "24px", fontWeight: "600" }], "headline-sm": ["16px", { lineHeight: "24px", fontWeight: "600" }], "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "mono": ["13px", { lineHeight: "18px", fontWeight: "400" }], "h2": ["20px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-md": ["13px", { lineHeight: "18px", fontWeight: "500" }], "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "500" }] } } } };</script></head><body class="bg-surface text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-md border-b border-surface-variant"><div class="h-14 max-w-[1440px] mx-auto px-6 flex items-center justify-between"><div class="flex items-center gap-2"><a class="pk-brand group" data-path="overview" href="#"><span class="pk-brand__visual"><img src="../assets/images/publishkit_logo_lockup_2400x600.png" alt="" width="2400" height="600"/><span class="pk-brand__text">PublishKit</span></span></a></div><nav class="hidden md:flex items-center gap-8" data-active-classes="text-on-surface font-semibold"><a class="font-body-base text-body-base text-on-surface-variant hover:text-on-surface transition-colors" href="#features">Features</a><a class="font-body-base text-body-base text-on-surface-variant hover:text-on-surface transition-colors" href="#manifesto">Notes</a><a class="font-body-base text-body-base text-on-surface-variant hover:text-on-surface transition-colors" href="#pricing">Pricing</a><a class="font-body-base text-body-base text-on-surface-variant hover:text-on-surface transition-colors" href="#faq">FAQ</a></nav><div class="flex items-center gap-4"><div class="inline-flex items-center rounded-md border border-outline-variant bg-surface-container-low px-1 py-0.5 text-xs font-mono text-secondary shadow-xs"><span class="px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface font-semibold">EN</span><span class="text-outline-variant px-0.5">/</span><a class="px-1.5 py-0.5 text-on-surface-variant hover:text-on-surface" href="../zh/">ZH</a></div><a class="download-trigger inline-flex items-center justify-center px-4 py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors cursor-pointer" href="#download">Download for Windows</a><a class="download-mac-trigger hidden sm:inline-flex items-center justify-center px-4 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant font-label-md text-label-md hover:bg-surface-container-low transition-colors cursor-pointer" href="#download">Download for Mac</a></div></div></header><main class="w-full pt-14 bg-surface max-w-[1440px] mx-auto px-6"><div class="flex flex-col w-full font-body-base text-on-surface">
+<!-- 1. HERO SECTION -->
+<section class="w-full pt-12 md:pt-16 pb-16 md:pb-24">
+<div class="max-w-[1360px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+<!-- Left Column (45% -> 5 cols / 12) -->
+<div class="lg:col-span-5 flex flex-col items-start pr-0 lg:pr-4">
+<!-- Badge Pill -->
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-label-xs text-label-xs mb-6 shadow-xs">
+<span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+<span class="">Windows desktop · browser side panel · Follow each site’s own posting rules. No account passwords stored. It only helps you manage the work.</span>
+</div>
+<!-- Headline -->
+<h1 class="text-on-surface font-headline-lg text-3xl sm:text-4xl lg:text-[46px] leading-[1.14] tracking-tight font-semibold mb-5 max-w-xl">
+          A lighter assistant for your posts
+        </h1>
+<!-- Subtitle -->
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-8 max-w-xl">
+          Line up a week or a month of copy as tasks, with a platform and a link. Copy the title, body, keywords, and images separately. The calendar export keeps project, platform, and link in one list.
+        </p>
+<!-- CTA Buttons -->
+<div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+<a class="download-trigger inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-on-primary-container transition-colors shadow-xs cursor-pointer" href="#download">
+<svg aria-hidden="true" class="w-4 h-4 fill-current" viewbox="0 0 16 16">
+<path d="M0 2.222L6.444 1.333V7.556H0V2.222zm7.111-.989L16 0v7.556H7.111V1.233zM0 8.444h6.444v6.223L0 13.778V8.444zm7.111 0H16V16l-8.889-1.233V8.444z"></path>
+</svg>
+<span class="">Download for Windows (x64)</span>
+</a>
+<a class="download-mac-trigger inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low font-label-md text-label-md transition-colors shadow-xs cursor-pointer" href="#download">
+<span class="">Download for Mac</span>
+</a>
+<button class="pro-modal-trigger inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low font-label-md text-label-md transition-colors shadow-xs cursor-pointer" type="button">
+<span class="">Get Pro — <span data-pro-price>$38</span></span>
+</button>
+</div>
+<!-- Trust line -->
+<div class="mt-6 flex items-center gap-2 font-mono text-code-sm text-secondary">
+<svg aria-hidden="true" class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="leading-tight">So you can use it with an easier mind.</span>
+</div>
+</div>
+<!-- Right Column — LP-04 placeholder -->
+<div class="lg:col-span-7 w-full">
+<picture>
+<source media="(max-width: 767px)" srcset="../assets/images/publishkit_hero_mobile_1170x2532.png"/>
+<img src="../assets/images/publishkit_hero_desktop_2880x1620.png" alt="PublishKit desktop app — Today queue" class="pk-shot pk-shot--hero" width="2880" height="1620" loading="eager"/>
+</picture>
+</div>
+</div>
+</section>
+<!-- 2. TRUST BAR SECTION -->
+<section class="w-full bg-surface-container-low border-y border-outline-variant py-8 my-6">
+<div class="max-w-[1360px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+<!-- Trust Item 1 -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0 shadow-xs">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-surface mb-1">Drafts stay on this PC</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Copy, image records, and publish status sit in a database on this computer. They are not uploaded to PublishKit.
+          </p>
+</div>
+</div>
+<!-- Trust Item 2 -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0 shadow-xs">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-surface mb-1">The extension only talks to this computer</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            The side panel reaches the desktop app at <code class="font-mono text-[12px] bg-surface-container px-1 py-0.5 rounded">127.0.0.1</code>. The port and pairing code are under Settings → Browser extension.
+          </p>
+</div>
+</div>
+<!-- Trust Item 3 -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0 shadow-xs">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-surface mb-1">Your accounts stay on each site</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            PublishKit does not store platform passwords, and it does not log in for you.
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. THREE-STEP FLOW SECTION -->
+<section class="w-full py-16 md:py-24">
+<div class="max-w-[1360px] mx-auto">
+<!-- Section Header -->
+<div class="text-left mb-12">
+<span class="font-label-xs text-label-xs text-primary tracking-wider uppercase font-semibold block mb-2">How a day of posting works</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">Put the tasks on the calendar, paste them out, mark them done</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Each project and each platform stays on its own row.</p>
+</div>
+<!-- 3 Card Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Step 1 -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-xs hover:border-primary/40 transition-colors flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center mb-6">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="font-mono text-code-sm text-secondary block mb-1">Step 01</span>
+<h3 class="font-h3 text-h3 text-on-surface mb-3">1. Schedule them as ready</h3>
+<p class="font-body-base text-body-base text-on-surface-variant leading-relaxed">
+              Open Schedule import from Sources or Tasks. Pick Markdown, Word, or Excel. Set a start date and an interval, check the platforms, and create the ready tasks.
+            </p>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-xs hover:border-primary/40 transition-colors flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center mb-6">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="font-mono text-code-sm text-secondary block mb-1">Step 02</span>
+<h3 class="font-h3 text-h3 text-on-surface mb-3">2. Paste on the site</h3>
+<p class="font-body-base text-body-base text-on-surface-variant leading-relaxed">
+              Open the task and use Copy title, Copy body, Copy keywords, and Copy images. Paste each one yourself.
+            </p>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-xs hover:border-primary/40 transition-colors flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center mb-6">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="font-mono text-code-sm text-secondary block mb-1">Step 03</span>
+<h3 class="font-h3 text-h3 text-on-surface mb-3">3. Mark it published</h3>
+<p class="font-body-base text-body-base text-on-surface-variant leading-relaxed">
+              In the side panel, choose Mark published and add the link.
+            </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. FEATURE SHOWCASE (Alternating 5 Rows) -->
+<section class="w-full py-16 space-y-24 max-w-[1360px] mx-auto" id="features">
+<!-- Row 1: Text Left, Mockup Right (Today Queue) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-5 space-y-4">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Today</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">See today’s tasks</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          Ready tasks are listed by date.
+        </p>
+</div>
+<div class="lg:col-span-7">
+<img src="../assets/images/publishkit_feat_today_1920x1080.png" alt="PublishKit Today queue" class="pk-shot pk-shot--feature" width="1920" height="1080" loading="lazy"/>
+</div>
+</div>
+<!-- Row 2: Mockup Left, Text Right (Content + Inspector) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-7 order-2 lg:order-1">
+<img src="../assets/images/publishkit_feat_content_inspector_1920x1080_en.png" alt="" class="pk-shot pk-shot--feature" width="1920" height="1080" loading="lazy"/>
+</div>
+<div class="lg:col-span-5 space-y-4 order-1 lg:order-2">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Copy</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">One piece, copied per platform</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          Title, body, and keywords are copied separately.
+        </p>
+</div>
+</div>
+<!-- Row 3: Text Left, Mockup Right (Companion Utility) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-5 space-y-4">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Side panel</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">Open the Chrome extension beside the post</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          Copy the title, body, and keywords from the side panel.
+        </p>
+</div>
+<div class="lg:col-span-7">
+<img src="../assets/images/publishkit_feat_extension_1920x1080.png" alt="" class="pk-shot pk-shot--feature" width="1920" height="1080" loading="lazy"/>
+</div>
+</div>
+<!-- Row 4: Mockup Left, Text Right (Kanban Pipeline) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-7 order-2 lg:order-1">
+<img src="../assets/images/publishkit_feat_kanban_1920x1080.png" alt="" class="pk-shot pk-shot--feature" width="1920" height="1080" loading="lazy"/>
+</div>
+<div class="lg:col-span-5 space-y-4 order-1 lg:order-2">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Tasks</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">One platform, one task</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          Schedule import can lay out a month of ready tasks at once.
+        </p>
+</div>
+</div>
+<!-- Row 5: Text Left, Mockup Right (Week Calendar) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-5 space-y-4">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Calendar</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">Tasks are easier to see on the calendar</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          Export records by project, dates, and status.
+        </p>
+</div>
+<div class="lg:col-span-7">
+<img src="../assets/images/publishkit_feat_calendar_week_1920x1080.png" alt="" class="pk-shot pk-shot--feature" width="1920" height="1080" loading="lazy"/>
+</div>
+</div>
+</section>
+<!-- 5. MANIFESTO -->
+<section class="w-full py-20 bg-surface-container-lowest border-y border-outline-variant my-12" id="manifesto">
+<div class="max-w-5xl mx-auto px-6">
+<div class="text-left mb-12">
+<span class="font-label-xs text-label-xs text-primary tracking-wider uppercase font-semibold block mb-2">Notes</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">Pay once, and the day-to-day is simpler.</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Column 1: What We Do -->
+<div class="p-8 rounded-xl bg-surface-container-low/50 border border-outline-variant space-y-5">
+<div class="flex items-center gap-2 pb-2 border-b border-outline-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-[#2e7d32]"></span>
+<h3 class="font-h3 text-h3 text-on-surface">What We Do</h3>
+</div>
+<ul class="space-y-4 font-body-base text-body-base text-on-surface">
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-[#2e7d32] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">It keeps a straight record of the copy and of what you published.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-[#2e7d32] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Pay once and keep using it. No monthly charge.</span>
+</li>
+</ul>
+</div>
+<!-- Column 2: What We Don't Do -->
+<div class="p-8 rounded-xl bg-surface-container-high/40 border border-outline-variant space-y-5">
+<div class="flex items-center gap-2 pb-2 border-b border-outline-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<h3 class="font-h3 text-h3 text-on-surface">What We Don't Do</h3>
+</div>
+<ul class="space-y-4 font-body-base text-body-base text-on-surface-variant">
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">It does not store platform passwords.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">It does not bypass platform rules, and it does not post for you.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">It does not charge by the month.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">It does not sell your drafts.</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- 6. PRICING SECTION -->
+<section class="pk-pricing w-full py-20" id="pricing">
+<div class="max-w-5xl mx-auto px-6">
+<div class="text-left mb-12">
+<span class="font-label-xs text-label-xs text-primary tracking-wider uppercase font-semibold block mb-2">Price</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">Free for 50 items. After that, ¥139 in China or $38 abroad, once.</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">The code starts with PKPRO-. Enter it under Settings → License.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+<!-- Card 1: PublishKit Free -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-xs flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-h2 text-h2 text-on-surface">PublishKit Free</h3>
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded bg-surface-container text-secondary">$0</span>
+</div>
+<div class="mb-4">
+<span class="text-3xl font-semibold text-on-surface">$0</span>
+<span class="text-secondary font-body-sm text-body-sm"> / forever</span>
+</div>
+<ul class="space-y-3 font-body-sm text-body-sm text-on-surface-variant border-t border-outline-variant pt-6">
+<li class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-primary">check</span>
+<span class="">50 items</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-primary">check</span>
+<span class="">More than one project, each with its own copy folder and image folder</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-primary">check</span>
+<span class="">Today, tasks, calendar, schedule import, copy, and the extension</span>
+</li>
+</ul>
+</div>
+<div class="mt-8 pt-6 border-t border-outline-variant">
+<button class="download-trigger w-full py-2.5 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low font-label-md text-label-md transition-colors shadow-xs cursor-pointer" type="button">
+            Download Free
+          </button>
+</div>
+</div>
+<!-- Card 2: PublishKit Pro Lifetime -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border-2 border-primary shadow-md flex flex-col justify-between relative ring-1 ring-primary/20"><div class="absolute -top-3 right-6"><span class="px-3.5 py-1 rounded-full bg-primary text-on-primary font-label-xs text-label-xs font-semibold uppercase tracking-wider shadow-sm">Recommended</span></div><div><div class="flex items-center justify-between mb-4"><h3 class="font-h2 text-h2 text-on-surface font-semibold">PublishKit Pro</h3><span class="font-mono text-xs px-2.5 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-medium">One-time</span></div><div class="mb-4"><div class="flex items-baseline gap-2 flex-wrap"><span class="text-4xl font-semibold text-on-surface" data-pro-price>$38</span><span class="text-secondary line-through font-body-sm text-body-sm" data-pro-was>$79</span><span class="text-primary font-mono text-xs font-semibold uppercase tracking-wide">launch price · one-time</span></div><span class="text-secondary font-body-sm text-body-sm block mt-1">One payment · Not a subscription</span></div><ul class="space-y-3 font-body-sm text-body-sm text-on-surface border-t border-outline-variant pt-6"><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class="">No cap on items</span></li><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class="">Everything in Free is here too</span></li><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class="">The code arrives by email after payment</span></li><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class="">A one-time buffer alternative if you still paste each post yourself.</span></li></ul></div><div class="mt-8 pt-6 border-t border-outline-variant space-y-2"><button class="pro-modal-trigger w-full py-3 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-on-primary-container transition-colors shadow-sm font-medium cursor-pointer" type="button">Get Pro — <span data-pro-price>$38</span></button><p class="text-center font-mono text-[11px] text-secondary">The code arrives by email as <code class="text-primary">PKPRO-</code> · Enter it under Settings → License</p></div></div>
+</div>
+</div>
+</section>
+<!-- 7. FAQ SECTION -->
+<section class="w-full py-16 max-w-4xl mx-auto px-6" id="faq">
+<div class="text-left mb-12">
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">Frequently Asked Questions</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">A few things people ask about PublishKit.</p>
+</div>
+<div class="space-y-3" id="faq-accordion">
+<!-- FAQ 1 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">Do the drafts get uploaded?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          No. The library, tasks, and settings stay on this computer. PublishKit's servers do not get the drafts unless you copy a backup out yourself.
+        </div>
+</div>
+<!-- FAQ 2 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">Will it post for me?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          No. You paste, upload, and publish in the editors on Xiaohongshu, Douyin, and Pinterest. PublishKit handles the schedule, the copy buttons, and a note of whether it went out.
+        </div>
+</div>
+<!-- FAQ 3 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">Which platforms?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          Xiaohongshu, Douyin, WeChat Channels, Bilibili, Weibo, Pinterest, Instagram, and YouTube are already in the list. If yours is missing, type the name in Schedule import or under Settings → Platforms.
+        </div>
+</div>
+<!-- FAQ 4 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">How do I install the extension?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          Chrome, Edge, and Brave all work. Install <a class="chrome-store-link text-primary underline" href="https://chromewebstore.google.com/detail/publishkit-companion/dijkbipanbpkgndbhonecpfnladaiipj" rel="noopener noreferrer" target="_blank">PublishKit Companion</a> from the Chrome Web Store, then copy the port and pairing code in the desktop app under Settings → Browser extension. The side panel only talks to this computer.
+        </div>
+</div>
+<!-- FAQ 5 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">What is the difference between Free and Pro?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          Free stops at 50 items. Pro removes that cap. Projects are unlimited on both.
+        </div>
+</div>
+<!-- FAQ 6 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">How do I activate?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          The code in the email starts with <code class="font-mono text-xs">PKPRO-</code>. Paste it under Settings → License.
+        </div>
+</div>
+<!-- FAQ 7 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">Is there a Mac version?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          Yes. Download for Mac on this page is the Apple silicon dmg (M1 or later). The Intel dmg is on the same release page, and its file name includes x64. The version is the one on that file. If the system says the developer cannot be verified, open System Settings → Privacy &amp; Security and choose Open Anyway. The Windows button is still Windows 10/11.
+        </div>
+</div>
+<!-- FAQ 8 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">How is this different from tools that post for you?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          Those tools remember the account and post when the time comes. PublishKit keeps the drafts and the schedule on your computer. You still publish on each site yourself.
+        </div>
+</div>
+</div>
+</section>
+<!-- 8. FINAL CTA BANNER -->
+<section class="w-full my-12 max-w-5xl mx-auto px-6" id="download">
+<div class="p-10 md:p-14 bg-surface-container-lowest border border-outline-variant rounded-2xl text-center shadow-xs">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high border border-outline-variant mx-auto flex items-center justify-center mb-6">
+<div class="w-4 h-4 bg-primary rounded-sm"></div>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">Put this week's drafts on today</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto mb-8">
+        Download the free Windows app. 50 items is enough for one round.
+      </p>
+<div class="flex flex-wrap items-center justify-center gap-4">
+<a class="download-trigger inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-on-primary-container transition-colors shadow-xs cursor-pointer" href="#download">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 16 16">
+<path d="M0 2.222L6.444 1.333V7.556H0V2.222zm7.111-.989L16 0v7.556H7.111V1.233zM0 8.444h6.444v6.223L0 13.778V8.444zm7.111 0H16V16l-8.889-1.233V8.444z"></path>
+</svg>
+<span class="">Download for Windows (<span data-app-version>v0.3.12</span>)</span>
+</a>
+<a class="download-mac-trigger inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low font-label-md text-label-md transition-colors shadow-xs cursor-pointer" href="#download">
+<span class="">Download for Mac (<span data-app-version>v0.3.12</span>)</span>
+</a>
+<a class="chrome-store-trigger inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low font-label-md text-label-md transition-colors shadow-xs cursor-pointer" href="https://chromewebstore.google.com/detail/publishkit-companion/dijkbipanbpkgndbhonecpfnladaiipj" rel="noopener noreferrer" target="_blank">
+<span class="">Install the browser extension</span>
+</a>
+<a class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low font-label-md text-label-md transition-colors shadow-xs" href="https://github.com/aiyahetun/pongrabbit-PublishKit" rel="noopener noreferrer" target="_blank">
+<span class="">GitHub</span>
+</a>
+</div>
+<p class="mt-4 max-w-xl mx-auto font-body-sm text-body-sm text-secondary leading-relaxed">
+        Windows 10/11 (64-bit). If SmartScreen says it protected your PC, choose More info, then Run anyway. The installer is not code-signed; the file is not corrupt. Download for Mac is the Apple silicon dmg (M1 or later). Intel Macs use <a class="download-mac-intel-trigger text-primary underline" href="#download">this dmg</a>. If macOS says the developer cannot be verified, open System Settings → Privacy &amp; Security and choose Open Anyway.
+      </p>
+</div>
+</section>
+</div></main>
+<!-- QUIET TOOL PRO MODAL DIALOG -->
+<div aria-hidden="true" class="fixed inset-0 z-[120] hidden items-center justify-center bg-inverse-surface/40 backdrop-blur-xs p-4 sm:p-6 transition-opacity duration-200" id="pro-modal">
+<div class="relative w-full max-w-xl rounded-2xl bg-surface-container-lowest border border-outline-variant shadow-xl p-6 sm:p-8 transform transition-all duration-200 scale-95 opacity-0" id="pro-modal-card">
+<!-- Header -->
+<div class="flex items-start justify-between gap-4 pb-4 border-b border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-primary-fixed flex items-center justify-center text-on-primary-fixed border border-outline-variant/60 shrink-0">
+<span class="material-symbols-outlined text-[20px] text-primary">key</span>
+</div>
+<div>
+<h3 class="font-h2 text-h2 text-on-surface font-semibold" id="pro-modal-title">Get PublishKit Pro Lifetime</h3>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">One-time purchase • Launch <span data-pro-price>$38</span> (was <span data-pro-was>$79</span>)</p>
+</div>
+</div>
+<button aria-label="Close modal" class="p-1 rounded-md text-secondary hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer" id="close-modal-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- License Format Pill Highlight -->
+<div class="my-5 p-3.5 rounded-lg bg-surface-container-low border border-outline-variant flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0">verified</span>
+<div class="font-mono text-xs text-on-surface">
+<span class="text-secondary block mb-0.5 font-sans font-medium text-[11px] uppercase tracking-wide">Key Format</span>
+        Your license key begins with prefix <span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-semibold text-primary">PKPRO-</span> (e.g. <span class="text-on-surface-variant font-mono">PKPRO-7A9B-42K9-XXXX</span>)
+      </div>
+</div>
+<!-- Step-by-Step Instructions -->
+<div class="space-y-3.5 mb-6">
+<div class="flex items-start gap-3">
+<span class="w-6 h-6 rounded-full bg-surface-container-high border border-outline-variant text-on-surface font-mono text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          After checkout, you'll receive a <code class="font-mono text-xs font-semibold text-on-surface bg-surface-container px-1 py-0.5 rounded">PKPRO-</code> license key by email.
+        </p>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-6 h-6 rounded-full bg-surface-container-high border border-outline-variant text-on-surface font-mono text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          In PublishKit desktop, open <span class="font-semibold text-on-surface">Settings</span> → <span class="font-medium text-on-surface">License</span> and paste your key.
+        </p>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-6 h-6 rounded-full bg-surface-container-high border border-outline-variant text-on-surface font-mono text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          After activation there is no cap on items.
+        </p>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="pt-4 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-end gap-3">
+<button class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container-low border border-outline-variant font-label-md text-label-md transition-colors cursor-pointer" id="dismiss-modal-btn" type="button">
+        Close / Enter Key Later
+      </button>
+<button class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-primary text-on-primary hover:bg-on-primary-container font-label-md text-label-md transition-colors shadow-xs font-medium cursor-pointer inline-flex items-center justify-center gap-1.5" id="checkout-btn" type="button">
+<span>Proceed to checkout — <span data-pro-price>$38</span></span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<footer class="w-full border-t border-surface-variant bg-surface-container-low mt-20"><div class="max-w-[1440px] mx-auto px-6 py-12 flex flex-col md:flex-row items-center justify-between gap-6"><div class="flex flex-wrap items-center gap-3"><div class="w-6 h-6 rounded-md bg-surface-container-high border border-outline-variant flex items-center justify-center"><div class="w-2.5 h-2.5 bg-primary rounded-xs"></div></div><span class="font-h3 text-h3 text-on-surface">PublishKit</span><span class="text-outline-variant">•</span><span class="font-body-sm text-body-sm text-on-surface-variant">Independent tool, not affiliated with PongRabbit account systems</span><span class="text-outline-variant">•</span><span class="font-body-sm text-body-sm text-secondary">© 2026</span></div><div class="flex flex-wrap items-center gap-6"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="../privacy.html">Privacy Policy</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="mailto:support@pongrabbit.com">Contact</a><a class="chrome-store-link font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="https://chromewebstore.google.com/detail/publishkit-companion/dijkbipanbpkgndbhonecpfnladaiipj" rel="noopener noreferrer" target="_blank">Extension</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/aiyahetun/pongrabbit-PublishKit" rel="noopener noreferrer" target="_blank">GitHub</a></div></div></footer>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "PublishKit",
+  "alternateName": "发稿匣",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Windows 10, Windows 11",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "description": "PublishKit is a light Windows app plus a Chrome extension for managing social posts. Line up a week or a month of copy as tasks, copy the title, body, keywords, and images separately, and export a calendar list with project, platform, and link."
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do the drafts get uploaded?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The library, tasks, and settings stay on this computer. PublishKit's servers do not get the drafts unless you copy a backup out yourself."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will it post for me?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. You paste, upload, and publish in the editors on Xiaohongshu, Douyin, and Pinterest. PublishKit handles the schedule, the copy buttons, and a note of whether it went out."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which platforms?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Xiaohongshu, Douyin, WeChat Channels, Bilibili, Weibo, Pinterest, Instagram, and YouTube are already in the list. If yours is missing, type the name in Schedule import or under Settings → Platforms."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I install the extension?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Chrome, Edge, and Brave all work. Install PublishKit Companion from the Chrome Web Store, then copy the port and pairing code in the desktop app under Settings → Browser extension. The side panel only talks to this computer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between Free and Pro?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Free stops at 50 items. Pro removes that cap. Projects are unlimited on both."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I activate?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The code in the email starts with PKPRO-. Paste it under Settings → License."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a Mac version?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Download for Mac on this page is the Apple silicon dmg, M1 or later. The Intel dmg is on the same release page, and its file name includes x64. The version is the one on that file. If the system says the developer cannot be verified, open System Settings → Privacy & Security and choose Open Anyway. The Windows button is still Windows 10/11."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is this different from tools that post for you?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Those tools remember the account and post when the time comes. PublishKit keeps the drafts and the schedule on your computer. You still publish on each site yourself."
+      }
+    }
+  ]
+}
+</script>
+<script src="../assets/site.js"></script>
+</body></html>

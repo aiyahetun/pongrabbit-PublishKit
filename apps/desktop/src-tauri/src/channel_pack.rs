@@ -1,3 +1,4 @@
+use crate::content_fields;
 use crate::rich_text;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,8 +42,19 @@ pub fn build_channel_pack(
     channel_name: &str,
     title: &str,
     body: &str,
+    keywords: &[String],
+    hash: bool,
 ) -> ChannelPackSpec {
-    let plain = format_plain_for_channel(channel_id, title, body);
+    let body_for_plain = content_fields::body_for_channel_copy_with_hash(Some(channel_id), body, keywords, hash);
+    let plain = format_plain_for_channel(channel_id, title, &body_for_plain);
+    let keyword_file = {
+        let formatted = content_fields::format_keywords_with_hash(Some(channel_id), keywords, hash);
+        if formatted.is_empty() {
+            "（这条内容还没有关联词）".to_string()
+        } else {
+            formatted
+        }
+    };
     let md = format!("# {title}\n\n{body}");
 
     match channel_id {
@@ -55,7 +67,7 @@ pub fn build_channel_pack(
                 },
                 PackTextFile {
                     file_name: "标签.txt",
-                    content: "#话题1 #话题2\n（请替换为小红书话题标签）".to_string(),
+                    content: keyword_file,
                 },
             ],
             readme: format!(
@@ -120,6 +132,10 @@ pub fn build_channel_pack(
                 PackTextFile {
                     file_name: "description.txt",
                     content: markdown_plain(body),
+                },
+                PackTextFile {
+                    file_name: "keywords.txt",
+                    content: content_fields::format_keywords_with_hash(Some("pinterest"), keywords, hash),
                 },
             ],
             readme: "Pinterest 发布包\n\ntitle.txt → Pin 标题；description.txt → 描述。".to_string(),
@@ -206,24 +222,25 @@ mod tests {
 
     #[test]
     fn xhs_pack_has_body_and_tags_files() {
-        let pack = build_channel_pack("xhs", "小红书", "春季上新", "这是正文 **加粗**");
+        let pack = build_channel_pack("xhs", "小红书", "春季上新", "这是正文 **加粗**", &[], true);
         assert_eq!(pack.files.len(), 2);
         assert_eq!(pack.files[0].file_name, "正文.txt");
         assert!(pack.files[0].content.contains("这是正文"));
         assert!(!pack.files[0].content.contains("**"));
         assert_eq!(pack.files[1].file_name, "标签.txt");
+        assert!(pack.files[1].content.contains("还没有关联词"));
     }
 
     #[test]
     fn wechat_pack_has_title_and_body() {
-        let pack = build_channel_pack("wechat_mp", "微信公众号", "标题", "正文");
+        let pack = build_channel_pack("wechat_mp", "微信公众号", "标题", "正文", &[], false);
         assert_eq!(pack.files[0].file_name, "title.txt");
         assert_eq!(pack.files[1].file_name, "正文.md");
     }
 
     #[test]
     fn default_pack_uses_markdown() {
-        let pack = build_channel_pack("custom", "自定义", "标题", "正文");
+        let pack = build_channel_pack("custom", "自定义", "标题", "正文", &[], false);
         assert_eq!(pack.files[0].file_name, "content.md");
         assert!(pack.files[0].content.starts_with("# 标题"));
     }

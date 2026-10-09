@@ -24,14 +24,39 @@ function currentMonthKey(): string {
   return monthKey(`${todayKey()}T00:00:00.000Z`);
 }
 
+function localDateKey(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return iso.slice(0, 10);
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function taskEventDate(task: PublishTask): string {
   if (task.status === "published" && task.publishedAt) {
-    return task.publishedAt.slice(0, 10);
+    return localDateKey(task.publishedAt);
   }
   if (task.scheduledAt) {
-    return task.scheduledAt.slice(0, 10);
+    return localDateKey(task.scheduledAt);
   }
-  return task.updatedAt.slice(0, 10);
+  return localDateKey(task.updatedAt);
+}
+
+export function isTaskOverdue(task: PublishTask): boolean {
+  if (task.status !== "ready") return false;
+  return taskEventDate(task) < todayKey();
+}
+
+export function overdueMeta(task: PublishTask): { days: number; scheduledDate: string } | null {
+  if (!isTaskOverdue(task)) return null;
+  const scheduledDate = taskEventDate(task);
+  const start = new Date(`${scheduledDate}T00:00:00`);
+  const today = new Date(`${todayKey()}T00:00:00`);
+  const days = Math.max(1, Math.round((today.getTime() - start.getTime()) / 86400000));
+  return { days, scheduledDate };
 }
 
 function compareTaskDesc(a: PublishTask, b: PublishTask): number {
@@ -116,6 +141,18 @@ function flatSection(key: string, labelKey: string, tasks: PublishTask[]): TaskS
   ];
 }
 
+export function buildTodayQueueSections(tasks: PublishTask[]): TaskSection[] {
+  const readySections = buildTaskSections(tasks, "ready");
+  const order = ["ready_overdue", "ready_today"];
+  return order
+    .map((key) => readySections.find((section) => section.key === key))
+    .filter((section): section is TaskSection => !!section && section.tasks.length > 0)
+    .map((section) => ({
+      ...section,
+      defaultCollapsed: false,
+    }));
+}
+
 export function buildTaskSections(
   tasks: PublishTask[],
   filter: "all" | TaskStatus
@@ -134,11 +171,15 @@ export function buildTaskSections(
   if (filter === "blocked") {
     return flatSection("blocked", "tasks.sectionBlocked", byStatus("blocked"));
   }
+  if (filter === "archived") {
+    return flatSection("archived", "tasks.sectionArchived", byStatus("archived"));
+  }
 
   return [
     ...flatSection("draft", "tasks.sectionDraft", byStatus("draft")),
     ...readySections(byStatus("ready")),
     ...flatSection("blocked", "tasks.sectionBlocked", byStatus("blocked")),
     ...publishedSections(byStatus("published")),
+    ...flatSection("archived", "tasks.sectionArchived", byStatus("archived")),
   ];
 }

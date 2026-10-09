@@ -12,6 +12,14 @@ pub struct TableRowPreview {
     pub channel_name: Option<String>,
     pub body_preview: String,
     pub recommended: bool,
+    #[serde(default)]
+    pub keywords: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pair_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scheduled_date: Option<String>,
+    #[serde(default)]
+    pub image_names: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,6 +30,9 @@ pub struct TableImportPreview {
     pub body_column: String,
     pub language_column: Option<String>,
     pub channel_column: Option<String>,
+    pub keyword_column: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image_column: Option<String>,
     pub rows: Vec<TableRowPreview>,
 }
 
@@ -32,6 +43,9 @@ struct ColumnMapping {
     body_idx: usize,
     language_idx: Option<usize>,
     channel_idx: Option<usize>,
+    keyword_idx: Option<usize>,
+    date_idx: Option<usize>,
+    image_idx: Option<usize>,
 }
 
 pub fn preview_table_import(path: &str) -> Result<TableImportPreview, String> {
@@ -65,6 +79,10 @@ pub fn preview_table_import(path: &str) -> Result<TableImportPreview, String> {
         channel_column: mapping
             .channel_idx
             .map(|idx| mapping.columns[idx].clone()),
+        keyword_column: mapping
+            .keyword_idx
+            .map(|idx| mapping.columns[idx].clone()),
+        image_column: mapping.image_idx.map(|idx| mapping.columns[idx].clone()),
         rows,
     })
 }
@@ -177,6 +195,9 @@ fn detect_columns(headers: &[String], rows: &[Vec<String>]) -> Result<ColumnMapp
     let mut body_idx = find_column(&normalized, BODY_KEYS);
     let language_idx = find_column(&normalized, LANGUAGE_KEYS);
     let channel_idx = find_column(&normalized, CHANNEL_KEYS);
+    let keyword_idx = find_column(&normalized, KEYWORD_KEYS);
+    let date_idx = find_column(&normalized, DATE_KEYS);
+    let image_idx = find_image_column(&normalized);
 
     if body_idx.is_none() {
         body_idx = find_longest_text_column(rows);
@@ -200,53 +221,102 @@ fn detect_columns(headers: &[String], rows: &[Vec<String>]) -> Result<ColumnMapp
         body_idx,
         language_idx,
         channel_idx,
+        keyword_idx,
+        date_idx,
+        image_idx: image_idx.filter(|idx| *idx != title_idx && *idx != body_idx),
     })
 }
 
 fn build_row_previews(mapping: &ColumnMapping, rows: &[Vec<String>]) -> Vec<TableRowPreview> {
-    rows.iter()
-        .enumerate()
-        .filter_map(|(index, row)| {
-            let title = cell_at(row, mapping.title_idx);
-            let body = cell_at(row, mapping.body_idx);
-            if title.is_empty() && body.is_empty() {
-                return None;
-            }
-            let title = if title.is_empty() {
-                format!("第 {} 行", index + 1)
+    let mut previews = Vec::new();
+    for (index, row) in rows.iter().enumerate() {
+        let title = cell_at(row, mapping.title_idx);
+        let body = cell_at(row, mapping.body_idx);
+        if title.is_empty() && body.is_empty() {
+            continue;
+        }
+        let title = if title.is_empty() {
+            format!("第 {} 行", index + 1)
+        } else {
+            title
+        };
+        if body.is_empty() {
+            continue;
+        }
+        let language = mapping
+            .language_idx
+            .map(|idx| cell_at(row, idx))
+            .filter(|value| !value.is_empty())
+            .map(|value| crate::md_split::detect_language(&value))
+            .unwrap_or_else(|| crate::md_split::detect_language(&body));
+        let channel_name = mapping
+            .channel_idx
+            .map(|idx| cell_at(row, idx))
+            .filter(|value| !value.is_empty());
+        let column_keywords = mapping
+            .keyword_idx
+            .map(|idx| crate::content_fields::split_keyword_text(&cell_at(row, idx)))
+            .unwrap_or_default();
+        let column_images = mapping
+            .image_idx
+            .map(|idx| crate::content_fields::split_image_names(&cell_at(row, idx)))
+            .unwrap_or_default();
+        let pieces = crate::content_fields::parse_block(&title, &body);
+        let pair_key = if pieces.len() > 1 {
+            Some(uuid::Uuid::new_v4().to_string())
+        } else {
+            None
+        };
+        for piece in pieces {
+            let keywords = if piece.keywords.is_empty() {
+                column_keywords.clone()
             } else {
-                title
+                piece.keywords
             };
-            if body.is_empty() {
-                return None;
-            }
-            let language = mapping
-                .language_idx
-                .map(|idx| cell_at(row, idx))
-                .filter(|value| !value.is_empty())
-                .map(|value| crate::md_split::detect_language(&value))
-                .unwrap_or_else(|| crate::md_split::detect_language(&body));
-            let channel_name = mapping
-                .channel_idx
-                .map(|idx| cell_at(row, idx))
-                .filter(|value| !value.is_empty());
-            let preview = body.chars().take(180).collect::<String>();
-            let body_preview = if body.chars().count() > 180 {
-                format!("{preview}…")
+            let image_names = union_image_names(&piece.image_names, &column_images);
+            let body = piece.body;
+            let language = if piece.language.is_empty() {
+                language.clone()
             } else {
-                preview
+                piece.language
             };
-            Some(TableRowPreview {
-                index,
-                title,
+            previews.push(TableRowPreview {
+                index: previews.len(),
+                title: piece.title,
                 body: body.clone(),
                 language,
-                channel_name,
-                body_preview,
+                channel_name: channel_name.clone(),
+                body_preview: preview_text(&body),
                 recommended: true,
-            })
-        })
-        .collect()
+                keywords,
+                pair_key: pair_key.clone(),
+                scheduled_date: mapping
+                    .date_idx
+                    .and_then(|idx| crate::batch_import::normalize_date(&cell_at(row, idx))),
+                image_names,
+            });
+        }
+    }
+    previews
+}
+
+fn union_image_names(labels: &[String], column: &[String]) -> Vec<String> {
+    let mut out = labels.to_vec();
+    for name in column {
+        if !out.iter().any(|existing| existing.eq_ignore_ascii_case(name)) {
+            out.push(name.clone());
+        }
+    }
+    out
+}
+
+fn preview_text(body: &str) -> String {
+    let preview = body.chars().take(180).collect::<String>();
+    if body.chars().count() > 180 {
+        format!("{preview}…")
+    } else {
+        preview
+    }
 }
 
 fn cell_at(row: &[String], idx: usize) -> String {
@@ -266,6 +336,21 @@ const BODY_KEYS: &[&str] = &[
 ];
 const LANGUAGE_KEYS: &[&str] = &["language", "语言", "lang", "语种"];
 const CHANNEL_KEYS: &[&str] = &["channel", "渠道", "platform", "平台", "发布平台"];
+const DATE_KEYS: &[&str] = &[
+    "日期", "发布时间", "发布日期", "排期", "scheduled", "schedule", "date", "postdate", "publishdate",
+];
+const KEYWORD_KEYS: &[&str] = &[
+    "关联词", "关键词", "标签", "话题", "keywords", "keyword", "hashtags", "hashtag", "tags",
+];
+const IMAGE_KEYS: &[&str] = &["配图", "images", "imagefile", "imagefiles"];
+
+fn find_image_column(headers: &[String]) -> Option<usize> {
+    headers.iter().position(|header| {
+        IMAGE_KEYS
+            .iter()
+            .any(|key| header == *key || header.contains(key))
+    })
+}
 
 fn find_column(headers: &[String], keys: &[&str]) -> Option<usize> {
     headers.iter().position(|header| {
@@ -286,4 +371,29 @@ fn find_longest_text_column(rows: &[Vec<String>]) -> Option<usize> {
         })
         .max_by_key(|(_, total)| *total)
         .map(|(idx, _)| idx)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn image_column_unions_with_labeled_body() {
+        let path = std::env::temp_dir().join(format!("publishkit-images-{}.csv", uuid::Uuid::new_v4()));
+        std::fs::write(
+            &path,
+            "标题,正文,配图\n春季,\"正文在这里\n\n**配图：** cover.jpg\",detail.png\n",
+        )
+        .unwrap();
+        let preview = preview_table_import(&path.to_string_lossy()).unwrap();
+        let _ = std::fs::remove_file(&path);
+        assert_eq!(preview.rows.len(), 1);
+        assert_eq!(
+            preview.rows[0].image_names,
+            vec!["cover.jpg".to_string(), "detail.png".into()]
+        );
+        assert!(preview.rows[0].body.contains("正文在这里"));
+        assert!(!preview.rows[0].body.contains("cover.jpg"));
+        assert!(!preview.rows[0].body.contains("detail.png"));
+    }
 }

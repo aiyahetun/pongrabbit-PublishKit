@@ -149,6 +149,7 @@ watch(
                   <span class="lines">L{{ item.startLine }}–{{ item.endLine }}</span>
                 </div>
                 <p class="preview">{{ item.bodyPreview }}</p>
+                <p v-if="item.keywords?.length" class="preview">{{ t("content.keywordLine", { words: item.keywords.join(" · ") }) }}</p>
               </div>
             </label>
           </li>

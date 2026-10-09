@@ -1,0 +1,36 @@
+{
+  "note": "Production PNGs copied from 项目图片/. SVG placeholders kept for regenerate script.",
+  "website": [
+    { "id": "LP-01", "file": "publishkit_icon_1024.png", "size": "1024×1024", "status": "done" },
+    { "id": "LP-02", "file": "favicon_32.png", "size": "32×32", "status": "done", "derivedFrom": "publishkit_icon_1024.png" },
+    { "id": "LP-02", "file": "apple_touch_180.png", "size": "180×180", "status": "done", "derivedFrom": "publishkit_icon_1024.png" },
+    { "id": "LP-03", "file": "publishkit_logo_lockup_2400x600.png", "size": "2400×600", "status": "done", "usedIn": ["nav"] },
+    { "id": "LP-04", "file": "publishkit_hero_desktop_2880x1620.png", "size": "2880×1620", "status": "done", "usedIn": ["hero desktop"] },
+    { "id": "LP-05", "file": "publishkit_hero_mobile_1170x2532.png", "size": "1170×2532", "status": "done", "usedIn": ["hero mobile"] },
+    { "id": "LP-06", "file": "publishkit_og_1200x630.png", "size": "1200×630", "status": "done", "usedIn": ["og:image"] },
+    { "id": "LP-07", "file": "publishkit_feat_today_1920x1080.png", "size": "1920×1080", "status": "done" },
+    { "id": "LP-08", "file": "publishkit_feat_content_inspector_1920x1080.png", "size": "1920×1080", "status": "done", "locale": "zh" },
+    { "id": "LP-08", "file": "publishkit_feat_content_inspector_1920x1080_en.png", "size": "1920×1080", "status": "done", "locale": "en" },
+    { "id": "LP-09", "file": "publishkit_feat_extension_1920x1080.png", "size": "1920×1080", "status": "done" },
+    { "id": "LP-10", "file": "publishkit_feat_kanban_1920x1080.png", "size": "1920×1080", "status": "done" },
+    { "id": "LP-11", "file": "publishkit_feat_calendar_week_1920x1080.png", "size": "1920×1080", "status": "done" },
+    { "id": "LP-12", "file": "publishkit_feat_channel_pack_1920x1080.png", "size": "1920×1080", "status": "available", "usedIn": ["optional showcase"] },
+    { "id": "LP-13", "file": "publishkit_flow_3step_2400x480.png", "size": "2400×480", "status": "available", "usedIn": ["workflow section optional"] },
+    { "id": "LP-14", "file": "publishkit_trust_local_800x600.png", "size": "800×600", "status": "available", "usedIn": ["hero trust optional"] },
+    { "id": "LP-15", "file": "publishkit_pricing_bg_1920x800.jpg", "size": "1920×800", "status": "done", "usedIn": ["pricing section"] }
+  ],
+  "chromeWebStore": {
+    "path": "apps/extension/store/assets/",
+    "status": "done",
+    "files": [
+      { "id": "CWS-01", "file": "icon_128.png", "size": "128×128" },
+      { "id": "CWS-02", "file": "promo_small_440x280.png", "size": "440×280" },
+      { "id": "CWS-03", "file": "promo_marquee_1400x560.png", "size": "1400×560" },
+      { "id": "CWS-04", "file": "screenshot_01_sidepanel_1280x800.png", "size": "1280×800" },
+      { "id": "CWS-05", "file": "screenshot_02_copy_1280x800.png", "size": "1280×800" },
+      { "id": "CWS-06", "file": "screenshot_03_publish_1280x800.png", "size": "1280×800" },
+      { "id": "CWS-07", "file": "screenshot_04_duplicate_warn_1280x800.png", "size": "1280×800" },
+      { "id": "CWS-08", "file": "screenshot_05_pairing_1280x800.png", "size": "1280×800" }
+    ]
+  }
+}

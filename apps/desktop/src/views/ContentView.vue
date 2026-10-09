@@ -1,20 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { ask, open } from "@tauri-apps/plugin-dialog";
-import type { Channel, ContentItem, DeleteContentResult, MediaAsset } from "@publishkit/shared";
-import { copyMarkdownAsRichText } from "../utils/clipboard";
+import type { Channel, ContentItem, DeleteContentResult, MediaAsset, Project } from "@publishkit/shared";
 import MediaLinkDialog from "../components/MediaLinkDialog.vue";
 import MediaThumb from "../components/MediaThumb.vue";
 import ContentInspector from "../components/ContentInspector.vue";
+import FieldCopyBar from "../components/FieldCopyBar.vue";
 import { copyLinkedImagesWorkflow } from "../utils/mediaActions";
 
 const { t } = useI18n();
 const items = ref<ContentItem[]>([]);
 const channels = ref<Channel[]>([]);
 const loading = ref(false);
-const copiedId = ref("");
 const error = ref("");
 const notice = ref("");
 const showCreate = ref(false);
@@ -23,6 +22,9 @@ const showMediaFor = ref<ContentItem | null>(null);
 const itemMedia = ref<Record<string, MediaAsset[]>>({});
 const newTitle = ref("");
 const newBody = ref("");
+const newKeywords = ref("");
+const projects = ref<Project[]>([]);
+const moveTarget = ref("");
 const creating = ref(false);
 const taskCreating = ref(false);
 const quickChannelName = ref("");
@@ -97,13 +99,21 @@ function sourceLabel(path: string) {
   return path;
 }
 
-async function copyBody(item: ContentItem) {
+async function loadProjects() {
+  projects.value = await invoke<Project[]>("list_projects_cmd");
+}
+
+async function moveSelected() {
+  if (!moveTarget.value || !hasSelection.value) return;
   try {
-    await copyMarkdownAsRichText(item.body);
-    copiedId.value = item.id;
-    setTimeout(() => {
-      if (copiedId.value === item.id) copiedId.value = "";
-    }, 1500);
+    const count = await invoke<number>("move_content_to_project_cmd", {
+      contentIds: [...selectedIds.value],
+      projectId: moveTarget.value,
+    });
+    selectedIds.value = new Set();
+    notice.value = t("content.moved", { count });
+    await loadItems();
+    await loadProjects();
   } catch (e) {
     error.value = String(e);
   }
@@ -116,11 +126,16 @@ async function createManual() {
     const created = await invoke<ContentItem>("create_manual_content", {
       title: newTitle.value,
       body: newBody.value,
+      keywords: newKeywords.value
+        .split(/[、,，;；\n]/)
+        .map((word) => word.trim())
+        .filter(Boolean),
     });
     items.value = [created, ...items.value];
     showCreate.value = false;
     newTitle.value = "";
     newBody.value = "";
+    newKeywords.value = "";
   } catch (e) {
     error.value = String(e);
   } finally {
@@ -255,8 +270,17 @@ async function addQuickChannel() {
   }
 }
 
+function onProjectChanged() {
+  void Promise.all([loadItems(), loadProjects()]);
+}
+
 onMounted(async () => {
-  await Promise.all([loadItems(), loadChannels()]);
+  window.addEventListener("publishkit-project-changed", onProjectChanged);
+  await Promise.all([loadItems(), loadChannels(), loadProjects()]);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("publishkit-project-changed", onProjectChanged);
 });
 </script>
 
@@ -308,6 +332,13 @@ onMounted(async () => {
       <span v-if="hasSelection" class="selected-count">
         {{ t("content.selectedCount", { count: selectedCount }) }}
       </span>
+      <select v-if="hasSelection" v-model="moveTarget" class="pk-input">
+        <option value="">{{ t("content.moveTo") }}</option>
+        <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
+      </select>
+      <button v-if="hasSelection" type="button" class="pk-btn pk-btn--ghost" :disabled="!moveTarget" @click="moveSelected">
+        {{ t("content.moveTo") }}
+      </button>
     </div>
 
     <p v-if="notice" class="notice">{{ notice }}</p>
@@ -354,9 +385,7 @@ onMounted(async () => {
               {{ t("content.exportPack") }}
             </button>
             <button type="button" class="pk-btn pk-btn--ghost" @click="showTaskFor = item">{{ t("content.addTask") }}</button>
-            <button type="button" class="pk-btn pk-btn--secondary" @click="copyBody(item)">
-              {{ copiedId === item.id ? t("content.copied") : t("content.copyRich") }}
-            </button>
+            <FieldCopyBar :title="item.title" :body="item.body" :keywords="item.keywords" />
             <button
               type="button"
               class="pk-btn pk-btn--ghost danger"
@@ -368,6 +397,8 @@ onMounted(async () => {
           </div>
         </div>
         <p class="preview">{{ item.body.slice(0, 240) }}{{ item.body.length > 240 ? "…" : "" }}</p>
+        <p v-if="item.keywords?.length" class="path">{{ t("content.keywordLine", { words: item.keywords.join(" · ") }) }}</p>
+        <p v-if="item.pairId" class="path">{{ t("content.pair") }}</p>
         <ul v-if="itemMedia[item.id]?.length" class="media-list">
           <li v-for="media in itemMedia[item.id]" :key="media.id">
             <MediaThumb :asset="media" size="sm" />
@@ -383,6 +414,7 @@ onMounted(async () => {
         :channels="channels"
         :media="itemMedia[inspectorItem.id] ?? []"
         @create-task="createTask(inspectorItem, $event)"
+        @changed="loadItems"
       />
     </div>
 
@@ -396,6 +428,10 @@ onMounted(async () => {
         <label>
           <span>{{ t("content.fieldBody") }}</span>
           <textarea v-model="newBody" rows="10" required />
+        </label>
+        <label>
+          <span>{{ t("content.fieldKeywords") }}</span>
+          <input v-model="newKeywords" :placeholder="t('content.keywordsHint')" />
         </label>
         <p class="muted">{{ t("content.createHint") }}</p>
         <div class="footer">

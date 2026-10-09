@@ -133,6 +133,7 @@ watch(
                   <span class="lines">#{{ row.index + 1 }}</span>
                 </div>
                 <p class="preview">{{ row.bodyPreview }}</p>
+                <p v-if="row.keywords?.length" class="preview">{{ t("content.keywordLine", { words: row.keywords.join(" · ") }) }}</p>
               </div>
             </label>
           </li>

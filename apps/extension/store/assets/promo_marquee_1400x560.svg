@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560" role="img" aria-label="Marquee promo">
+  <rect width="100%" height="100%" fill="#F7F6F3"/>
+  <rect x="42" y="28" width="1316" height="504" fill="#FFFFFF" stroke="#D1C5B3" stroke-width="2" stroke-dasharray="12 8" rx="12"/>
+  <text x="50%" y="46%" dominant-baseline="middle" text-anchor="middle" fill="#795916" font-family="Inter,Segoe UI,sans-serif" font-size="28" font-weight="600">CWS-03</text>
+  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#8A8278" font-family="Inter,Segoe UI,sans-serif" font-size="22">1400 × 560 · PLACEHOLDER</text>
+  <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" fill="#B8924A" font-family="Inter,Segoe UI,sans-serif" font-size="20">Replace with AI asset · see PublishKit-官网与Chrome商店配图AI描述词.md</text>
+</svg>

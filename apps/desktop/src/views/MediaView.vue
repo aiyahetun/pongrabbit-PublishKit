@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import type { MediaAsset, ScanMediaResult, WorkspaceSettings } from "@publishkit/shared";
 import MediaThumb from "../components/MediaThumb.vue";
 import { copyMediaImage, revealMediaInFolder } from "../utils/mediaActions";
+import { mediaPreviewSrc } from "../utils/mediaPreview";
 
 type ThumbBatchResult = { generated: number; remaining: number };
 
@@ -18,6 +19,8 @@ const thumbing = ref(false);
 const error = ref("");
 const notice = ref("");
 const copiedId = ref("");
+const failedOnly = ref(false);
+const previewAsset = ref<MediaAsset | null>(null);
 let thumbRunId = 0;
 
 function formatSize(bytes: number) {
@@ -27,7 +30,35 @@ function formatSize(bytes: number) {
 }
 
 function hasMissingThumbs(list: MediaAsset[]) {
-  return list.some((item) => item.kind === "image" && !item.thumbPath);
+  return list.some(
+    (item) => item.kind === "image" && item.thumbStatus !== "failed" && item.thumbStatus !== "ready" && !item.thumbPath
+  );
+}
+
+const visibleAssets = computed(() =>
+  failedOnly.value ? assets.value.filter((item) => item.thumbStatus === "failed") : assets.value
+);
+
+function pixelLabel(item: MediaAsset) {
+  if (!item.width || !item.height) return "";
+  return t("media.pixels", { width: item.width, height: item.height });
+}
+
+function isLong(item: MediaAsset) {
+  return !!item.width && !!item.height && item.height / item.width >= 2.2;
+}
+
+async function openAsset(item: MediaAsset) {
+  if (item.thumbPath) {
+    previewAsset.value = item;
+    return;
+  }
+  await invoke("open_media_file_cmd", { path: item.path });
+}
+
+async function retryFailed() {
+  await invoke("retry_failed_thumbnails_cmd");
+  await refreshList();
 }
 
 async function loadUsages() {
@@ -129,13 +160,24 @@ async function reveal(item: MediaAsset) {
   }
 }
 
+async function onProjectChanged() {
+  try {
+    settings.value = await invoke<WorkspaceSettings>("get_workspace_settings");
+    await refreshList();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
 onMounted(async () => {
+  window.addEventListener("publishkit-project-changed", onProjectChanged);
   settings.value = await invoke<WorkspaceSettings>("get_workspace_settings");
   await refreshList();
 });
 
 onBeforeUnmount(() => {
   thumbRunId += 1;
+  window.removeEventListener("publishkit-project-changed", onProjectChanged);
 });
 </script>
 
@@ -147,6 +189,12 @@ onBeforeUnmount(() => {
         <p class="subtitle">{{ t("media.subtitle") }}</p>
       </div>
       <div class="header-actions">
+        <button type="button" class="pk-btn pk-btn--ghost" @click="failedOnly = !failedOnly">
+          {{ t("media.filterFailed") }}
+        </button>
+        <button type="button" class="pk-btn pk-btn--ghost" @click="retryFailed">
+          {{ t("media.retryFailed") }}
+        </button>
         <button type="button" class="pk-btn pk-btn--secondary" :disabled="loading" @click="refreshList">
           {{ t("media.refresh") }}
         </button>
@@ -167,14 +215,21 @@ onBeforeUnmount(() => {
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="loading" class="muted">{{ t("media.loading") }}</p>
 
-    <div v-else-if="assets.length" class="grid">
-      <article v-for="item in assets" :key="item.id" class="card">
-        <button type="button" class="preview-btn" @click="reveal(item)">
+    <div v-else-if="visibleAssets.length" class="grid">
+      <article v-for="item in visibleAssets" :key="item.id" class="card">
+        <button type="button" class="preview-btn" @click="openAsset(item)">
           <MediaThumb :asset="item" size="lg" />
+          <span v-if="isLong(item)" class="badge">{{ t("media.longImage") }}</span>
         </button>
         <div class="meta">
           <strong>{{ item.fileName }}</strong>
-          <span class="size">{{ formatSize(item.sizeBytes) }}</span>
+          <span class="size">{{ pixelLabel(item) }} {{ formatSize(item.sizeBytes) }}</span>
+          <p v-if="item.thumbStatus === 'failed'" class="usage-empty">
+            {{ t("media.thumbFailed") }}
+            <button type="button" class="pk-btn pk-btn--ghost" @click="invoke('open_media_file_cmd', { path: item.path })">
+              {{ t("media.openOriginal") }}
+            </button>
+          </p>
           <span class="path">{{ item.path }}</span>
           <div v-if="usagesByMedia[item.id]?.length" class="usage">
             <span class="usage-label">{{ t("media.usageTitle") }}</span>
@@ -201,6 +256,19 @@ onBeforeUnmount(() => {
     </div>
 
     <p v-else class="muted">{{ t("media.empty") }}</p>
+
+    <div v-if="previewAsset" class="overlay" @click.self="previewAsset = null">
+      <div class="preview-dialog">
+        <header>
+          <strong>{{ previewAsset.fileName }}</strong>
+          <button type="button" class="pk-btn pk-btn--ghost" @click="previewAsset = null">{{ t("common.cancel") }}</button>
+        </header>
+        <img :src="mediaPreviewSrc(previewAsset) ?? undefined" :alt="previewAsset.fileName" />
+        <button type="button" class="pk-btn pk-btn--secondary" @click="invoke('open_media_file_cmd', { path: previewAsset.path })">
+          {{ t("media.openOriginal") }}
+        </button>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -242,11 +310,51 @@ onBeforeUnmount(() => {
   border-radius: var(--pk-radius-md);
 }
 .preview-btn {
+  position: relative;
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
   align-self: flex-start;
+}
+.badge {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  background: rgba(0, 0, 0, 0.62);
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 99px;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+}
+.preview-dialog {
+  background: var(--pk-bg-panel);
+  padding: 16px;
+  border-radius: 12px;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.preview-dialog img {
+  max-width: 720px;
+  max-height: 70vh;
+  object-fit: contain;
+}
+.preview-dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 .meta {
   min-width: 0;

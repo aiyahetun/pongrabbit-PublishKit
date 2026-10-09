@@ -2,31 +2,38 @@
 import type { PublishTask } from "@publishkit/shared";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import FieldCopyBar from "./FieldCopyBar.vue";
 
 const props = defineProps<{
   task: PublishTask;
   copied?: boolean;
   publishUrl: string;
   scheduledDate?: string;
+  publishedDate?: string;
   taskNote: string;
   blockedReasonInput: string;
+  overdue?: boolean;
 }>();
 
 const emit = defineEmits<{
   copy: [];
   copySingleImage: [];
+  linkMedia: [];
   openLinkedImagesFolder: [];
   exportPack: [];
   markReady: [];
   markPublished: [];
+  backfillPublish: [];
   undoPublish: [];
   markBlocked: [];
   unblock: [];
   saveNote: [];
   saveScheduled: [];
   saveChecklist: [items: string[]];
+  archive: [];
   "update:publishUrl": [value: string];
   "update:scheduledDate": [value: string];
+  "update:publishedDate": [value: string];
   "update:taskNote": [value: string];
   "update:blockedReasonInput": [value: string];
 }>();
@@ -58,15 +65,19 @@ const blockedPresets = [
 
 const isBlocked = computed(() => props.task.status === "blocked");
 const canMarkBlocked = computed(
-  () => props.task.status === "draft" || props.task.status === "ready"
+  () => !props.overdue && (props.task.status === "draft" || props.task.status === "ready")
 );
 
 const showUrlField = computed(
-  () => props.task.status === "ready" || props.task.status === "published"
+  () =>
+    !props.overdue &&
+    (props.task.status === "ready" || props.task.status === "published")
 );
 
 const showScheduleField = computed(
-  () => props.task.status === "draft" || props.task.status === "ready"
+  () =>
+    !props.overdue &&
+    (props.task.status === "draft" || props.task.status === "ready")
 );
 
 function applyBlockedPreset(key: (typeof blockedPresets)[number]) {
@@ -77,8 +88,15 @@ function applyBlockedPreset(key: (typeof blockedPresets)[number]) {
 <template>
   <div class="action-bar">
     <div class="btn-row">
-      <button type="button" class="pk-btn pk-btn--ghost" @click="emit('copy')">
-        {{ copied ? t("content.copied") : t("content.copyRich") }}
+      <FieldCopyBar
+        :title="task.content.title"
+        :body="task.content.body"
+        :keywords="task.content.keywords"
+        :channel-id="task.channel.id"
+      />
+
+      <button type="button" class="pk-btn pk-btn--ghost" @click="emit('linkMedia')">
+        {{ t("content.linkMedia") }}
       </button>
 
       <button type="button" class="pk-btn pk-btn--ghost" @click="emit('copySingleImage')">
@@ -93,41 +111,96 @@ function applyBlockedPreset(key: (typeof blockedPresets)[number]) {
         {{ t("tasks.exportChannelPack") }}
       </button>
 
-      <button
-        v-if="task.status === 'draft'"
-        type="button"
-        class="pk-btn pk-btn--secondary"
-        @click="emit('markReady')"
-      >
-        {{ t("tasks.markReady") }}
-      </button>
-
-      <button
-        v-if="task.status === 'ready'"
-        type="button"
-        class="pk-btn pk-btn--primary"
-        @click="emit('markPublished')"
-      >
-        {{ t("tasks.markPublished") }}
-      </button>
-
-      <template v-if="task.status === 'published'">
-        <button type="button" class="pk-btn pk-btn--secondary" @click="emit('markPublished')">
-          {{ t("tasks.saveUrl") }}
+      <template v-if="!overdue">
+        <button
+          v-if="task.status === 'draft'"
+          type="button"
+          class="pk-btn pk-btn--secondary"
+          @click="emit('markReady')"
+        >
+          {{ t("tasks.markReady") }}
         </button>
-        <button type="button" class="pk-btn pk-btn--ghost" @click="emit('undoPublish')">
-          {{ t("tasks.undoPublish") }}
+
+        <button
+          v-if="task.status === 'ready'"
+          type="button"
+          class="pk-btn pk-btn--success"
+          @click="emit('markPublished')"
+        >
+          {{ t("tasks.markPublished") }}
+        </button>
+
+        <template v-if="task.status === 'published'">
+          <button type="button" class="pk-btn pk-btn--secondary" @click="emit('markPublished')">
+            {{ t("tasks.saveUrl") }}
+          </button>
+          <button type="button" class="pk-btn pk-btn--ghost" @click="emit('undoPublish')">
+            {{ t("tasks.undoPublish") }}
+          </button>
+        </template>
+
+        <button
+          v-if="isBlocked"
+          type="button"
+          class="pk-btn pk-btn--secondary"
+          @click="emit('unblock')"
+        >
+          {{ t("tasks.unblock") }}
         </button>
       </template>
+    </div>
 
-      <button
-        v-if="isBlocked"
-        type="button"
-        class="pk-btn pk-btn--secondary"
-        @click="emit('unblock')"
-      >
-        {{ t("tasks.unblock") }}
-      </button>
+    <div v-if="overdue" class="overdue-panel">
+      <p class="overdue-title">{{ t("tasks.overdueActionsTitle") }}</p>
+
+      <div class="overdue-action">
+        <span class="field-label">{{ t("tasks.backfillPublish") }}</span>
+        <label class="inline-field">
+          <span class="inline-label">{{ t("tasks.publishedDateLabel") }}</span>
+          <input
+            class="pk-input schedule-input"
+            type="date"
+            :value="publishedDate ?? ''"
+            @input="emit('update:publishedDate', ($event.target as HTMLInputElement).value)"
+          />
+        </label>
+        <label class="inline-field">
+          <span class="inline-label">{{ t("tasks.publishUrlLabel") }}</span>
+          <input
+            class="pk-input url-input"
+            :value="publishUrl"
+            :placeholder="t('tasks.publishUrlPlaceholder')"
+            @input="emit('update:publishUrl', ($event.target as HTMLInputElement).value)"
+          />
+        </label>
+        <span class="hint">{{ t("tasks.publishedDateHint") }}</span>
+        <button type="button" class="pk-btn pk-btn--success" @click="emit('backfillPublish')">
+          {{ t("tasks.backfillPublish") }}
+        </button>
+      </div>
+
+      <div class="overdue-action">
+        <span class="field-label">{{ t("tasks.reschedulePublish") }}</span>
+        <div class="schedule-inputs">
+          <input
+            class="pk-input schedule-input"
+            type="date"
+            :value="scheduledDate ?? ''"
+            @input="emit('update:scheduledDate', ($event.target as HTMLInputElement).value)"
+          />
+          <button type="button" class="pk-btn pk-btn--secondary" @click="emit('saveScheduled')">
+            {{ t("tasks.confirmReschedule") }}
+          </button>
+        </div>
+        <span class="hint">{{ t("tasks.rescheduleHint") }}</span>
+      </div>
+
+      <div class="overdue-action">
+        <button type="button" class="pk-btn pk-btn--ghost archive-btn" @click="emit('archive')">
+          {{ t("tasks.archive") }}
+        </button>
+        <span class="hint">{{ t("tasks.archiveHint") }}</span>
+      </div>
     </div>
 
     <label v-if="showScheduleField" class="schedule-row">
@@ -236,6 +309,36 @@ function applyBlockedPreset(key: (typeof blockedPresets)[number]) {
   gap: var(--pk-space-2);
 }
 
+.overdue-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pk-space-3);
+  padding: var(--pk-space-3);
+  border: 1px solid color-mix(in srgb, var(--pk-status-blocked) 25%, var(--pk-border));
+  border-radius: var(--pk-radius-md);
+  background: color-mix(in srgb, var(--pk-status-blocked) 6%, var(--pk-bg-panel));
+}
+
+.overdue-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pk-status-blocked);
+}
+
+.overdue-action {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: var(--pk-space-2);
+  border-top: 1px solid var(--pk-border);
+}
+
+.overdue-action:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
 .schedule-row,
 .url-row,
 .note-row,
@@ -250,6 +353,19 @@ function applyBlockedPreset(key: (typeof blockedPresets)[number]) {
   font-size: 12px;
   font-weight: 500;
   color: var(--pk-ink-muted);
+}
+
+.inline-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pk-space-2);
+}
+
+.inline-label {
+  font-size: 12px;
+  color: var(--pk-ink-secondary);
+  min-width: 88px;
 }
 
 .schedule-inputs {
@@ -280,8 +396,13 @@ function applyBlockedPreset(key: (typeof blockedPresets)[number]) {
 }
 
 .note-save,
-.block-btn {
+.block-btn,
+.archive-btn {
   align-self: flex-start;
+}
+
+.archive-btn {
+  color: var(--pk-status-blocked);
 }
 
 .preset-row {

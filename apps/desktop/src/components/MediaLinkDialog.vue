@@ -157,6 +157,8 @@ watch(
               <MediaThumb :asset="item" size="md" />
               <div class="text">
                 <strong>{{ item.fileName }}</strong>
+                <span v-if="item.width && item.height" class="path">{{ t("media.pixels", { width: item.width, height: item.height }) }}</span>
+                <span v-if="item.thumbStatus === 'failed'" class="path">{{ t("media.thumbFailed") }}</span>
                 <span class="path">{{ item.path }}</span>
               </div>
             </label>

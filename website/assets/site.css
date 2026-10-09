@@ -1,0 +1,82 @@
+.pk-shot {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid #e4e2dd;
+  box-shadow: 0 8px 28px rgba(27, 28, 25, 0.1);
+  background: #f7f6f3;
+}
+
+.pk-shot--hero {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.pk-shot--feature {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* Chinese hero: larger line-height avoids cramped multi-line headlines */
+html[lang="zh-CN"] .pk-hero-title {
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+@media (min-width: 1024px) {
+  html[lang="zh-CN"] .pk-hero-title {
+    font-size: 2.5rem;
+    line-height: 1.55;
+  }
+}
+
+.pk-brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.pk-brand__visual {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+}
+
+.pk-brand__visual img {
+  display: block;
+  height: 2rem;
+  width: auto;
+}
+
+.pk-brand__text {
+  position: absolute;
+  left: 24%;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #1b1c19;
+}
+
+.pk-pricing {
+  background-color: #fbf9f4;
+  background-image: url("images/publishkit_pricing_bg_1920x800.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 767px) {
+  .pk-pricing {
+    background-size: cover;
+    background-position: center top;
+  }
+}
+
+.pk-psb-beian img {
+  display: inline-block;
+  vertical-align: middle;
+}

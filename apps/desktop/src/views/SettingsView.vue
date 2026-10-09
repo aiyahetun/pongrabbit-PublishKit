@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { ask, open, save } from "@tauri-apps/plugin-dialog";
@@ -68,6 +68,17 @@ async function removeChannel(channel: Channel) {
   try {
     await invoke("delete_channel_cmd", { channelId: channel.id });
     await loadChannels();
+  } catch (e) {
+    channelError.value = String(e);
+  }
+}
+
+async function toggleChannelHash(channel: Channel) {
+  const enabled = !channel.keywordHash;
+  channelError.value = "";
+  try {
+    await invoke("set_channel_keyword_hash_cmd", { channelId: channel.id, enabled });
+    channel.keywordHash = enabled;
   } catch (e) {
     channelError.value = String(e);
   }
@@ -178,6 +189,20 @@ async function loadWorkspace() {
   scanIgnoreText.value = (settings.scanIgnoreDirs ?? []).join("\n");
 }
 
+async function reloadCurrentProject() {
+  const settings = await invoke<WorkspaceSettings>("get_workspace_settings");
+  projectName.value = settings.projectName ?? "";
+  brandDomestic.value = settings.brandDomestic ?? "";
+  brandOverseas.value = settings.brandOverseas ?? "";
+  videoRoot.value = settings.videoRoot ?? "";
+}
+
+function onProjectChanged() {
+  void reloadCurrentProject().catch((e) => {
+    channelError.value = String(e);
+  });
+}
+
 async function loadLicense() {
   licenseStatus.value = await invoke<LicenseStatus>("get_license_status_cmd");
 }
@@ -192,6 +217,7 @@ async function saveProject() {
       brandOverseas: brandOverseas.value || null,
     });
     backupNotice.value = t("settings.projectSaved");
+    window.dispatchEvent(new CustomEvent("publishkit-project-changed"));
   } catch (e) {
     channelError.value = String(e);
   }
@@ -214,8 +240,11 @@ async function saveScanIgnore() {
 async function pickVideoRoot() {
   const picked = await open({ directory: true, multiple: false, title: t("settings.chooseVideoRoot") });
   if (picked && typeof picked === "string") {
-    await invoke("set_video_root", { path: picked });
-    videoRoot.value = picked;
+    const { setProjectRoot } = await import("../utils/projectRoot");
+    const settings = await setProjectRoot("set_video_root", picked, (name) =>
+      window.confirm(t("project.rootBound", { name }))
+    );
+    videoRoot.value = settings.videoRoot ?? "";
   }
 }
 
@@ -232,7 +261,12 @@ async function activateLicense() {
 }
 
 onMounted(async () => {
+  window.addEventListener("publishkit-project-changed", onProjectChanged);
   await Promise.all([loadChannels(), loadApiStatus(), loadWorkspace(), loadLicense()]);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("publishkit-project-changed", onProjectChanged);
 });
 </script>
 
@@ -365,6 +399,7 @@ onMounted(async () => {
     <div class="card wide">
       <h2>{{ t("channels.title") }}</h2>
       <p class="muted">{{ t("channels.subtitle") }}</p>
+      <p class="muted">{{ t("channels.hashHint") }}</p>
 
       <div class="group">
         <h3>{{ t("channels.domestic") }}</h3>
@@ -372,6 +407,9 @@ onMounted(async () => {
           <span v-for="ch in domesticChannels.filter((c) => !c.isCustom)" :key="ch.id" class="channel-tag">
             <span class="dot" :style="{ background: ch.color }" />
             {{ ch.name }}
+            <button type="button" class="hash-toggle" :class="{ on: ch.keywordHash }" @click="toggleChannelHash(ch)">
+              {{ ch.keywordHash ? t("channels.hashOn") : t("channels.hashOff") }}
+            </button>
           </span>
         </div>
       </div>
@@ -382,6 +420,9 @@ onMounted(async () => {
           <span v-for="ch in overseasChannels.filter((c) => !c.isCustom)" :key="ch.id" class="channel-tag">
             <span class="dot" :style="{ background: ch.color }" />
             {{ ch.name }}
+            <button type="button" class="hash-toggle" :class="{ on: ch.keywordHash }" @click="toggleChannelHash(ch)">
+              {{ ch.keywordHash ? t("channels.hashOn") : t("channels.hashOff") }}
+            </button>
           </span>
         </div>
       </div>
@@ -393,6 +434,9 @@ onMounted(async () => {
             <span class="dot" :style="{ background: ch.color }" />
             {{ ch.name }}
             <span class="market">{{ marketLabel(ch.market) }}</span>
+            <button type="button" class="hash-toggle" :class="{ on: ch.keywordHash }" @click="toggleChannelHash(ch)">
+              {{ ch.keywordHash ? t("channels.hashOn") : t("channels.hashOff") }}
+            </button>
             <button type="button" class="remove" :title="t('channels.remove')" @click="removeChannel(ch)">×</button>
           </span>
         </div>
@@ -515,12 +559,25 @@ label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 12px;
+  height: 28px;
+  padding: 0 8px;
   border-radius: var(--pk-radius-pill);
   border: 1px solid var(--pk-border-strong);
   background: var(--pk-bg-app);
-  font-size: 13px;
+  font-size: 12px;
+}
+.hash-toggle {
+  border: none;
+  background: transparent;
+  color: var(--pk-ink-muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.hash-toggle.on {
+  color: var(--pk-accent-text);
+  font-weight: 600;
 }
 .channel-tag.custom {
   padding-right: 8px;

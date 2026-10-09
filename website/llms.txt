@@ -1,0 +1,28 @@
+# PublishKit / 发稿匣
+
+> 发稿匣是本地桌面内容与发布管理工具，管理文案、素材、渠道与发布状态。
+> Does NOT auto-post, store platform passwords, or offer one-click multi-platform distribution.
+
+## What we are
+- Local content and publish management for cross-border / multi-channel teams
+- Windows desktop + Chrome extension (manual publish, status sync back)
+- Freemium: Free 50 items / Pro lifetime ¥139 or $38
+
+## What we are NOT
+- Not a Buffer/Later-style social media scheduler
+- Not 蚁小二-style cloud matrix auto-distribution
+- Not OAuth / account hosting SaaS
+
+## Canonical URLs
+- English: https://get.pongrabbit.com/en/
+- 中文: https://get.pongrabbit.cn/zh/
+- Privacy: https://get.pongrabbit.cn/privacy.html
+
+## Download
+- Latest release: https://github.com/aiyahetun/pongrabbit-PublishKit/releases/latest
+- Chrome extension (PublishKit Companion): https://chromewebstore.google.com/detail/publishkit-companion/dijkbipanbpkgndbhonecpfnladaiipj
+
+## Compare
+- vs schedulers: we track status; you publish manually in the browser
+- vs 蚁小二: local data, no cloud account matrix
+- vs Eagle: includes channels, publish states, and extension workflow

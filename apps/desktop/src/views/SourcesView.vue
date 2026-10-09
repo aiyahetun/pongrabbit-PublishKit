@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { MarkdownScanItem, WorkspaceSettings } from "@publishkit/shared";
+import BatchPlanWizard from "../components/BatchPlanWizard.vue";
 import SplitWizard from "../components/SplitWizard.vue";
+import { setProjectRoot } from "../utils/projectRoot";
 import TableImportWizard from "../components/TableImportWizard.vue";
 
 const { t } = useI18n();
@@ -15,23 +17,56 @@ const error = ref("");
 const splitTarget = ref<MarkdownScanItem | null>(null);
 const tableTarget = ref<MarkdownScanItem | null>(null);
 const importNotice = ref("");
+const showBatch = ref(false);
 
-onMounted(async () => {
+async function loadSettings() {
   settings.value = await invoke<WorkspaceSettings>("get_workspace_settings");
+  files.value = [];
+  splitTarget.value = null;
+  tableTarget.value = null;
+  importNotice.value = "";
+  error.value = "";
+}
+
+function onProjectChanged() {
+  void loadSettings().catch((e) => {
+    error.value = String(e);
+  });
+}
+
+onMounted(() => {
+  window.addEventListener("publishkit-project-changed", onProjectChanged);
+  onProjectChanged();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("publishkit-project-changed", onProjectChanged);
 });
 
 async function pickCopyRoot() {
   error.value = "";
   const picked = await open({ directory: true, multiple: false, title: t("sources.pickCopyRoot") });
   if (!picked || Array.isArray(picked)) return;
-  settings.value = await invoke<WorkspaceSettings>("set_copy_root", { path: picked });
+  try {
+    settings.value = await setProjectRoot("set_copy_root", picked, (name) =>
+      window.confirm(t("project.rootBound", { name }))
+    );
+  } catch (e) {
+    if (String(e) !== "Error: cancelled") error.value = String(e);
+  }
 }
 
 async function pickMediaRoot() {
   error.value = "";
   const picked = await open({ directory: true, multiple: false, title: t("sources.pickMediaRoot") });
   if (!picked || Array.isArray(picked)) return;
-  settings.value = await invoke<WorkspaceSettings>("set_media_root", { path: picked });
+  try {
+    settings.value = await setProjectRoot("set_media_root", picked, (name) =>
+      window.confirm(t("project.rootBound", { name }))
+    );
+  } catch (e) {
+    if (String(e) !== "Error: cancelled") error.value = String(e);
+  }
 }
 
 async function scan() {
@@ -68,12 +103,18 @@ function onImported(count: number) {
   importNotice.value = t("split.importDone", { count });
 }
 
+function onBatchDone(message: string) {
+  showBatch.value = false;
+  importNotice.value = message;
+}
+
 function formatLabel(format: string) {
   if (format === "docx") return t("sources.formatDocx");
   if (format === "txt") return t("sources.formatTxt");
   if (format === "pdf") return t("sources.formatPdf");
   if (format === "xlsx") return t("sources.formatXlsx");
   if (format === "csv") return t("sources.formatCsv");
+  if (format === "html") return t("sources.formatHtml");
   return t("sources.formatMd");
 }
 
@@ -101,14 +142,19 @@ function importActionLabel(format: string) {
           <button type="button" class="pk-btn pk-btn--secondary" @click="pickMediaRoot">{{ t("common.choose") }}</button>
         </div>
       </div>
-      <button
-        class="pk-btn pk-btn--primary"
-        type="button"
-        :disabled="!settings?.copyRoot || scanning"
-        @click="scan"
-      >
-        {{ scanning ? t("sources.scanning") : t("sources.scan") }}
-      </button>
+      <div class="actions">
+        <button
+          class="pk-btn pk-btn--primary"
+          type="button"
+          :disabled="!settings?.copyRoot || scanning"
+          @click="scan"
+        >
+          {{ scanning ? t("sources.scanning") : t("sources.scan") }}
+        </button>
+        <button type="button" class="pk-btn pk-btn--secondary" @click="showBatch = true">
+          {{ t("batch.title") }}
+        </button>
+      </div>
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="importNotice" class="notice">{{ importNotice }}</p>
       <p class="hint">{{ t("sources.formatsHint") }}</p>
@@ -139,6 +185,8 @@ function importActionLabel(format: string) {
       @close="splitTarget = null"
       @imported="onImported"
     />
+
+    <BatchPlanWizard v-if="showBatch" @close="showBatch = false" @done="onBatchDone" />
 
     <TableImportWizard
       v-if="tableTarget"
@@ -172,9 +220,11 @@ function importActionLabel(format: string) {
   color: var(--pk-ink-muted);
   margin-bottom: 6px;
 }
-.row {
+.row,
+.actions {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 .row-input {
   flex: 1;

@@ -18,11 +18,16 @@ const props = withDefaults(
 const src = computed(() =>
   props.preview ? mediaOriginalSrc(props.asset) : mediaPreviewSrc(props.asset)
 );
+const longImage = computed(() => {
+  const width = props.asset.width ?? 0;
+  const height = props.asset.height ?? 0;
+  return width > 0 && height / width >= 2.2;
+});
 </script>
 
 <template>
   <div class="media-thumb" :class="size" :data-kind="asset.kind">
-    <img v-if="src" :src="src" :alt="asset.fileName" loading="lazy" />
+    <img v-if="src" :src="src" :alt="asset.fileName" loading="lazy" :class="{ long: longImage }" />
     <span v-else-if="asset.kind === 'video'" class="placeholder">▶</span>
     <span v-else class="placeholder">◻</span>
   </div>
@@ -55,6 +60,9 @@ const src = computed(() =>
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.media-thumb img.long {
+  object-position: top;
 }
 .placeholder {
   color: var(--pk-ink-muted);

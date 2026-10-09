@@ -6,7 +6,7 @@ use axum::{
     Json, Router,
 };
 use crate::content_images;
-use crate::db::{fields_body, get_content_item_by_id, duplicate_publish_warning, list_media_for_content, list_publish_tasks, update_publish_task_status, DbState, DuplicatePublishWarning};
+use crate::db::{fields_body, fields_keywords, get_content_item_by_id, duplicate_publish_warning, list_media_for_content, list_publish_tasks, project_label_for_content, update_publish_task_status, DbState, DuplicatePublishWarning};
 use crate::rich_text;
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
@@ -51,6 +51,7 @@ struct ApiTaskSummary {
     content_title: String,
     content_language: String,
     publish_url: String,
+    project_name: String,
 }
 
 #[derive(Serialize)]
@@ -71,6 +72,7 @@ struct ApiTaskDetail {
     channel: ApiChannelRef,
     content: ApiContentRef,
     media: Vec<ApiMediaRef>,
+    project_name: String,
 }
 
 #[derive(Serialize)]
@@ -88,15 +90,21 @@ struct ApiContentRef {
     title: String,
     language: String,
     body: String,
+    keywords: Vec<String>,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PrepareResponse {
     task_id: String,
+    title: String,
     body: String,
     body_html: String,
     body_plain: String,
+    keywords: Vec<String>,
+    keywords_plain: String,
+    full_text: String,
+    project_name: String,
     copy_mode: &'static str,
     media_paths: Vec<String>,
     image_count: usize,
@@ -187,6 +195,20 @@ fn map_task_summary(row: &(
         content_title: row.12.clone(),
         content_language: row.13.clone(),
         publish_url: row.2.clone(),
+        project_name: String::new(),
+    }
+}
+
+fn map_publish_task_summary(task: &crate::PublishTaskRow) -> ApiTaskSummary {
+    ApiTaskSummary {
+        id: task.id.clone(),
+        status: task.status.clone(),
+        channel_name: task.channel.name.clone(),
+        channel_color: task.channel.color.clone(),
+        content_title: task.content.title.clone(),
+        content_language: task.content.language.clone(),
+        publish_url: task.publish_url.clone(),
+        project_name: task.project_name.clone(),
     }
 }
 
@@ -200,11 +222,11 @@ fn load_task_detail(state: &DbState, task_id: &str) -> Result<ApiTaskDetail, Api
 
         let media = list_media_for_content(conn, &row.11)?
             .into_iter()
-            .map(|(id, path, file_name, kind, _)| ApiMediaRef {
-                id,
-                path,
-                file_name,
-                kind,
+            .map(|asset| ApiMediaRef {
+                id: asset.id,
+                path: asset.path,
+                file_name: asset.file_name,
+                kind: asset.kind,
             })
             .collect();
 
@@ -222,8 +244,12 @@ fn load_task_detail(state: &DbState, task_id: &str) -> Result<ApiTaskDetail, Api
                 title: row.12.clone(),
                 language: row.13.clone(),
                 body: fields_body(&row.14),
+                keywords: fields_keywords(&row.14),
             },
             media,
+            project_name: project_label_for_content(conn, &row.11)
+                .map(|(_, name, _)| name)
+                .unwrap_or_default(),
         })
     })
     .map_err(|message| {
@@ -291,18 +317,17 @@ async fn ui_locale(State(ctx): State<ApiContext>, headers: HeaderMap) -> Result<
 async fn tasks_today(State(ctx): State<ApiContext>, headers: HeaderMap) -> Result<Json<Vec<ApiTaskSummary>>, ApiError> {
     auth(&headers, &ctx.token)?;
     let state = ctx.app.state::<DbState>();
-    let tasks = crate::db::with_conn(&state, |conn| {
-        Ok(list_publish_tasks(conn, Some("ready"))?
-            .iter()
-            .map(map_task_summary)
-            .collect::<Vec<_>>())
-    })
-    .map_err(|message| ApiError {
+    let tasks = crate::fetch_today_ready_tasks(&state).map_err(|message| ApiError {
         status: StatusCode::INTERNAL_SERVER_ERROR,
         code: "internal",
         message,
     })?;
-    Ok(Json(tasks))
+    Ok(Json(
+        tasks
+            .iter()
+            .map(map_publish_task_summary)
+            .collect::<Vec<_>>(),
+    ))
 }
 
 async fn task_detail(
@@ -329,27 +354,52 @@ async fn task_prepare(
         .iter()
         .filter(|item| item.kind == "image")
         .count();
-    let body = detail.content.body.clone();
-    let body_plain = crate::channel_pack::format_plain_for_channel(
-        &detail.channel.id,
-        &detail.content.title,
-        &body,
+    let channel_id = detail.channel.id.as_str();
+    let hash = crate::db::with_conn(&state, |conn| {
+        crate::db::channel_keyword_hash(conn, channel_id)
+    })
+    .unwrap_or_else(|_| crate::content_fields::default_keyword_hash(Some(channel_id)));
+    let copied_body = crate::content_fields::body_for_channel_copy_with_hash(
+        Some(channel_id),
+        &detail.content.body,
+        &detail.content.keywords,
+        hash,
     );
-    let copy_mode = if crate::channel_pack::uses_plain_copy(&detail.channel.id) {
+    let body_plain = if crate::channel_pack::uses_plain_copy(channel_id) {
+        rich_text::markdown_to_plain(&copied_body)
+    } else {
+        rich_text::markdown_to_plain(&detail.content.body)
+    };
+    let copy_mode = if crate::channel_pack::uses_plain_copy(channel_id) {
         "plain"
     } else {
         "rich"
     };
-    let (response_body, response_html) = if copy_mode == "plain" {
-        (body_plain.clone(), rich_text::markdown_to_html(&body_plain))
+    let response_html = if crate::content_fields::is_multi_field_channel(channel_id) {
+        rich_text::markdown_to_html(&detail.content.body)
     } else {
-        (body.clone(), rich_text::markdown_to_html(&body))
+        rich_text::markdown_to_html(&copied_body)
     };
     Ok(Json(PrepareResponse {
         task_id: detail.id,
+        title: detail.content.title.clone(),
         body_html: response_html,
         body_plain,
-        body: response_body,
+        body: copied_body,
+        keywords: detail.content.keywords.clone(),
+        keywords_plain: crate::content_fields::format_keywords_with_hash(
+            Some(channel_id),
+            &detail.content.keywords,
+            hash,
+        ),
+        full_text: crate::content_fields::full_text_for_copy_with_hash(
+            Some(channel_id),
+            &detail.content.title,
+            &detail.content.body,
+            &detail.content.keywords,
+            hash,
+        ),
+        project_name: detail.project_name.clone(),
         copy_mode,
         media_paths,
         image_count,
@@ -455,7 +505,7 @@ async fn task_unpublish(
     auth(&headers, &ctx.token)?;
     let state = ctx.app.state::<DbState>();
     crate::db::with_conn(&state, |conn| {
-        update_publish_task_status(conn, &task_id, "ready", None, None, None)
+        update_publish_task_status(conn, &task_id, "ready", None, None, None, None)
     })
     .map_err(|message| ApiError {
         status: StatusCode::BAD_REQUEST,
@@ -481,6 +531,7 @@ async fn task_publish(
             body.url.as_deref(),
             None,
             None,
+            body.published_at.as_deref(),
         )
     })
     .map_err(|message| ApiError {

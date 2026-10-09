@@ -3,7 +3,7 @@ import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import type { Channel, ContentItem, MediaAsset, PublishTask } from "@publishkit/shared";
-import { copyMarkdownAsRichText } from "../utils/clipboard";
+import FieldCopyBar from "./FieldCopyBar.vue";
 import MediaThumb from "./MediaThumb.vue";
 
 const props = defineProps<{
@@ -12,13 +12,17 @@ const props = defineProps<{
   media: MediaAsset[];
 }>();
 
-const emit = defineEmits<{ createTask: [channel: Channel] }>();
+const emit = defineEmits<{ createTask: [channel: Channel]; changed: [] }>();
 
 const { t } = useI18n();
 const tab = ref<"body" | "media" | "tasks" | "note">("body");
 const tasks = ref<PublishTask[]>([]);
 const note = ref("");
-const copied = ref(false);
+const draftTitle = ref("");
+const draftBody = ref("");
+const draftKeywords = ref("");
+const saving = ref(false);
+const saveError = ref("");
 
 const itemTasks = computed(() => tasks.value.filter((task) => task.content.id === props.item.id));
 
@@ -31,17 +35,48 @@ watch(
   async () => {
     note.value = "";
     tab.value = "body";
+    draftTitle.value = props.item.title;
+    draftBody.value = props.item.body;
+    draftKeywords.value = (props.item.keywords ?? []).join("、");
     await loadTasks();
   },
   { immediate: true }
 );
 
-async function copyBody() {
-  await copyMarkdownAsRichText(props.item.body);
-  copied.value = true;
-  setTimeout(() => {
-    copied.value = false;
-  }, 1500);
+function keywordList() {
+  return draftKeywords.value
+    .split(/[、,，;；\n]/)
+    .map((word) => word.trim().replace(/^#/, ""))
+    .filter(Boolean);
+}
+
+async function saveFields() {
+  saving.value = true;
+  saveError.value = "";
+  try {
+    await invoke("update_content_fields_cmd", {
+      contentItemId: props.item.id,
+      title: draftTitle.value,
+      body: draftBody.value,
+      keywords: keywordList(),
+      language: props.item.language,
+    });
+    emit("changed");
+  } catch (e) {
+    saveError.value = String(e);
+  } finally {
+    saving.value = false;
+  }
+}
+
+async function recognize() {
+  saveError.value = "";
+  try {
+    await invoke("recognize_content_keywords_cmd", { contentItemId: props.item.id });
+    emit("changed");
+  } catch (e) {
+    saveError.value = String(e);
+  }
 }
 </script>
 
@@ -66,12 +101,28 @@ async function copyBody() {
     </div>
 
     <div v-if="tab === 'body'" class="panel">
+      <FieldCopyBar :title="draftTitle" :body="draftBody" :keywords="keywordList()" show-warnings />
+      <label class="note-field">
+        <span>{{ t("content.fieldTitle") }}</span>
+        <input v-model="draftTitle" class="pk-input" type="text" />
+      </label>
+      <label class="note-field">
+        <span>{{ t("content.fieldBody") }}</span>
+        <textarea v-model="draftBody" class="pk-input" rows="8" />
+      </label>
+      <label class="note-field">
+        <span>{{ t("content.fieldKeywords") }}</span>
+        <input v-model="draftKeywords" class="pk-input" type="text" :placeholder="t('content.keywordsHint')" />
+      </label>
       <div class="btn-row">
-        <button type="button" class="pk-btn pk-btn--primary" @click="copyBody">
-          {{ copied ? t("content.copied") : t("content.copyRich") }}
+        <button type="button" class="pk-btn pk-btn--secondary" :disabled="saving" @click="saveFields">
+          {{ t("common.save") }}
+        </button>
+        <button type="button" class="pk-btn pk-btn--ghost" @click="recognize">
+          {{ t("content.recognize") }}
         </button>
       </div>
-      <pre class="body">{{ item.body }}</pre>
+      <p v-if="saveError" class="muted">{{ saveError }}</p>
     </div>
 
     <div v-else-if="tab === 'media'" class="panel">

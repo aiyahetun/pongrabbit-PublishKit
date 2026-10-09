@@ -2,7 +2,13 @@
 
 Chrome/Edge MV3 companion for the desktop app's localhost API.
 
-## Load unpacked
+## Install from Chrome Web Store
+
+1. Install **PublishKit Companion** from the [Chrome Web Store](https://chromewebstore.google.com/detail/publishkit-companion/dijkbipanbpkgndbhonecpfnladaiipj) (works on Chrome, Edge, Brave).
+2. Start the desktop app and open **Settings → Browser extension**.
+3. Copy **port + pairing token** into the extension side panel → **Save** → **Test connection**.
+
+## Load unpacked (development)
 
 1. Start desktop app: `npm run tauri dev`
 2. Open **Settings → Browser extension** and copy **port + pairing token**

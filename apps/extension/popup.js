@@ -17,8 +17,11 @@ const STRINGS = {
     loadedTasks: "已加载 {count} 条待发任务",
     configSaved: "配置已保存",
     tokenMissing: "请先在桌面端「设置 → 浏览器插件」复制配对 Token",
-    copyBody: "复制富文本",
-    copyDone: "富文本已复制，可直接粘贴到编辑器",
+    copyBody: "复制正文",
+    copyTitle: "复制标题",
+    copyKeywords: "复制关联词",
+    copyFull: "复制全文",
+    copyDone: "已复制，可直接粘贴",
     copyFailed: "复制失败",
     copyImage: "复制单张配图",
     copyImageDone: "配图已复制，到平台编辑器 Ctrl+V 粘贴",
@@ -55,8 +58,11 @@ const STRINGS = {
     loadedTasks: "Loaded {count} ready task(s)",
     configSaved: "Settings saved",
     tokenMissing: "Copy the pairing token from desktop Settings → Browser extension",
-    copyBody: "Copy rich text",
-    copyDone: "Rich text copied — paste into the editor",
+    copyBody: "Copy body",
+    copyTitle: "Copy title",
+    copyKeywords: "Copy keywords",
+    copyFull: "Copy full text",
+    copyDone: "Copied — paste it in",
     copyFailed: "Copy failed",
     copyImage: "Copy single image",
     copyImageDone: "Image copied — paste with Ctrl+V in the editor",
@@ -180,8 +186,28 @@ async function copyRichText(html, plain) {
   await navigator.clipboard.writeText(plain);
 }
 
-async function copyTaskBody(taskId) {
-  const data = await apiFetch(`/tasks/${encodeURIComponent(taskId)}/prepare`, { method: "POST" });
+async function prepareTask(taskId) {
+  return apiFetch(`/tasks/${encodeURIComponent(taskId)}/prepare`, { method: "POST" });
+}
+
+async function copyTaskField(taskId, field) {
+  const data = await prepareTask(taskId);
+  if (field === "title") {
+    await navigator.clipboard.writeText(data.title ?? "");
+    return;
+  }
+  if (field === "keywords") {
+    const text = data.keywordsPlain ?? "";
+    if (!text) throw new Error(uiLocale === "en" ? "No keywords yet" : "这条内容还没有关联词");
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  if (field === "full") {
+    const text = data.fullText ?? "";
+    if (!text) throw new Error(uiLocale === "en" ? "This item is empty" : "这条内容是空的");
+    await navigator.clipboard.writeText(text);
+    return;
+  }
   if (data.copyMode === "plain") {
     await navigator.clipboard.writeText(data.bodyPlain ?? data.body ?? "");
     return;
@@ -241,7 +267,7 @@ function renderTaskItem(task) {
   item.className = "task-item";
 
   const title = document.createElement("strong");
-  title.textContent = task.contentTitle;
+  title.textContent = task.projectName ? `${task.projectName} · ${task.contentTitle}` : task.contentTitle;
   item.appendChild(title);
 
   const channel = document.createElement("span");
@@ -251,19 +277,26 @@ function renderTaskItem(task) {
   const actions = document.createElement("div");
   actions.className = "task-actions";
 
-  const copyBtn = document.createElement("button");
-  copyBtn.type = "button";
-  copyBtn.textContent = t("copyBody");
-  copyBtn.addEventListener("click", async () => {
-    setStatus(t("connecting"));
-    try {
-      await copyTaskBody(task.id);
-      setStatus(t("copyDone"), "ok");
-    } catch (error) {
-      setStatus(`${t("copyFailed")}: ${error}`, "error");
-    }
-  });
-  actions.appendChild(copyBtn);
+  for (const [field, label] of [
+    ["title", "copyTitle"],
+    ["body", "copyBody"],
+    ["keywords", "copyKeywords"],
+    ["full", "copyFull"],
+  ]) {
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.textContent = t(label);
+    copyBtn.addEventListener("click", async () => {
+      setStatus(t("connecting"));
+      try {
+        await copyTaskField(task.id, field);
+        setStatus(t("copyDone"), "ok");
+      } catch (error) {
+        setStatus(`${t("copyFailed")}: ${error}`, "error");
+      }
+    });
+    actions.appendChild(copyBtn);
+  }
 
   const imageBtn = document.createElement("button");
   imageBtn.type = "button";

@@ -7,7 +7,19 @@
   "permissions": ["storage", "activeTab", "sidePanel"],
   "host_permissions": ["http://127.0.0.1/*"],
   "action": {
-    "default_title": "PublishKit"
+    "default_title": "PublishKit",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
   },
   "side_panel": {
     "default_path": "sidepanel.html"

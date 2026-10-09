@@ -22,6 +22,7 @@ pub fn source_format(path: &Path) -> Option<&'static str> {
         "pdf" => Some("pdf"),
         "xlsx" | "xls" => Some("xlsx"),
         "csv" => Some("csv"),
+        "html" | "htm" => Some("html"),
         _ => None,
     }
 }
@@ -31,7 +32,7 @@ pub fn is_table_format(format: &str) -> bool {
 }
 
 pub fn is_split_format(format: &str) -> bool {
-    matches!(format, "md" | "txt" | "docx" | "pdf")
+    matches!(format, "md" | "txt" | "docx" | "pdf" | "html")
 }
 
 pub fn is_supported_source(path: &Path) -> bool {
@@ -46,11 +47,37 @@ pub fn read_source_content(path: &str) -> Result<String, String> {
     match source_format(&path) {
         Some("docx") => docx_to_markdown(&path),
         Some("pdf") => pdf_to_markdown(&path),
+        Some("html") => html_to_text(&path),
         Some(format) if is_table_format(format) => Err("表格文件请使用表格导入向导".into()),
         Some("md" | "txt" | "markdown") => std::fs::read_to_string(&path).map_err(|e| e.to_string()),
         Some(_) => std::fs::read_to_string(&path).map_err(|e| e.to_string()),
         None => Err("不支持的文件格式".into()),
     }
+}
+
+pub fn html_to_text(path: &Path) -> Result<String, String> {
+    let raw = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let without_blocks = regex::Regex::new(r"(?is)<(script|style)[^>]*>.*?</\1>")
+        .unwrap()
+        .replace_all(&raw, "");
+    let broken = regex::Regex::new(r"(?i)<br\s*/?>|</p>|</div>|</h[1-6]>|</li>|</tr>")
+        .unwrap()
+        .replace_all(&without_blocks, "\n");
+    let stripped = regex::Regex::new(r"(?s)<[^>]+>")
+        .unwrap()
+        .replace_all(&broken, "");
+    let text = stripped
+        .replace("&nbsp;", " ")
+        .replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&#39;", "'");
+    let lines: Vec<&str> = text.lines().map(str::trim).filter(|line| !line.is_empty()).collect();
+    if lines.is_empty() {
+        return Err("HTML 里没有可提取的文字".into());
+    }
+    Ok(lines.join("\n\n") + "\n")
 }
 
 pub fn pdf_to_markdown(path: &Path) -> Result<String, String> {

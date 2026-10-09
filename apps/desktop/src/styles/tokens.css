@@ -61,13 +61,13 @@ button.pk-btn--primary {
 
 button.pk-btn--secondary {
   background: var(--pk-bg-panel);
-  color: var(--pk-ink);
+  color: var(--pk-ink-secondary);
   border-color: var(--pk-border-strong);
 }
 
 button.pk-btn--ghost {
   background: transparent;
-  color: var(--pk-ink-secondary);
+  color: var(--pk-ink-muted);
   border-color: transparent;
 }
 
@@ -80,11 +80,11 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--pk-space-2);
-  height: 36px;
-  padding: 0 var(--pk-space-3);
-  border-radius: var(--pk-radius-md);
-  font-size: 13px;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1;
   border: 1px solid transparent;
@@ -98,6 +98,10 @@ input {
 }
 
 .pk-btn--primary {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
   background: var(--pk-accent);
   color: var(--pk-inverse);
   border-color: var(--pk-accent);
@@ -109,9 +113,8 @@ input {
 
 .pk-btn--secondary {
   background: var(--pk-bg-panel);
-  color: var(--pk-ink);
+  color: var(--pk-ink-secondary);
   border-color: var(--pk-border-strong);
-  box-shadow: var(--pk-shadow-sm);
 }
 
 .pk-btn--secondary:hover:not(:disabled) {
@@ -120,8 +123,9 @@ input {
 
 .pk-btn--ghost {
   background: transparent;
-  color: var(--pk-ink-secondary);
+  color: var(--pk-ink-muted);
   border-color: transparent;
+  font-weight: 400;
 }
 
 .pk-btn--ghost:hover:not(:disabled) {
@@ -129,14 +133,18 @@ input {
 }
 
 .pk-btn--success {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
   background: var(--pk-status-ready);
   color: #fff;
   border-color: var(--pk-status-ready);
 }
 
 .pk-input {
-  height: 36px;
-  padding: 0 var(--pk-space-3);
+  height: 30px;
+  padding: 0 10px;
   border: 1px solid var(--pk-border-strong);
   border-radius: var(--pk-radius-md);
   background: var(--pk-bg-panel);

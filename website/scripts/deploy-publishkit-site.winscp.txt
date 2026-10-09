@@ -1,0 +1,10 @@
+# WinSCP 同步官网到 ECS（在 WinSCP 里：命令 → 在后台运行 /script= 本文件）
+# 本地目录与远程目录按需改路径；会话名须与 WinSCP 登录窗口里一致（国内 / 海外）。
+option batch on
+option confirm off
+open 国内
+synchronize remote -criteria=time "C:\Users\win\Desktop\内容营销平台工具\website" /var/www/publishkit/
+close
+open 海外
+synchronize remote -criteria=time "C:\Users\win\Desktop\内容营销平台工具\website" /var/www/publishkit/
+exit

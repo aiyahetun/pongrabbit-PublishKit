@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-container": "#efeee8", "inverse-primary": "#ebc073", "on-surface-variant": "#4e4638", "surface-variant": "#e4e2dd", "on-tertiary-fixed": "#001b3c", "secondary-container": "#e5e2db", "on-error-container": "#93000a", "on-tertiary-container": "#c6d9ff", "tertiary-container": "#7d99c9", "surface-container-low": "#f5f4ee", "surface-container-lowest": "#ffffff", "tertiary-fixed": "#d5e3ff", "on-background": "#1b1c19", "surface-container-highest": "#e4e2dd", "surface-bright": "#fbf9f4", "outline-variant": "#d1c5b3", "on-error": "#ffffff", "tertiary-fixed-dim": "#abc8fa", "on-primary-fixed-variant": "#5e4200", "outline": "#807667", "tertiary": "#435f8b", "on-tertiary-fixed-variant": "#2a4772", "surface-dim": "#dbdad5", "inverse-surface": "#30312d", "secondary-fixed-dim": "#c9c6c0", "primary-fixed": "#ffdea7", "inverse-on-surface": "#f2f1eb", "surface-container-high": "#e9e8e3", "on-primary": "#ffffff", "surface-tint": "#795916", "secondary-fixed": "#e5e2dc", "on-secondary-fixed": "#1c1c18", "background": "#fbf9f4", "primary-fixed-dim": "#ebc073", "error-container": "#ffdad6", "surface": "#fbf9f4", "secondary": "#5f5e59", "error": "#ba1a1a", "primary-container": "#795916", "primary": "#795916", "on-tertiary": "#ffffff", "on-secondary-fixed-variant": "#474742", "on-secondary-container": "#65645f", "on-surface": "#1b1c19", "on-secondary": "#ffffff", "on-primary-container": "#412c00", "on-primary-fixed": "#271900" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xs": "0.25rem", "sidebar_width": "220px", "baseline": "4px", "space-lg": "1rem", "margin": "1.5rem", "space-sm": "0.5rem", "space-md": "0.75rem", "container_gutter": "24px", "inner_padding": "16px", "element_gap": "12px", "space-xl": "1.5rem", "gutter": "1.5rem" }, fontFamily: { "label-xs": ["Inter"], "headline-lg": ["Inter"], "code-sm": ["Inter"], "headline-md": ["Inter"], "body-base": ["Inter"], "h1": ["Inter"], "h3": ["Inter"], "headline-sm": ["Inter"], "body-sm": ["Inter"], "body-md": ["Inter"], "mono": ["Inter"], "h2": ["Inter"], "body-lg": ["Inter"], "label-md": ["Inter"], "label-sm": ["Inter"] }, fontSize: { "label-xs": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "500" }], "headline-lg": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "600" }], "code-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }], "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }], "body-base": ["14px", { lineHeight: "20px", fontWeight: "400" }], "h1": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "600" }], "h3": ["16px", { lineHeight: "24px", fontWeight: "600" }], "headline-sm": ["16px", { lineHeight: "24px", fontWeight: "600" }], "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "mono": ["13px", { lineHeight: "18px", fontWeight: "400" }], "h2": ["20px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "label-md": ["13px", { lineHeight: "18px", fontWeight: "500" }], "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "500" }] } } } };</script></head><body class="bg-surface text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-md border-b border-surface-variant"><div class="h-14 max-w-[1440px] mx-auto px-6 flex items-center justify-between"><div class="flex items-center gap-2"><a class="flex items-center gap-2.5 group" data-path="overview" href="#"><div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center"><div class="w-3 h-3 bg-primary rounded-sm"></div></div><span class="font-h3 text-h3 text-on-surface tracking-tight">PublishKit</span></a></div><nav class="hidden md:flex items-center gap-8" data-active-classes="text-on-surface font-semibold"><a class="font-body-base text-body-base text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#features">Features</a><a class="font-body-base text-body-base text-on-surface-variant hover:text-on-surface transition-colors" data-path="manifesto" href="#manifesto">Manifesto</a><a class="font-body-base text-body-base text-on-surface-variant hover:text-on-surface transition-colors" data-path="pricing" href="#pricing">Pricing</a><a class="font-body-base text-body-base text-on-surface-variant hover:text-on-surface transition-colors" data-path="faq" href="#faq">FAQ</a></nav><div class="flex items-center gap-4"><div class="inline-flex items-center rounded-md border border-outline-variant bg-surface-container-low px-1 py-0.5 text-xs font-mono text-secondary shadow-xs"><span class="px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface font-semibold">EN</span><span class="text-outline-variant px-0.5">/</span><span class="px-1.5 py-0.5 text-on-surface-variant hover:text-on-surface cursor-pointer">ZH</span></div><a class="download-trigger inline-flex items-center justify-center px-4 py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors cursor-pointer" data-path="download" href="#download">Download for Windows</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-14 bg-surface max-w-[1440px] mx-auto px-6"><div class="flex flex-col w-full font-body-base text-on-surface">
+<!-- 1. HERO SECTION -->
+<section class="w-full pt-12 md:pt-16 pb-16 md:pb-24">
+<div class="max-w-[1360px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+<!-- Left Column (45% -> 5 cols / 12) -->
+<div class="lg:col-span-5 flex flex-col items-start pr-0 lg:pr-4">
+<!-- Badge Pill -->
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-label-xs text-label-xs mb-6 shadow-xs">
+<span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+<span class="">Local-First Desktop App • Version 1.4 Stable</span>
+</div>
+<!-- Headline -->
+<h1 class="text-on-surface font-headline-lg text-3xl sm:text-4xl lg:text-[46px] leading-[1.14] tracking-tight font-semibold mb-5 max-w-xl">
+          Cross-border content ops — clear, fast, tracked
+        </h1>
+<!-- Subtitle -->
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-8 max-w-xl">
+          PublishKit orchestrates multi-platform publishing with offline-first speed and zero cloud exposure. No sketchy auto-posting bots. You stay in control with native precision.
+        </p>
+<!-- CTA Buttons -->
+<div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+<a class="download-trigger inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-on-primary-container transition-colors shadow-xs cursor-pointer" href="#download">
+<svg aria-hidden="true" class="w-4 h-4 fill-current" viewbox="0 0 16 16">
+<path d="M0 2.222L6.444 1.333V7.556H0V2.222zm7.111-.989L16 0v7.556H7.111V1.233zM0 8.444h6.444v6.223L0 13.778V8.444zm7.111 0H16V16l-8.889-1.233V8.444z"></path>
+</svg>
+<span class="">Download for Windows (x64)</span>
+</a>
+<button class="pro-modal-trigger inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low font-label-md text-label-md transition-colors shadow-xs cursor-pointer" type="button">
+<span class="">Get Lifetime Pro — $69</span>
+</button>
+</div>
+<!-- Trust line -->
+<div class="mt-6 flex items-center gap-2 font-mono text-code-sm text-secondary">
+<svg aria-hidden="true" class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="leading-tight">100% local SQLite database • No API keys in cloud • MIT-audited extension</span>
+</div>
+</div>
+<!-- Right Column (55% -> 7 cols / 12) Realistic Desktop Window Mockup -->
+<div class="lg:col-span-7 w-full">
+<div class="w-full bg-surface-container-lowest rounded-xl border border-outline-variant shadow-md overflow-hidden">
+<!-- Mac Window Chrome -->
+<div class="h-10 bg-surface-container-low px-4 border-b border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-[#ec6a5e] inline-block"></span>
+<span class="w-3 h-3 rounded-full bg-[#f4bf4f] inline-block"></span>
+<span class="w-3 h-3 rounded-full bg-[#62c554] inline-block"></span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<svg class="w-3.5 h-3.5 text-primary" fill="currentColor" viewbox="0 0 20 20">
+<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+<path clip-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" fill-rule="evenodd"></path>
+</svg>
+<span class="">PublishKit — Today Queue (3 scheduled)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline-variant">127.0.0.1:48291</span>
+</div>
+</div>
+<!-- Mock UI Workspace -->
+<div class="p-5 bg-surface space-y-3">
+<!-- Task Item 1 -->
+<div class="p-4 rounded-lg bg-surface-container-lowest border border-outline-variant shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-primary/40 transition-colors">
+<div class="space-y-1.5">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-h3 text-h3 text-on-surface font-semibold">Q3 Global Expansion Thread</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#e8f5e9] text-[#2e7d32] font-label-xs text-label-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2e7d32]"></span>
+                    Ready to publish
+                  </span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-xs text-label-xs">
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-secondary">X / Twitter</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-secondary">LinkedIn</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-secondary">Threads</span>
+<span class="text-secondary">• 09:45 GMT (Local Dispatch)</span>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+<button class="px-3 py-1.5 rounded-md bg-primary text-on-primary font-label-sm text-label-sm hover:bg-on-primary-container transition-colors inline-flex items-center gap-1">
+<span class="">Open Extension</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Task Item 2 -->
+<div class="p-4 rounded-lg bg-surface-container-lowest border border-outline-variant shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div class="space-y-1.5">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-h3 text-h3 text-on-surface font-semibold">Product Launch Changelog v2.4</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Scheduled 14:30 GMT
+                  </span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-xs text-label-xs">
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-secondary">Substack</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-secondary">Medium</span>
+<span class="text-secondary truncate max-w-xs">• 1,240 words &amp; 4 high-res diagrams</span>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+<span class="text-label-sm font-label-sm text-secondary">Auto-packed</span>
+</div>
+</div>
+<!-- Task Item 3 -->
+<div class="p-4 rounded-lg bg-surface-container-lowest border border-outline-variant shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div class="space-y-1.5">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-h3 text-h3 text-on-surface font-semibold">Creator Spotlight: Studio Mono</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#fff8e1] text-[#b78103] font-label-xs text-label-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#b78103]"></span>
+                    Draft Review
+                  </span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-xs text-label-xs">
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-secondary">Instagram</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-secondary">YouTube Community</span>
+<span class="text-secondary">• 2 assets staged</span>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+<span class="text-label-sm font-label-sm text-secondary font-mono">Cmd+E</span>
+</div>
+</div>
+<!-- Integrated Visual Anchor -->
+<div class="pt-2">
+<div class="border border-dashed border-outline-variant rounded-lg p-3 text-center bg-surface-container-low/70 flex items-center justify-between text-xs text-secondary font-mono"><span class="inline-flex items-center gap-2"><span class="px-2 py-0.5 rounded bg-surface-container-highest font-semibold text-primary">use LP-07 asset</span><span class="">[ App Screenshot: Today Queue &amp; Channel Dispatcher 1280x800 ]</span></span><span class="inline-flex items-center gap-1 text-primary"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Native Electron Core</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. TRUST BAR SECTION -->
+<section class="w-full bg-surface-container-low border-y border-outline-variant py-8 my-6">
+<div class="max-w-[1360px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+<!-- Trust Item 1 -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0 shadow-xs">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-surface mb-1">Local Data Architecture</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Local SQLite engine. Your drafts, schedules, and analytics never touch an intermediate server or centralized database.
+          </p>
+</div>
+</div>
+<!-- Trust Item 2 -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0 shadow-xs">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-surface mb-1">Localhost Browser Extension</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Communicates exclusively over secure local loopback (<code class="font-mono text-[12px] bg-surface-container px-1 py-0.5 rounded">127.0.0.1:48291</code>) directly with your desktop client.
+          </p>
+</div>
+</div>
+<!-- Trust Item 3 -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest border border-outline-variant flex items-center justify-center shrink-0 shadow-xs">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-on-surface mb-1">Zero Platform Credential Storing</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            We never ask for or hold platform passwords or OAuth tokens. You publish securely in your authenticated native browser session.
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. THREE-STEP FLOW SECTION -->
+<section class="w-full py-16 md:py-24">
+<div class="max-w-[1360px] mx-auto">
+<!-- Section Header -->
+<div class="text-left mb-12">
+<span class="font-label-xs text-label-xs text-primary tracking-wider uppercase font-semibold block mb-2">Workflow</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">Publishing without algorithmic friction</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">How thoughtful creators manage 6+ networks in 15 minutes a day</p>
+</div>
+<!-- 3 Card Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Step 1 -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-xs hover:border-primary/40 transition-colors flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center mb-6">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="font-mono text-code-sm text-secondary block mb-1">Step 01</span>
+<h3 class="font-h3 text-h3 text-on-surface mb-3">1. Prepare Content Pack</h3>
+<p class="font-body-base text-body-base text-on-surface-variant leading-relaxed">
+              Draft once in Markdown with live per-platform character counts, media asset bundling, and customized channel variants without duplicate entry.
+            </p>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/50 text-xs font-mono text-secondary flex items-center justify-between">
+<span class="">Live token check</span>
+<span class="text-primary font-semibold">Ready</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-xs hover:border-primary/40 transition-colors flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center mb-6">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="font-mono text-code-sm text-secondary block mb-1">Step 02</span>
+<h3 class="font-h3 text-h3 text-on-surface mb-3">2. Post on Native Platforms</h3>
+<p class="font-body-base text-body-base text-on-surface-variant leading-relaxed">
+              One click opens the exact native creator studio. Your assets, hashtags, and text auto-populate via our companion bridge with 100% account safety.
+            </p>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/50 text-xs font-mono text-secondary flex items-center justify-between">
+<span class="">Zero API throttle</span>
+<span class="text-primary font-semibold">1-Click</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-xs hover:border-primary/40 transition-colors flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center mb-6">
+<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="font-mono text-code-sm text-secondary block mb-1">Step 03</span>
+<h3 class="font-h3 text-h3 text-on-surface mb-3">3. Track in Browser Extension</h3>
+<p class="font-body-base text-body-base text-on-surface-variant leading-relaxed">
+              The lightweight sidebar extension auto-detects successful publishing receipts and updates your local calendar with zero manual logging.
+            </p>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/50 text-xs font-mono text-secondary flex items-center justify-between">
+<span class="">Receipt logged</span>
+<span class="text-primary font-semibold">SQLite sync</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. FEATURE SHOWCASE (Alternating 5 Rows) -->
+<section class="w-full py-16 space-y-24 max-w-[1360px] mx-auto" id="features">
+<!-- Row 1: Text Left, Mockup Right (Today Queue) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-5 space-y-4">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Orchestration</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">Today Queue: Zero-cognitive-load dispatching</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          Focus only on what goes live today. Clean chronological queuing, priority weighting, and instant one-key triggers keep your mornings focused on creative output rather than administrative platform juggling.
+        </p>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Time-zone sync</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Conflict warnings</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Batch trigger</span>
+</div>
+</div>
+<div class="lg:col-span-7">
+<div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+<div class="flex items-center justify-between pb-4 border-b border-outline-variant">
+<span class="font-h3 text-h3 text-on-surface">Today's Dispatch Matrix</span>
+<span class="font-mono text-code-sm text-secondary">Tuesday, Oct 24</span>
+</div>
+<div class="mt-4 space-y-3">
+<div class="p-3.5 bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Tokyo Launch Teaser #1</div>
+<div class="text-xs text-secondary">X (JP), Threads • 10:00 JST</div>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container-lowest border border-outline-variant font-mono text-xs">Pushed</span>
+</div>
+<div class="p-3.5 bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-[#f4bf4f]"></span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Engineering Architecture Memo</div>
+<div class="text-xs text-secondary">Hacker News, Substack • 14:00 UTC</div>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-primary-fixed text-on-primary-fixed-variant border border-outline-variant font-mono text-xs">In Queue</span>
+</div>
+<div class="p-3.5 bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Weekly Community Recaps</div>
+<div class="text-xs text-secondary">LinkedIn, Bluesky • 18:30 EST</div>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container-lowest border border-outline-variant font-mono text-xs">Staged</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Row 2: Mockup Left, Text Right (Content + Inspector) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-7 order-2 lg:order-1">
+<div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- Left editor view -->
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant space-y-2">
+<div class="text-xs font-mono text-secondary flex justify-between">
+<span class="">MASTER_COPY.MD</span>
+<span class="text-primary font-semibold">Markdown</span>
+</div>
+<p class="font-mono text-xs text-on-surface leading-relaxed">
+                # Designing tools without dopamine loops.<br/><br/>
+                We built PublishKit around three foundational constraints: zero cloud custody, single-click native handoffs, and durable local SQLite records...
+              </p>
+</div>
+<!-- Right inspector preview -->
+<div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant space-y-3">
+<div class="flex items-center justify-between text-xs font-mono text-secondary">
+<span class="font-semibold text-on-surface">Target: X / Threads</span>
+<span class="text-[#2e7d32]">214 / 280 chars</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded border border-outline-variant text-xs text-on-surface">
+                Designing tools without dopamine loops.<br/><br/>We built PublishKit around three constraints: zero cloud custody, 1-click native handoffs...
+              </div>
+<div class="flex items-center gap-2 text-xs text-secondary">
+<span class="w-2 h-2 rounded-full bg-[#2e7d32]"></span> Aspect ratio: 16:9 safe
+              </div>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 space-y-4 order-1 lg:order-2">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Authoring Engine</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">Content + Inspector: Format once, adapt natively</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          The unified multi-column editor lets you craft master copy alongside live side-by-side platform previews. Instant character constraint enforcement prevents clipped threads and missing media aspect ratios.
+        </p>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Thread splitting</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Alt-text sync</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Tag presets</span>
+</div>
+</div>
+</div>
+<!-- Row 3: Text Left, Mockup Right (Companion Utility) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-5 space-y-4">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Companion Utility</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">Browser Extension Bridge: 360px of pure utility</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          A dedicated 360px floating panel stays docked beside your active social tab. Inject text, copy high-res attachments directly to clipboard, and confirm post status with a single keypress.
+        </p>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Zero cloud relay</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">360px docked width</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">One-click autofill</span>
+</div>
+</div>
+<div class="lg:col-span-7">
+<div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
+<div class="flex-1 w-full bg-surface-container-low p-4 rounded-lg border border-outline-variant text-center py-12 text-secondary text-xs font-mono"><div class="flex flex-col items-center justify-center gap-2"><span class="px-2.5 py-1 rounded bg-surface-container-highest text-primary font-mono text-xs font-semibold shadow-xs">use LP-07 asset</span><span class="text-secondary">[ Native Browser Tab: x.com/compose ]</span></div></div>
+<div class="w-full sm:w-[260px] bg-surface-container-lowest border-2 border-primary/30 rounded-lg p-4 shadow-sm space-y-3">
+<div class="flex items-center justify-between border-b border-outline-variant pb-2">
+<span class="font-label-xs text-label-xs font-semibold text-primary">PublishKit Bridge</span>
+<span class="w-2 h-2 rounded-full bg-[#2e7d32]"></span>
+</div>
+<div class="text-xs text-on-surface-variant font-mono">Active draft: Launch_V2</div>
+<button class="w-full py-1.5 bg-primary text-on-primary rounded text-xs font-medium">Inject Text &amp; Media</button>
+<button class="w-full py-1.5 bg-surface-container text-on-surface rounded text-xs font-medium border border-outline-variant">Mark as Dispatched</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Row 4: Mockup Left, Text Right (Kanban Pipeline) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-7 order-2 lg:order-1">
+<div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm overflow-x-auto">
+<div class="grid grid-cols-3 gap-3 min-w-[500px]">
+<!-- Col 1 -->
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant">
+<div class="flex items-center justify-between text-xs font-semibold text-on-surface-variant mb-2">
+<span class="">Idea / Raw Spark</span>
+<span class="font-mono text-secondary">3</span>
+</div>
+<div class="space-y-2">
+<div class="p-2.5 bg-surface-container-lowest rounded border border-outline-variant text-xs shadow-xs">
+<div class="font-medium text-on-surface">Postgres vs SQLite Benchmarks</div>
+<div class="text-[11px] text-secondary mt-1">Tag: Technical</div>
+</div>
+</div>
+</div>
+<!-- Col 2 -->
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant">
+<div class="flex items-center justify-between text-xs font-semibold text-on-surface-variant mb-2">
+<span class="">Localized / Adapted</span>
+<span class="font-mono text-secondary">2</span>
+</div>
+<div class="space-y-2">
+<div class="p-2.5 bg-surface-container-lowest rounded border border-primary/30 text-xs shadow-xs">
+<div class="font-medium text-on-surface">German Market Whitepaper</div>
+<div class="text-[11px] text-primary font-semibold mt-1">Ready for review</div>
+</div>
+</div>
+</div>
+<!-- Col 3 -->
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant">
+<div class="flex items-center justify-between text-xs font-semibold text-on-surface-variant mb-2">
+<span class="">Dispatched</span>
+<span class="font-mono text-secondary">14</span>
+</div>
+<div class="space-y-2">
+<div class="p-2.5 bg-surface-container-lowest rounded border border-outline-variant text-xs opacity-75">
+<div class="font-medium text-on-surface">Product Hunt FAQ Sheet</div>
+<div class="text-[11px] text-[#2e7d32] mt-1">Confirmed Live</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 space-y-4 order-1 lg:order-2">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Pipeline Management</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">Kanban Board: From raw spark to syndicated</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          Visual pipeline mapped specifically for international marketing operations: Idea, Drafted, Translated/Localized, Channel Adapted, Ready, Published. Drag, drop, and inspect bottlenecks effortlessly.
+        </p>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Multi-market tags</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Custom stages</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Filter by region</span>
+</div>
+</div>
+</div>
+<!-- Row 5: Text Left, Mockup Right (Week Calendar) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-5 space-y-4">
+<span class="font-label-xs text-label-xs text-primary uppercase font-semibold tracking-wider">Chronology</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface">Week Calendar: High-density editorial rhythm</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          View your cross-border schedule across all global timezones simultaneously. Visual heat-indicators highlight content cadence gaps before they impact your organic reach.
+        </p>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Multi-timezone view</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Cadence balance</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs border border-outline-variant">Drag-reschedule</span>
+</div>
+</div>
+<div class="lg:col-span-7">
+<div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+<div class="grid grid-cols-5 gap-2 text-center text-xs font-mono text-secondary border-b border-outline-variant pb-2">
+<div class="">MON 23</div>
+<div class="">TUE 24</div>
+<div class="">WED 25</div>
+<div class="">THU 26</div>
+<div class="">FRI 27</div>
+</div>
+<div class="grid grid-cols-5 gap-2 pt-3 min-h-[140px]">
+<div class="space-y-1.5">
+<div class="p-2 bg-surface-container rounded border border-outline-variant text-[11px] text-left text-on-surface">Thread (US)</div>
+</div>
+<div class="space-y-1.5">
+<div class="p-2 bg-primary-fixed rounded border border-outline-variant text-[11px] text-left text-on-primary-fixed-variant font-medium">Newsletter</div>
+<div class="p-2 bg-surface-container rounded border border-outline-variant text-[11px] text-left text-on-surface">X Snippet</div>
+</div>
+<div class="space-y-1.5">
+<div class="p-2 bg-surface-container-low rounded border border-dashed border-outline-variant text-[11px] text-secondary text-center">Gap</div>
+</div>
+<div class="space-y-1.5">
+<div class="p-2 bg-surface-container rounded border border-outline-variant text-[11px] text-left text-on-surface">Dev Case Study</div>
+</div>
+<div class="space-y-1.5">
+<div class="p-2 bg-surface-container rounded border border-outline-variant text-[11px] text-left text-on-surface">Roundup</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. MANIFESTO -->
+<section class="w-full py-20 bg-surface-container-lowest border-y border-outline-variant my-12" id="manifesto">
+<div class="max-w-5xl mx-auto px-6">
+<div class="text-left mb-12">
+<span class="font-label-xs text-label-xs text-primary tracking-wider uppercase font-semibold block mb-2">Our Philosophy</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">The Quiet Tool Manifesto</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Why we built PublishKit as a local desktop tool rather than another bloated SaaS subscription.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Column 1: What We Do -->
+<div class="p-8 rounded-xl bg-surface-container-low/50 border border-outline-variant space-y-5">
+<div class="flex items-center gap-2 pb-2 border-b border-outline-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-[#2e7d32]"></span>
+<h3 class="font-h3 text-h3 text-on-surface">What We Do</h3>
+</div>
+<ul class="space-y-4 font-body-base text-body-base text-on-surface">
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-[#2e7d32] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Store all drafts &amp; media strictly on your local disk in standard SQLite.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-[#2e7d32] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Respect platform integrity — you remain logged in natively with zero bot shadowbans.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-[#2e7d32] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Offer single-purchase lifetime licenses with continuous utility updates.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-[#2e7d32] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Provide lightning-fast instant keyboard shortcuts (Cmd+K, J/K navigation).</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-[#2e7d32] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Design for silence: no notification badges, no gamified streaks, no upsell popups.</span>
+</li>
+</ul>
+</div>
+<!-- Column 2: What We Don't Do -->
+<div class="p-8 rounded-xl bg-surface-container-high/40 border border-outline-variant space-y-5">
+<div class="flex items-center gap-2 pb-2 border-b border-outline-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<h3 class="font-h3 text-h3 text-on-surface">What We Don't Do</h3>
+</div>
+<ul class="space-y-4 font-body-base text-body-base text-on-surface-variant">
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Never ask for your account passwords, cookies, or OAuth management tokens.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Never proxy your sensitive posts or IP addresses through untrusted shared servers.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Never trap your creative portfolio in a monthly recurring subscription tax.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Never inject AI hype text without your explicit local prompt.</span>
+</li>
+<li class="flex items-start gap-3">
+<svg class="w-5 h-5 text-secondary shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Never sell aggregate analytics or post impressions to advertising data brokers.</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- 6. PRICING SECTION -->
+<section class="w-full py-20 max-w-5xl mx-auto px-6" id="pricing">
+<div class="text-left mb-12">
+<span class="font-label-xs text-label-xs text-primary tracking-wider uppercase font-semibold block mb-2">Transparent Pricing</span>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">Pay once, own forever</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">No monthly invoices. No seat penalties. Run locally on all your personal machines.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+<!-- Card 1: PublishKit Free -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-xs flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-h2 text-h2 text-on-surface">PublishKit Free</h3>
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded bg-surface-container text-secondary">Community</span>
+</div>
+<div class="mb-4">
+<span class="text-3xl font-semibold text-on-surface">$0</span>
+<span class="text-secondary font-body-sm text-body-sm"> / forever</span>
+</div>
+<p class="text-secondary font-body-sm text-body-sm mb-6">For independent creators getting organized with local discipline.</p>
+<ul class="space-y-3 font-body-sm text-body-sm text-on-surface-variant border-t border-outline-variant pt-6">
+<li class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-primary">check</span>
+<span class="">Up to 3 active channels</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-primary">check</span>
+<span class="">Local SQLite storage &amp; backup</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-primary">check</span>
+<span class="">Today Queue &amp; Kanban view</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-primary">check</span>
+<span class="">Standard Markdown editor</span>
+</li>
+<li class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-primary">check</span>
+<span class="">Community forum support</span>
+</li>
+</ul>
+</div>
+<div class="mt-8 pt-6 border-t border-outline-variant">
+<button class="download-trigger w-full py-2.5 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low font-label-md text-label-md transition-colors shadow-xs cursor-pointer" type="button">
+            Download Free
+          </button>
+</div>
+</div>
+<!-- Card 2: PublishKit Pro Lifetime -->
+<div class="p-8 rounded-xl bg-surface-container-lowest border-2 border-primary shadow-md flex flex-col justify-between relative ring-1 ring-primary/20"><div class="absolute -top-3 right-6"><span class="px-3.5 py-1 rounded-full bg-primary text-on-primary font-label-xs text-label-xs font-semibold uppercase tracking-wider shadow-sm">Recommended</span></div><div><div class="flex items-center justify-between mb-4"><h3 class="font-h2 text-h2 text-on-surface font-semibold">PublishKit Pro Lifetime</h3><span class="font-mono text-xs px-2.5 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-medium">Lifetime License</span></div><div class="mb-4"><div class="flex items-baseline gap-2"><span class="text-4xl font-semibold text-on-surface">$69</span><span class="text-primary font-mono text-xs font-semibold uppercase tracking-wide">one-time payment</span></div><span class="text-secondary font-body-sm text-body-sm block mt-1">Lifetime access • Zero recurring fees</span></div><p class="text-secondary font-body-sm text-body-sm mb-6">For solo marketers &amp; cross-border growth teams requiring high velocity.</p><ul class="space-y-3 font-body-sm text-body-sm text-on-surface border-t border-outline-variant pt-6"><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class=""><strong>Unlimited</strong> channels &amp; accounts</span></li><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class="">Companion Extension (Chrome, Edge, Brave)</span></li><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class="">Multi-timezone Week Calendar matrix</span></li><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class="">Content+Inspector side-by-side view</span></li><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class="">CSV batch importer &amp; JSON asset export</span></li><li class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[18px] text-primary">check</span><span class="">Lifetime updates &amp; priority email support</span></li></ul></div><div class="mt-8 pt-6 border-t border-outline-variant space-y-2"><button class="pro-modal-trigger w-full py-3 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-on-primary-container transition-colors shadow-sm font-medium cursor-pointer" type="button">Get Lifetime License — $69</button><p class="text-center font-mono text-[11px] text-secondary">30-day money-back guarantee • Valid for 3 personal machines</p></div></div>
+</div>
+</section>
+<!-- 7. FAQ SECTION -->
+<section class="w-full py-16 max-w-4xl mx-auto px-6" id="faq">
+<div class="text-left mb-12">
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">Frequently Asked Questions</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Everything you need to know about PublishKit and our local-first architecture.</p>
+</div>
+<div class="space-y-3" id="faq-accordion">
+<!-- FAQ 1 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">Why not use automated social media schedulers like Buffer or Hootsuite?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          Automated cloud schedulers use generic API bots that frequently trigger algorithmic suppression or shadowbans on modern platforms. PublishKit gives you the speed of batch drafting while publishing natively through your own authenticated browser session.
+        </div>
+</div>
+<!-- FAQ 2 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">How does the desktop app communicate with my web browser?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          PublishKit uses an encrypted local loopback connection on 127.0.0.1. The companion extension only reads and sends commands to your local desktop client. Zero traffic ever leaves your computer.
+        </div>
+</div>
+<!-- FAQ 3 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">What happens if I switch from Windows to macOS?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          Your Pro license covers up to 3 personal machines across both Windows and macOS. Your local database can be backed up or synced via iCloud, OneDrive, or Dropbox seamlessly.
+        </div>
+</div>
+<!-- FAQ 4 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">Can I manage multiple accounts on the same platform (e.g., 3 X accounts)?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          Yes. You can configure multiple profiles per channel. When triggered, the companion extension will ensure you are targeting the appropriate native profile.
+        </div>
+</div>
+<!-- FAQ 5 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">Is my content data locked in PublishKit?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          Never. Your entire library is stored in a clean SQLite database and can be exported as structured Markdown files and JSON anytime with one click.
+        </div>
+</div>
+<!-- FAQ 6 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">Does PublishKit require an active internet connection to write?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          No. PublishKit is 100% offline-first. You can write, organize, schedule, and tag content while flying or disconnected. You only need connectivity when you choose to dispatch posts.
+        </div>
+</div>
+<!-- FAQ 7 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">What does 'Lifetime' really mean for the Pro license?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          You receive all v1.x and v2.x updates forever. No recurring monthly credit card charges. We believe essential desk tools should be owned, not rented.
+        </div>
+</div>
+<!-- FAQ 8 -->
+<div class="rounded-lg border border-outline-variant bg-surface-container-lowest overflow-hidden transition-all">
+<button class="faq-toggle w-full p-5 text-left flex items-center justify-between gap-4" type="button">
+<span class="font-h3 text-h3 text-on-surface">How do updates work for the desktop app and extension?</span>
+<span class="material-symbols-outlined text-secondary transition-transform">expand_more</span>
+</button>
+<div class="faq-content hidden px-5 pb-5 text-on-surface-variant font-body-base text-body-base leading-relaxed border-t border-outline-variant/30 pt-3">
+          The desktop app features silent, delta background updates with release notes. The browser extension updates automatically through the Chrome Web Store.
+        </div>
+</div>
+</div>
+</section>
+<!-- 8. FINAL CTA BANNER -->
+<section class="w-full my-12 max-w-5xl mx-auto px-6" id="download">
+<div class="p-10 md:p-14 bg-surface-container-lowest border border-outline-variant rounded-2xl text-center shadow-xs">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high border border-outline-variant mx-auto flex items-center justify-center mb-6">
+<div class="w-4 h-4 bg-primary rounded-sm"></div>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-2xl md:text-3xl text-on-surface mb-3">Ready for calm, controlled publishing?</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto mb-8">
+        Join hundreds of cross-border marketers, founders, and creators who chose clarity over chaotic tabs.
+      </p>
+<div class="flex flex-wrap items-center justify-center gap-4">
+<a class="download-trigger inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-on-primary-container transition-colors shadow-xs cursor-pointer" href="#download">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 16 16">
+<path d="M0 2.222L6.444 1.333V7.556H0V2.222zm7.111-.989L16 0v7.556H7.111V1.233zM0 8.444h6.444v6.223L0 13.778V8.444zm7.111 0H16V16l-8.889-1.233V8.444z"></path>
+</svg>
+<span class="">Download for Windows (v1.4)</span>
+</a>
+<a class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low font-label-md text-label-md transition-colors shadow-xs" href="#">
+<span class="">Explore GitHub Architecture</span>
+</a>
+</div>
+<p class="mt-4 font-mono text-xs text-secondary">
+        Windows 10/11 (64-bit) • macOS (Universal Apple Silicon &amp; Intel) • 82 MB installer
+      </p>
+</div>
+</section>
+</div></main>
+<!-- TOAST CONTAINER FOR DOWNLOAD NOTIFICATIONS -->
+<div aria-live="polite" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none" id="toast-container"></div>
+<!-- QUIET TOOL PRO MODAL DIALOG -->
+<div aria-hidden="true" class="fixed inset-0 z-[120] hidden items-center justify-center bg-inverse-surface/40 backdrop-blur-xs p-4 sm:p-6 transition-opacity duration-200" id="pro-modal">
+<div class="relative w-full max-w-xl rounded-2xl bg-surface-container-lowest border border-outline-variant shadow-xl p-6 sm:p-8 transform transition-all duration-200 scale-95 opacity-0" id="pro-modal-card">
+<!-- Header -->
+<div class="flex items-start justify-between gap-4 pb-4 border-b border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-primary-fixed flex items-center justify-center text-on-primary-fixed border border-outline-variant/60 shrink-0">
+<span class="material-symbols-outlined text-[20px] text-primary">key</span>
+</div>
+<div>
+<h3 class="font-h2 text-h2 text-on-surface font-semibold" id="pro-modal-title">Get PublishKit Pro Lifetime</h3>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">One-time purchase • $69 perpetual license for up to 3 machines</p>
+</div>
+</div>
+<button aria-label="Close modal" class="p-1 rounded-md text-secondary hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer" id="close-modal-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- License Format Pill Highlight -->
+<div class="my-5 p-3.5 rounded-lg bg-surface-container-low border border-outline-variant flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0">verified</span>
+<div class="font-mono text-xs text-on-surface">
+<span class="text-secondary block mb-0.5 font-sans font-medium text-[11px] uppercase tracking-wide">Key Format</span>
+        Your license key begins with prefix <span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-semibold text-primary">PKPRO-</span> (e.g. <span class="text-on-surface-variant font-mono">PKPRO-7A9B-42K9-XXXX</span>)
+      </div>
+</div>
+<!-- Step-by-Step Instructions -->
+<div class="space-y-3.5 mb-6">
+<div class="flex items-start gap-3">
+<span class="w-6 h-6 rounded-full bg-surface-container-high border border-outline-variant text-on-surface font-mono text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Complete checkout via Stripe to immediately receive your <code class="font-mono text-xs font-semibold text-on-surface bg-surface-container px-1 py-0.5 rounded">PKPRO-</code> key by email.
+        </p>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-6 h-6 rounded-full bg-surface-container-high border border-outline-variant text-on-surface font-mono text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          In the PublishKit desktop app, open <span class="font-semibold text-on-surface">Settings</span> (<kbd class="px-1.5 py-0.5 bg-surface-container border border-outline-variant rounded font-mono text-[11px]">Cmd/Ctrl + ,</kbd>) → <span class="font-medium text-on-surface">‘License &amp; Sync’</span>.
+        </p>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-6 h-6 rounded-full bg-surface-container-high border border-outline-variant text-on-surface font-mono text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Paste your <code class="font-mono text-xs font-semibold text-on-surface bg-surface-container px-1 py-0.5 rounded">PKPRO-</code> key to unlock unlimited channels and instant loopback extension pairing.
+        </p>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="pt-4 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-end gap-3">
+<button class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container-low border border-outline-variant font-label-md text-label-md transition-colors cursor-pointer" id="dismiss-modal-btn" type="button">
+        Close / Enter Key Later
+      </button>
+<button class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-primary text-on-primary hover:bg-on-primary-container font-label-md text-label-md transition-colors shadow-xs font-medium cursor-pointer inline-flex items-center justify-center gap-1.5" id="checkout-btn" type="button">
+<span>Proceed to Checkout ($69)</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<footer class="w-full border-t border-surface-variant bg-surface-container-low mt-20"><div class="max-w-[1440px] mx-auto px-6 py-12 flex flex-col md:flex-row items-center justify-between gap-6"><div class="flex items-center gap-3"><div class="w-6 h-6 rounded-md bg-surface-container-high border border-outline-variant flex items-center justify-center"><div class="w-2.5 h-2.5 bg-primary rounded-xs"></div></div><span class="font-h3 text-h3 text-on-surface">PublishKit</span><span class="text-outline-variant">•</span><span class="font-body-sm text-body-sm text-on-surface-variant">Quiet Tool Studio</span><span class="text-outline-variant">•</span><span class="font-body-sm text-body-sm text-secondary">© 2025</span></div><div class="flex flex-wrap items-center gap-6"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="privacy-policy" href="#">Privacy Policy</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="terms-of-service" href="#">Terms of Service</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="security-architecture" href="#">Security Architecture</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="contact" href="#">Contact &amp; GitHub</a></div></div></footer>
+<!-- Interactive Scripts: FAQ Accordion, Download Toast, Pro Activation Modal -->
+<script>
+  // FAQ Accordion
+  document.querySelectorAll('.faq-toggle').forEach(button => {
+    button.addEventListener('click', () => {
+      const content = button.nextElementSibling;
+      const icon = button.querySelector('.material-symbols-outlined');
+      const isHidden = content.classList.contains('hidden');
+
+      document.querySelectorAll('.faq-content').forEach(c => c.classList.add('hidden'));
+      document.querySelectorAll('.faq-toggle .material-symbols-outlined').forEach(i => i.style.transform = 'rotate(0deg)');
+
+      if (isHidden) {
+        content.classList.remove('hidden');
+        if (icon) icon.style.transform = 'rotate(180deg)';
+      }
+    });
+  });
+
+  // 1. Download Toast Notification
+  function showDownloadToast() {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'pointer-events-auto flex items-center gap-3 p-3.5 sm:p-4 rounded-xl bg-surface-container-lowest border border-outline-variant shadow-lg text-on-surface max-w-md w-full transition-all duration-300 transform translate-y-4 opacity-0';
+    toast.innerHTML = `
+      <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0 border border-outline-variant text-primary">
+        <span class="material-symbols-outlined text-[18px]">downloading</span>
+      </div>
+      <div class="flex-1 pr-1">
+        <div class="font-label-sm text-label-sm font-semibold text-on-surface">Starting download</div>
+        <div class="font-mono text-[11px] text-on-surface-variant leading-tight mt-0.5">
+          PublishKit-v1.4-x64.exe (82 MB) • Verifying SHA-256 checksum...
+        </div>
+      </div>
+      <button class="toast-close p-1 rounded hover:bg-surface-container text-secondary hover:text-on-surface cursor-pointer shrink-0 transition-colors" aria-label="Dismiss toast">
+        <span class="material-symbols-outlined text-[16px]">close</span>
+      </button>
+    `;
+
+    container.appendChild(toast);
+
+    // Trigger transition in
+    requestAnimationFrame(() => {
+      toast.classList.remove('translate-y-4', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+    });
+
+    const dismissToast = () => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-2', 'opacity-0');
+      setTimeout(() => {
+        if (toast.parentElement) toast.parentElement.removeChild(toast);
+      }, 300);
+    };
+
+    const timer = setTimeout(dismissToast, 4000);
+
+    const closeBtn = toast.querySelector('.toast-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearTimeout(timer);
+        dismissToast();
+      });
+    }
+  }
+
+  document.querySelectorAll('.download-trigger').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      // If it has #download anchor, allow smooth scroll or prevent default for pure download demo
+      e.preventDefault();
+      showDownloadToast();
+    });
+  });
+
+  // 2. Quiet Tool Pro Activation Modal
+  const modal = document.getElementById('pro-modal');
+  const modalCard = document.getElementById('pro-modal-card');
+  const closeModalBtn = document.getElementById('close-modal-btn');
+  const dismissModalBtn = document.getElementById('dismiss-modal-btn');
+  const checkoutBtn = document.getElementById('checkout-btn');
+
+  function openProModal() {
+    if (!modal || !modalCard) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    modal.setAttribute('aria-hidden', 'false');
+
+    // Smooth entrance
+    requestAnimationFrame(() => {
+      modalCard.classList.remove('scale-95', 'opacity-0');
+      modalCard.classList.add('scale-100', 'opacity-100');
+    });
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeProModal() {
+    if (!modal || !modalCard) return;
+    modalCard.classList.remove('scale-100', 'opacity-100');
+    modalCard.classList.add('scale-95', 'opacity-0');
+
+    setTimeout(() => {
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }, 200);
+  }
+
+  document.querySelectorAll('.pro-modal-trigger').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openProModal();
+    });
+  });
+
+  if (closeModalBtn) closeModalBtn.addEventListener('click', closeProModal);
+  if (dismissModalBtn) dismissModalBtn.addEventListener('click', closeProModal);
+
+  // Close when clicking modal backdrop outside the card
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeProModal();
+      }
+    });
+  }
+
+  // Handle ESC key to dismiss modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closeProModal();
+    }
+  });
+
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+      checkoutBtn.innerHTML = `
+        <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+        <span>Redirecting to Stripe...</span>
+      `;
+      setTimeout(() => {
+        closeProModal();
+        checkoutBtn.innerHTML = `
+          <span>Proceed to Checkout ($69)</span>
+          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+        `;
+      }, 1200);
+    });
+  }
+</script>
+</body></html>

@@ -1,25 +1,39 @@
 <script setup lang="ts">
 import type { PublishTask } from "@publishkit/shared";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { overdueMeta } from "../utils/taskGroups";
 
-defineProps<{
+const props = defineProps<{
   task: PublishTask;
+  showOverdue?: boolean;
 }>();
 
 const { t } = useI18n();
+const overdue = computed(() => (props.showOverdue ? overdueMeta(props.task) : null));
 </script>
 
 <template>
-  <article class="task-card">
+  <article class="task-card" :class="{ overdue: !!overdue }">
     <div class="head">
       <span class="channel-dot" :style="{ background: task.channel.color }" />
       <div class="titles">
         <strong>{{ task.content.title }}</strong>
         <span class="sub">
+          <span v-if="task.projectName" class="channel-name">{{ task.projectName }}</span>
+          <span v-if="task.projectName" class="sep">·</span>
           <span class="channel-name">{{ task.channel.name }}</span>
           <span class="sep">·</span>
           <span>{{ task.content.language }}</span>
         </span>
+        <p v-if="overdue" class="overdue-badge">
+          {{
+            t("tasks.overdueBadge", {
+              days: overdue.days,
+              date: overdue.scheduledDate,
+            })
+          }}
+        </p>
       </div>
       <span class="pk-status" :data-status="task.status">
         {{ t(`tasks.status_${task.status}`, task.status) }}
@@ -99,6 +113,18 @@ const { t } = useI18n();
 .blocked-reason {
   margin: var(--pk-space-2) 0 0;
   font-size: 13px;
+  line-height: 1.4;
+  color: var(--pk-status-blocked);
+  font-weight: 500;
+}
+
+.task-card.overdue {
+  border-color: color-mix(in srgb, var(--pk-status-blocked) 35%, var(--pk-border-strong));
+}
+
+.overdue-badge {
+  margin: 6px 0 0;
+  font-size: 12px;
   line-height: 1.4;
   color: var(--pk-status-blocked);
   font-weight: 500;

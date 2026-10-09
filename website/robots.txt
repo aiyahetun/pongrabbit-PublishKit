@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://get.pongrabbit.cn/sitemap.xml
+Sitemap: https://get.pongrabbit.com/sitemap.xml

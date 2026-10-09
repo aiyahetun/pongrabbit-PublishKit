@@ -31,6 +31,10 @@ pub struct SplitPreview {
     pub section_kind: SectionKind,
     /// Whether this block is pre-selected for import (false for meta / ops text).
     pub recommended: bool,
+    #[serde(default)]
+    pub keywords: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pair_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -146,6 +150,8 @@ pub fn preview_splits_from_content(
                 language,
                 section_kind,
                 recommended,
+                keywords: Vec::new(),
+                pair_key: None,
             }
         })
         .collect())

@@ -250,6 +250,25 @@ fn merge_thumb_dir(src: &Path, dest: &Path) -> Result<(), String> {
     Ok(())
 }
 
+fn backup_has_table(conn: &rusqlite::Connection, name: &str) -> Result<bool, String> {
+    let count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM backup.sqlite_master WHERE type = 'table' AND name = ?1",
+            [name],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+    Ok(count > 0)
+}
+
+fn backup_has_column(conn: &rusqlite::Connection, table: &str, column: &str) -> Result<bool, String> {
+    let sql = format!("SELECT COUNT(*) FROM pragma_table_info('{table}', 'backup') WHERE name = ?1");
+    let count: i64 = conn
+        .query_row(&sql, [column], |row| row.get(0))
+        .map_err(|e| e.to_string())?;
+    Ok(count > 0)
+}
+
 pub fn merge_backup_database(
     main: &rusqlite::Connection,
     backup_db_path: &Path,
@@ -273,15 +292,35 @@ pub fn merge_backup_database(
             "INSERT OR IGNORE INTO source_documents
              SELECT id, path, title, hash, last_scanned_at FROM backup.source_documents",
         )?;
-        let content_items_added = merge(
-            "INSERT OR IGNORE INTO content_items
-             SELECT id, source_document_id, source_path, source_anchor, title, language, fields_json, created_at, updated_at
-             FROM backup.content_items",
-        )?;
-        let media_assets_added = merge(
-            "INSERT OR IGNORE INTO media_assets
-             SELECT id, path, file_name, kind, size_bytes, mtime, indexed_at FROM backup.media_assets",
-        )?;
+        let content_items_added = if backup_has_column(main, "content_items", "project_id")? {
+            merge(
+                "INSERT OR IGNORE INTO content_items
+                 (id, source_document_id, source_path, source_anchor, title, language, fields_json, created_at, updated_at, project_id, pair_id)
+                 SELECT id, source_document_id, source_path, source_anchor, title, language, fields_json, created_at, updated_at, project_id, pair_id
+                 FROM backup.content_items",
+            )?
+        } else {
+            merge(
+                "INSERT OR IGNORE INTO content_items
+                 (id, source_document_id, source_path, source_anchor, title, language, fields_json, created_at, updated_at)
+                 SELECT id, source_document_id, source_path, source_anchor, title, language, fields_json, created_at, updated_at
+                 FROM backup.content_items",
+            )?
+        };
+        let media_assets_added = if backup_has_column(main, "media_assets", "project_id")? {
+            merge(
+                "INSERT OR IGNORE INTO media_assets
+                 (id, path, file_name, kind, size_bytes, mtime, indexed_at, project_id, width, height, thumb_status, thumb_error)
+                 SELECT id, path, file_name, kind, size_bytes, mtime, indexed_at, project_id, width, height, thumb_status, thumb_error
+                 FROM backup.media_assets",
+            )?
+        } else {
+            merge(
+                "INSERT OR IGNORE INTO media_assets
+                 (id, path, file_name, kind, size_bytes, mtime, indexed_at)
+                 SELECT id, path, file_name, kind, size_bytes, mtime, indexed_at FROM backup.media_assets",
+            )?
+        };
         let content_media_added = merge(
             "INSERT OR IGNORE INTO content_media
              SELECT content_item_id, media_asset_id, sort_order FROM backup.content_media",
@@ -292,6 +331,20 @@ pub fn merge_backup_database(
              SELECT id, content_item_id, channel_id, status, scheduled_at, published_at, publish_url, note, NULL, created_at, updated_at
              FROM backup.publish_tasks",
         )?;
+        if backup_has_table(main, "projects")? {
+            merge(
+                "INSERT OR IGNORE INTO projects
+                 SELECT id, name, color, brand_domestic, brand_overseas, archived_at, created_at, updated_at
+                 FROM backup.projects",
+            )?;
+        }
+        if backup_has_table(main, "project_roots")? {
+            merge(
+                "INSERT OR IGNORE INTO project_roots
+                 SELECT id, project_id, path, kind FROM backup.project_roots",
+            )?;
+        }
+        crate::db::assign_orphan_rows(main)?;
         Ok(MergeBackupSummary {
             source_documents_added,
             content_items_added,

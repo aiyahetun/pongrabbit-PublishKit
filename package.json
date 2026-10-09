@@ -1,7 +1,7 @@
 {
   "name": "pongrabbit-publishkit",
   "private": true,
-  "version": "0.3.4",
+  "version": "0.3.12",
   "description": "PublishKit — local-first content ops for cross-border marketing",
   "scripts": {
     "dev": "npm run dev --workspace @publishkit/desktop",

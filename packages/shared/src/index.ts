@@ -32,6 +32,8 @@ export type WorkspaceSettings = {
 
   projectName?: string;
 
+  currentProjectId?: string;
+
   brandDomestic?: string;
 
   brandOverseas?: string;
@@ -102,6 +104,10 @@ export type SplitPreview = {
 
   recommended: boolean;
 
+  keywords?: string[];
+
+  pairKey?: string;
+
 };
 
 
@@ -119,6 +125,16 @@ export type ContentItem = {
   body: string;
 
   createdAt: string;
+
+  keywords?: string[];
+
+  projectId?: string;
+
+  projectName?: string;
+
+  projectColor?: string;
+
+  pairId?: string;
 
 };
 
@@ -194,6 +210,10 @@ export type TableRowPreview = {
 
   recommended: boolean;
 
+  keywords?: string[];
+
+  pairKey?: string;
+
 };
 
 
@@ -210,7 +230,37 @@ export type TableImportPreview = {
 
   channelColumn?: string;
 
+  keywordColumn?: string;
+
   rows: TableRowPreview[];
+
+};
+
+
+
+export type Project = {
+
+  id: string;
+
+  name: string;
+
+  color: string;
+
+  brandDomestic?: string;
+
+  brandOverseas?: string;
+
+  archivedAt?: string;
+
+  contentCount: number;
+
+  mediaCount: number;
+
+  copyRoot?: string;
+
+  mediaRoot?: string;
+
+  videoRoot?: string;
 
 };
 
@@ -227,6 +277,8 @@ export type Channel = {
   color: string;
 
   isCustom: boolean;
+
+  keywordHash?: boolean;
 
 };
 
@@ -276,7 +328,15 @@ export type PublishTask = {
 
     body: string;
 
+    keywords?: string[];
+
   };
+
+  projectId?: string;
+
+  projectName?: string;
+
+  projectColor?: string;
 
 };
 
@@ -297,6 +357,16 @@ export type MediaAsset = {
   indexedAt: string;
 
   thumbPath?: string;
+
+  width?: number;
+
+  height?: number;
+
+  thumbStatus?: string;
+
+  thumbError?: string;
+
+  projectId?: string;
 
 };
 
@@ -389,6 +459,8 @@ export type CalendarEntry = {
   contentTitle: string;
 
   publishUrl: string;
+
+  projectName?: string;
 
 };
 

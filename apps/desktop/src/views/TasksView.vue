@@ -4,12 +4,15 @@ import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import type { PublishTask, TaskStatus } from "@publishkit/shared";
+import BatchPlanWizard from "../components/BatchPlanWizard.vue";
+import MediaLinkDialog from "../components/MediaLinkDialog.vue";
 import TaskCard from "../components/TaskCard.vue";
 import TaskActionBar from "../components/TaskActionBar.vue";
 import TasksKanbanBoard from "../components/TasksKanbanBoard.vue";
 import { copyFirstLinkedImage, openLinkedImagesFolder } from "../utils/taskMediaActions";
-import { buildTaskSections, type TaskSection } from "../utils/taskGroups";
+import { buildTaskSections, taskEventDate, type TaskSection } from "../utils/taskGroups";
 import { confirmPublishIfDuplicate } from "../utils/confirmPublish";
+import { confirmArchiveTask } from "../utils/confirmArchive";
 
 const { t, locale } = useI18n();
 const tasks = ref<PublishTask[]>([]);
@@ -20,12 +23,15 @@ const error = ref("");
 const copiedId = ref("");
 const publishUrls = ref<Record<string, string>>({});
 const scheduledDates = ref<Record<string, string>>({});
+const publishedDates = ref<Record<string, string>>({});
 const taskNotes = ref<Record<string, string>>({});
 const blockedReasonInputs = ref<Record<string, string>>({});
 const collapsed = ref<Set<string>>(new Set());
 const notice = ref("");
+const showBatch = ref(false);
+const mediaTarget = ref<PublishTask | null>(null);
 
-const filters: Array<"all" | TaskStatus> = ["all", "draft", "ready", "blocked", "published"];
+const filters: Array<"all" | TaskStatus> = ["all", "draft", "ready", "blocked", "published", "archived"];
 
 const sections = computed(() => buildTaskSections(tasks.value, filter.value));
 
@@ -41,6 +47,7 @@ const hasTasks = computed(() =>
 function syncTaskFields(list: PublishTask[]) {
   const next: Record<string, string> = { ...publishUrls.value };
   const nextDates: Record<string, string> = { ...scheduledDates.value };
+  const nextPublished: Record<string, string> = { ...publishedDates.value };
   const nextNotes: Record<string, string> = { ...taskNotes.value };
   const nextBlocked: Record<string, string> = { ...blockedReasonInputs.value };
   for (const task of list) {
@@ -51,6 +58,9 @@ function syncTaskFields(list: PublishTask[]) {
     } else if (task.scheduledAt) {
       nextDates[task.id] = task.scheduledAt.slice(0, 10);
     }
+    if (!(task.id in nextPublished)) {
+      nextPublished[task.id] = taskEventDate(task);
+    }
     if (!(task.id in nextNotes)) nextNotes[task.id] = task.note || "";
     if (!(task.id in nextBlocked)) {
       nextBlocked[task.id] = task.blockedReason || "";
@@ -60,6 +70,7 @@ function syncTaskFields(list: PublishTask[]) {
   }
   publishUrls.value = next;
   scheduledDates.value = nextDates;
+  publishedDates.value = nextPublished;
   taskNotes.value = nextNotes;
   blockedReasonInputs.value = nextBlocked;
 }
@@ -173,7 +184,7 @@ async function openTaskImagesFolder(task: PublishTask) {
 async function updateTask(
   task: PublishTask,
   status: TaskStatus,
-  options?: { blockedReason?: string | null }
+  options?: { blockedReason?: string | null; publishedDate?: string | null }
 ) {
   error.value = "";
   notice.value = "";
@@ -188,6 +199,7 @@ async function updateTask(
       publishUrl: publishUrls.value[task.id]?.trim() || null,
       note: null,
       blockedReason: options?.blockedReason ?? null,
+      publishedDate: options?.publishedDate ?? null,
     });
     await loadTasks();
   } catch (e) {
@@ -235,7 +247,7 @@ async function saveTaskChecklist(task: PublishTask, items: string[]) {
   }
 }
 
-async function saveScheduled(task: PublishTask) {
+async function saveScheduled(task: PublishTask, isReschedule = false) {
   error.value = "";
   notice.value = "";
   try {
@@ -243,7 +255,34 @@ async function saveScheduled(task: PublishTask) {
       taskId: task.id,
       scheduledDate: scheduledDates.value[task.id] ?? "",
     });
-    notice.value = t("tasks.scheduledSaved");
+    notice.value = t(isReschedule ? "tasks.rescheduleDone" : "tasks.scheduledSaved");
+    await loadTasks();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function backfillPublish(task: PublishTask) {
+  await updateTask(task, "published", {
+    publishedDate: publishedDates.value[task.id] || taskEventDate(task),
+  });
+}
+
+async function archiveTask(task: PublishTask) {
+  error.value = "";
+  notice.value = "";
+  const ok = await confirmArchiveTask(t);
+  if (!ok) return;
+  try {
+    await invoke("update_publish_task_status_cmd", {
+      taskId: task.id,
+      status: "archived",
+      publishUrl: null,
+      note: null,
+      blockedReason: null,
+      publishedDate: null,
+    });
+    notice.value = t("tasks.archiveDone");
     await loadTasks();
   } catch (e) {
     error.value = String(e);
@@ -288,6 +327,12 @@ function statusLabel(status: string) {
   return t(`tasks.status_${status}`, status);
 }
 
+function onBatchDone(message: string) {
+  showBatch.value = false;
+  notice.value = message;
+  void loadTasks();
+}
+
 watch(filter, () => {
   collapsed.value = new Set(
     sections.value.filter((section) => section.defaultCollapsed).map((section) => section.key)
@@ -314,8 +359,13 @@ onMounted(loadTasks);
         <button type="button" class="pk-btn pk-btn--secondary" :disabled="loading" @click="loadTasks">
           {{ t("tasks.refresh") }}
         </button>
+        <button type="button" class="pk-btn pk-btn--primary" @click="showBatch = true">
+          {{ t("batch.title") }}
+        </button>
       </div>
     </header>
+
+    <BatchPlanWizard v-if="showBatch" @close="showBatch = false" @done="onBatchDone" />
 
     <p v-if="notice" class="notice">{{ notice }}</p>
 
@@ -368,6 +418,7 @@ onMounted(loadTasks);
           @update:blocked-reason-input="blockedReasonInputs[task.id] = $event"
           @copy="copyTask(task)"
           @copy-single-image="copyTaskSingleImage(task)"
+          @link-media="mediaTarget = task"
           @open-linked-images-folder="openTaskImagesFolder(task)"
           @export-pack="exportTaskPack(task)"
           @mark-ready="updateTask(task, 'ready')"
@@ -392,36 +443,49 @@ onMounted(loadTasks);
 
         <ul v-if="!isCollapsed(group.key)" class="list">
           <li v-for="task in group.tasks" :key="task.id">
-            <TaskCard :task="task">
+            <TaskCard :task="task" :show-overdue="group.key === 'ready_overdue'">
               <TaskActionBar
                 :task="task"
+                :overdue="group.key === 'ready_overdue'"
                 :copied="copiedId === task.id"
                 :publish-url="publishUrls[task.id] ?? ''"
                 :scheduled-date="scheduledDates[task.id] ?? ''"
+                :published-date="publishedDates[task.id] ?? ''"
                 :task-note="taskNotes[task.id] ?? ''"
                 :blocked-reason-input="blockedReasonInputs[task.id] ?? ''"
                 @update:publish-url="publishUrls[task.id] = $event"
                 @update:scheduled-date="scheduledDates[task.id] = $event"
+                @update:published-date="publishedDates[task.id] = $event"
                 @update:task-note="taskNotes[task.id] = $event"
                 @update:blocked-reason-input="blockedReasonInputs[task.id] = $event"
                 @copy="copyTask(task)"
                 @copy-single-image="copyTaskSingleImage(task)"
+                @link-media="mediaTarget = task"
                 @open-linked-images-folder="openTaskImagesFolder(task)"
                 @export-pack="exportTaskPack(task)"
                 @mark-ready="updateTask(task, 'ready')"
                 @mark-published="updateTask(task, 'published')"
+                @backfill-publish="backfillPublish(task)"
+                @archive="archiveTask(task)"
                 @undo-publish="updateTask(task, 'draft')"
                 @mark-blocked="markBlocked(task)"
                 @unblock="unblockTask(task)"
                 @save-note="saveTaskNote(task)"
                 @save-checklist="saveTaskChecklist(task, $event)"
-                @save-scheduled="saveScheduled(task)"
+                @save-scheduled="saveScheduled(task, group.key === 'ready_overdue')"
               />
             </TaskCard>
           </li>
         </ul>
       </section>
     </div>
+
+    <MediaLinkDialog
+      v-if="mediaTarget"
+      :content-id="mediaTarget.content.id"
+      :content-title="mediaTarget.content.title"
+      @close="mediaTarget = null"
+    />
   </section>
 </template>
 

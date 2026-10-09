@@ -157,15 +157,16 @@ PublishKit 是**效率型内容运营工具**，不是营销官网，也不是�
 
 | 类型 | 样式 | 用途 |
 |------|------|------|
-| Primary | 填充 `--pk-accent`，字 `--pk-inverse` | 准备发布、标记已发布、保存 |
-| Secondary | 白底 + `--pk-border-strong` 边框 | 导出、取消 |
-| Ghost | 无边框，hover 底 `--pk-bg-alt` | 复制、次要操作 |
+| Primary | 填充 `--pk-accent`，字 `--pk-inverse`。高 30px，字号 13px，字重 600 | 一块区域里的主操作：复制正文、开始扫描、任务页的排期导入、新建、保存 |
+| Success | 填充 `--pk-status-ready`，白字。尺寸同 Primary | 标为已发布、补记发布 |
+| Secondary | 白底 + `--pk-border-strong` 边框。高 26px，字号 12px | 导出、刷新、来源页的排期导入、选择文件夹 |
+| Ghost | 无边框，字 `--pk-ink-muted`，字重 400，hover 底 `--pk-bg-alt`。高 26px，字号 12px | 复制标题、复制关联词、复制全文、关闭 |
 | Danger | 字/边 `--pk-status-blocked` | 删除链接、归档 |
 
-- 高度：32px（紧凑）/ 36px（默认）
-- 圆角：`--pk-radius-md`
+- 圆角：6px（按钮）
 - 图标按钮：32×32，必须带 tooltip 与 aria-label
 - **同一视觉区域 Primary 最多 1 个**
+- 0.3.8 起的尺寸和「标为已发布用 Success」见 [排期导入与复制格式方案](PublishKit-排期导入与复制格式方案.md) §4
 
 ### 3.2 输入与搜索
 

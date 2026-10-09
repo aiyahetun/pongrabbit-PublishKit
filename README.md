@@ -21,6 +21,13 @@
 
 打 tag 触发 GitHub Actions 构建安装包（见 [开发环境 · GitHub Release](./docs/开发环境.md#github-releaseci)）。
 
+| 渠道 | 链接 |
+|------|------|
+| 官网（中文） | https://get.pongrabbit.cn/zh/ |
+| 官网（英文） | https://get.pongrabbit.com/en/ |
+| 桌面端下载 | https://github.com/aiyahetun/pongrabbit-PublishKit/releases/latest |
+| 浏览器插件 | https://chromewebstore.google.com/detail/publishkit-companion/dijkbipanbpkgndbhonecpfnladaiipj |
+
 ## 本地开发
 
 详见 [docs/开发环境.md](./docs/开发环境.md)。
