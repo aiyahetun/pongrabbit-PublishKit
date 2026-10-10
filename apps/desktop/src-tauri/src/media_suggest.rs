@@ -98,32 +98,44 @@ pub fn score_media_for_content(
 #[cfg(test)]
 mod tests {
     use super::score_media_for_content;
+    use std::path::PathBuf;
+
+    fn fixture_path(parts: &[&str]) -> String {
+        let mut path = PathBuf::from(std::env::temp_dir());
+        for part in parts {
+            path.push(part);
+        }
+        path.to_string_lossy().into_owned()
+    }
 
     #[test]
     fn same_directory_scores() {
+        let root = fixture_path(&["publishkit-media-suggest-test", "docs"]);
         let (score, reason) = score_media_for_content(
-            r"C:\docs\post.md",
+            &fixture_path(&["publishkit-media-suggest-test", "docs", "post.md"]),
             "Post title",
-            r"C:\docs\cover.jpg",
+            &fixture_path(&["publishkit-media-suggest-test", "docs", "cover.jpg"]),
             "cover.jpg",
             None,
             None,
         );
-        assert!(score >= 100);
+        assert!(score >= 100, "score={score} for root {root}");
         assert_eq!(reason, "same_dir");
     }
 
     #[test]
     fn mirror_roots_scores() {
+        let copy_root = fixture_path(&["publishkit-media-suggest-test", "copy"]);
+        let media_root = fixture_path(&["publishkit-media-suggest-test", "media"]);
         let (score, reason) = score_media_for_content(
-            r"C:\copy\2024\spring.md",
+            &fixture_path(&["publishkit-media-suggest-test", "copy", "2024", "spring.md"]),
             "Spring",
-            r"D:\media\2024\spring.jpg",
+            &fixture_path(&["publishkit-media-suggest-test", "media", "2024", "spring.jpg"]),
             "spring.jpg",
-            Some(r"C:\copy"),
-            Some(r"D:\media"),
+            Some(&copy_root),
+            Some(&media_root),
         );
-        assert!(score >= 90);
+        assert!(score >= 90, "score={score}");
         assert_eq!(reason, "mirror_path");
     }
 }
