@@ -70,7 +70,7 @@ if (zh) {
   expect(zh, "zh", /hreflang="x-default"/, "hreflang x-default");
   expectAbsOg(zh, "zh", "get.pongrabbit.cn");
   expect(zh, "zh", /name="twitter:card" content="summary_large_image"/, "twitter:card");
-  expect(zh, "zh", /能够帮助你管理自媒体发布任务和内容的轻应用/, "meta description");
+  expect(zh, "zh", /帖仍由你在平台上亲手发出/, "meta description");
   expect(zh, "zh", /更「轻」的自媒体发布内容管理助手/, "title");
   rejectTaizhang(zh, "zh");
   rejectIfFound(zh, "zh", /og:image" content="\.\./, "og:image must not be relative");
@@ -82,7 +82,7 @@ if (en) {
   expect(en, "en", /rel="canonical" href="https:\/\/get\.pongrabbit\.com\/en\/"/, "canonical URL");
   expect(en, "en", /hreflang="zh-CN"/, "hreflang zh-CN");
   expectAbsOg(en, "en", "get.pongrabbit.com");
-  expect(en, "en", /PublishKit is a light Windows app plus a Chrome extension for managing social posts/, "meta description");
+  expect(en, "en", /You still publish each post yourself/, "meta description");
   expect(en, "en", /A lighter assistant for your posts/, "title");
   expect(en, "en", /A one-time buffer alternative if you still paste each post yourself\./, "buffer sentence on the pricing card");
   const enMeta = en.match(/<meta name="description" content="([^"]*)"/);
